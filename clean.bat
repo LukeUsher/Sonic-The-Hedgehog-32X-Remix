@@ -18,6 +18,10 @@ rm smps.bin
 rm smps.p
 cd ..
 
+cd m68k
+rm sonic.lst
+cd ..
+
 cd ..
 rm s1built.32x
 
