@@ -25,7 +25,6 @@ cd ..
 cd ..
 
 REM Fixup for real hardware
-rompad.exe s1built.32x 255 0
 fixheadr s1built.32x
 
 pause

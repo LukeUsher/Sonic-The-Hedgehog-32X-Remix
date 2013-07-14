@@ -1,4 +1,4 @@
-comp_z80_size 0x14FF efile fÅr C-Programm */
+comp_z80_size 0x155C efile fÅr C-Programm */
 #define Snd_FBZ1 0x108000
 #define Snd_FBZ2 0x108597
 #define Snd_MHZ1 0x108AFE

@@ -385,32 +385,10 @@ HurtSonic:
 
 
 KillSonic:
-		tst.w	(v_debuguse).w	; is debug mode	active?
-		
-		
-	if TimeLimitInSpecialStage=1	;Mercury Time Limit In Special Stage
-		bne.w	@dontdie	; if yes, branch
-		cmpi.b	#id_SonicSpecial,(a0) ; test if it's Special Stage Sonic that's trying to die
-		bne.s	@normal
-		
-		move.b	#4,obRoutine(a0)	; change Sonic to Special Stage dying routine
-		
-		;move.w	obY(a0),$38(a0)
-		
-		bset	#staAir,obStatus(a0)	;Mercury Constants
-		move.b	#id_Shrink,obAnim(a0)
-		bset	#7,obGfx(a0)
-		move.w	#sfx_Death,d0	; play normal death sound
-		jsr	(PlaySound_Special).l
-		moveq	#-1,d0
-		rts	
-		
-	@normal:
-	else
-		bne.s	@dontdie	; if yes, branch
-	endc	;end Time Limit In Special Stage	
-		
-		move.b	#0,(v_invinc).w	; remove invincibility
+		tst.w	(v_debuguse).w		; is debug mode	active?
+		bne.s	@dontdie		; if yes, branch
+		move.w	#0,(v_rings).w		; clear rings
+		move.b	#0,(v_invinc).w		; remove invincibility
 		move.b	#6,obRoutine(a0)
 		bsr.w	Sonic_ResetOnFloor
 		bset	#staAir,obStatus(a0)	;Mercury Constants
@@ -418,16 +396,16 @@ KillSonic:
 		move.w	#0,obVelX(a0)
 		move.w	#0,obInertia(a0)
 		
-	if SpinDashActive=0	;Mercury Spin Dash
+	if SpinDashActive=0			;Mercury Spin Dash
 		move.w	obY(a0),$38(a0)
-	endc	;end Spin Dash
+	endc					;end Spin Dash
 		
 		move.b	#id_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
-		move.w	#sfx_Death,d0	; play normal death sound
-		cmpi.b	#id_Spikes,(a2)	; check	if you were killed by spikes
+		move.w	#sfx_Death,d0		; play normal death sound
+		cmpi.b	#id_Spikes,(a2)		; check	if you were killed by spikes
 		bne.s	@sound
-		move.w	#sfx_HitSpikes,d0 ; play spikes death sound
+		move.w	#sfx_HitSpikes,d0 	; play spikes death sound
 
 	@sound:
 		jsr	(PlaySound_Special).l

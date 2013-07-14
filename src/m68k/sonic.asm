@@ -43,7 +43,7 @@ StartOfRom:
 		dc.w 0								; Checksum
 		dc.b "J               " 					; I/O support
 		dc.l StartOfRom							; ROM start
-		dc.l EndOfRom-$02200000						; ROM end
+		dc.l EndOfRom							; ROM end
 		dc.l $FF0000							; RAM start
 		dc.l $FFFFFF							; RAM end
 		
@@ -191,8 +191,6 @@ ICD_MARS_END:
 ; ===========================================================================
 
 ErrorTrap:
-		nop	
-		nop	
 		bra.s	ErrorTrap
 ; ===========================================================================
 
@@ -236,9 +234,8 @@ MainGameLoop:
 		bra.s	MainGameLoop
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Main game mode array
+; Main game mode array 
 ; ---------------------------------------------------------------------------
-
 GameModeArray:
 
 ptr_GM_Sega:	
@@ -257,7 +254,8 @@ ptr_GM_Ending:
 		bra.w	GM_Ending	; End of game sequence ($18)
 ptr_GM_Credits:	
 		bra.w	GM_Credits	; Credits ($1C)
-		rts		
+		rts
+		
 ; ===========================================================================
 
 BusError:
@@ -330,6 +328,8 @@ loc_462:
 		bsr.w	ShowErrorValue
 
 loc_478:
+		music	$28	
+		jmp	ErrorTrap
 		bsr.w	ErrorWaitForC
 		movem.l	(v_regbuffer).w,d0-a7
 		enable_ints
@@ -339,6 +339,7 @@ loc_478:
 
 
 ShowErrorMessage:
+		jsr	ClearScreen
 		lea	(vdp_data_port).l,a6
 		locVRAM	$F800
 		lea	(Art_Text).l,a0
@@ -355,10 +356,14 @@ ShowErrorMessage:
 		moveq	#$12,d1		; number of characters (minus 1)
 
 	@showchars:
-		moveq	#0,d0
-		move.b	(a0)+,d0
-		addi.w	#$790,d0
-		move.w	d0,(a6)
+		moveq	#0,d0		; Clear D0
+		move.b	(a0)+,d0	; Read character
+		cmp.w	#$40, d0	; Check for $40 (End of ASCII number area)
+		blt.s	@notText	; If this is not an ASCII text character, branch
+		sub.w	#$3,d0		; Subtract an extra 3 (Compensate for missing characters in the font)
+	@notText:
+		addi.w	#$790,d0	; Add #$790 to get VRAM address
+		move.w	d0,(a6)		; Write to the VDP
 		dbf	d1,@showchars	; repeat for number of characters
 		rts	
 ; End of function ShowErrorMessage
@@ -376,7 +381,7 @@ ErrorText:
 @bus:		dc.b "BUS ERROR          "
 @address:	dc.b "ADDRESS ERROR      "
 @illinstruct:	dc.b "ILLEGAL INSTRUCTION"
-@zerodivide:	dc.b "@ERO DIVIDE        "
+@zerodivide:	dc.b "ZERO DIVIDE        "
 @chkinstruct:	dc.b "CHK INSTRUCTION    "
 @trapv:		dc.b "TRAPV INSTRUCTION  "
 @privilege:	dc.b "PRIVILEGE VIOLATION"
@@ -408,7 +413,7 @@ ShowErrorValue:
 		andi.w	#$F,d1
 		cmpi.w	#$A,d1
 		bcs.s	@chars0to9
-		addq.w	#7,d1		; add 7 for characters A-F
+		addq.w	#4,d1		; add 4 for characters A-F
 
 	@chars0to9:
 		addi.w	#$7C0,d1
@@ -600,15 +605,8 @@ VBla_08:				; XREF: VBla_Index
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
 		
-	if UseDMAQueue=1	;Mercury Use DMA Queue
 		jsr	(ProcessDMAQueue).l
-	else
-		tst.b	(f_sonframechg).w ; has Sonic's sprite changed?
-		beq.s	@nochg		; if not, branch
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w
-	endc	;end Use DMA Queue
-		
+
 	@nochg:
 		startZ80
 		movem.l	(v_screenposx).w,d0-d7
@@ -653,16 +651,8 @@ VBla_0A:				; XREF: VBla_Index
 		startZ80
 		bsr.w	PalCycle_SS
 		
-	if UseDMAQueue=1	;Mercury Use DMA Queue
 		jsr	(ProcessDMAQueue).l
-	else
-		tst.b	(f_sonframechg).w ; has Sonic's sprite changed?
-		beq.s	@nochg		; if not, branch
 
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic ; load new Sonic gfx
-		move.b	#0,(f_sonframechg).w
-	endc	;end Use DMA Queue
-		
 	@nochg:
 	
 	if DynamicSpecialStageWalls=1	;Mercury Dynamic Special Stage Walls
@@ -704,15 +694,9 @@ VBla_0C:				; XREF: VBla_Index
 		move.w	(v_hbla_hreg).w,(a5)
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
-	if UseDMAQueue=1	;Mercury Use DMA Queue
+
 		jsr	(ProcessDMAQueue).l
-	else
-		tst.b	(f_sonframechg).w
-		beq.s	@nochg
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic
-		move.b	#0,(f_sonframechg).w
-	endc	;end Use DMA Queue
-		
+
 	@nochg:
 		startZ80
 		movem.l	(v_screenposx).w,d0-d7
@@ -747,15 +731,9 @@ VBla_16:				; XREF: VBla_Index
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
 		startZ80
-	if UseDMAQueue=1	;Mercury Use DMA Queue
+
 		jsr	(ProcessDMAQueue).l
-	else
-		tst.b	(f_sonframechg).w
-		beq.s	@nochg
-		writeVRAM	v_sgfx_buffer,$2E0,vram_sonic
-		move.b	#0,(f_sonframechg).w
-	endc	;end Use DMA Queue
-		
+
 	@nochg:
 	
 	if DynamicSpecialStageWalls=1	;Mercury Dynamic Special Stage Walls
@@ -859,7 +837,6 @@ loc_119E:
 		clr.b	($FFFFF64F).w
 		movem.l	d0-a6,-(sp)
 		bsr.w	Demo_Time
-		;jsr	UpdateMusic
 		movem.l	(sp)+,d0-a6
 		rte	
 ; End of function HBlank
@@ -875,9 +852,9 @@ JoypadInit:				; XREF: GameClrRAM
 		stopZ80
 		waitZ80
 		moveq	#$40,d0
-		move.b	d0,($A10009).l	; init port 1 (joypad 1)
-		move.b	d0,($A1000B).l	; init port 2 (joypad 2)
-		move.b	d0,($A1000D).l	; init port 3 (expansion)
+		move.b	d0,($A10009).l		; init port 1 (joypad 1)
+		move.b	d0,($A1000B).l		; init port 2 (joypad 2)
+		move.b	d0,($A1000D).l		; init port 3 (expansion)
 		startZ80
 		rts	
 ; End of function JoypadInit
@@ -890,10 +867,10 @@ JoypadInit:				; XREF: GameClrRAM
 
 
 ReadJoypads:				; XREF: VBlank, HBlank
-		lea	(v_jpadhold1).w,a0 ; address where joypad states are written
-		lea	($A10003).l,a1	; first	joypad port
-		bsr.s	@read		; do the first joypad
-		addq.w	#2,a1		; do the second	joypad
+		lea	(v_jpadhold1).w,a0 	; address where joypad states are written
+		lea	($A10003).l,a1		; first	joypad port
+		bsr.s	@read			; do the first joypad
+		addq.w	#2,a1			; do the second	joypad
 
 	@read:
 		move.b	#0,(a1)
@@ -1090,9 +1067,7 @@ TilemapToVRAM:				; XREF: GM_Sega; GM_Title; SS_BGLoad
 		rts	
 ; End of function TilemapToVRAM
 
-	if UseDMAQueue=1	;Mercury Use DMA Queue
 		include	"_inc\(Mercury) DMA Queue.asm"
-	endc	;end Use DMA Queue
 	
 		include	"_inc\Nemesis Decompression.asm"
 
@@ -2055,8 +2030,9 @@ Sega_GotoTitle:
 ; Title	screen
 ; ---------------------------------------------------------------------------
 
-GM_Title:				; XREF: GameModeArray
-		jsr	LoadDMARoutine
+GM_Title:					; XREF: GameModeArray
+		jsr	LoadDMARoutines		; Load DMA queue routines to RAM
+		;jsr	LoadSRAMRoutines	; TODO
 
 		move.b	#bgm_Stop,d0
 		bsr.w	PlaySound_Special ; stop music
@@ -2132,8 +2108,8 @@ GM_Title:				; XREF: GameModeArray
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformLayers
 
-		move.l	#Blk16_GHZ,(v_256x256+4).l	; store the ROM address for the block mappings
-		move.l	#Blk256_GHZ,(v_256x256).l	; store the ROM address for the chunk mappings	
+		move.l	#Blk16_Title,(v_256x256+4).l	; store the ROM address for the block mappings
+		move.l	#Blk256_Title,(v_256x256).l	; store the ROM address for the chunk mappings	
 		
 		bsr.w	LevelLayoutLoad		
 		bsr.w	PaletteFadeOut
@@ -2150,7 +2126,7 @@ GM_Title:				; XREF: GameModeArray
 		copyTilemap	Eni_Title,$C206,$21,$15
 
 		locVRAM	0
-		lea	(Nem_GHZ_1st).l,a0 ; load GHZ patterns
+		lea	(Nem_Title).l,a0 ; load GHZ patterns
 		bsr.w	NemDec
 		
 		moveq	#palid_Title,d0	; load title screen palette
@@ -2401,34 +2377,34 @@ LevSelCode_US:	dc.b btnUp,btnDn,btnL,btnR,0,$FF
 
 LevSelControls:				; XREF: LevelSelect
 		move.b	(v_jpadpress1).w,d1
-		andi.b	#btnUp+btnDn,d1	; is up/down pressed and held?
-		bne.s	LevSel_UpDown	; if yes, branch
-		subq.w	#1,(v_levseldelay).w ; subtract 1 from time to next move
-		bpl.s	LevSel_SndTest	; if time remains, branch
+		andi.b	#btnUp+btnDn,d1		; is up/down pressed and held?
+		bne.s	LevSel_UpDown		; if yes, branch
+		subq.w	#1,(v_levseldelay).w 	; subtract 1 from time to next move
+		bpl.s	LevSel_SndTest		; if time remains, branch
 
 LevSel_UpDown:
-		move.w	#$B,(v_levseldelay).w ; reset time delay
+		move.w	#$B,(v_levseldelay).w	; reset time delay
 		move.b	(v_jpadhold1).w,d1
-		andi.b	#btnUp+btnDn,d1	; is up/down pressed?
-		beq.s	LevSel_SndTest	; if not, branch
+		andi.b	#btnUp+btnDn,d1		; is up/down pressed?
+		beq.s	LevSel_SndTest		; if not, branch
 		move.w	(v_levselitem).w,d0
-		btst	#bitUp,d1	; is up	pressed?
-		beq.s	LevSel_Down	; if not, branch
-		subq.w	#1,d0		; move up 1 selection
+		btst	#bitUp,d1		; is up	pressed?
+		beq.s	LevSel_Down		; if not, branch
+		subq.w	#1,d0			; move up 1 selection
 		bcc.s	LevSel_Down
-		moveq	#$14,d0		; if selection moves below 0, jump to selection	$14
+		moveq	#$14,d0			; if selection moves below 0, jump to selection	$14
 
 LevSel_Down:
-		btst	#bitDn,d1	; is down pressed?
-		beq.s	LevSel_Refresh	; if not, branch
-		addq.w	#1,d0		; move down 1 selection
+		btst	#bitDn,d1		; is down pressed?
+		beq.s	LevSel_Refresh		; if not, branch
+		addq.w	#1,d0			; move down 1 selection
 		cmpi.w	#$15,d0
 		bcs.s	LevSel_Refresh
-		moveq	#0,d0		; if selection moves above $14,	jump to	selection 0
+		moveq	#0,d0			; if selection moves above $14,	jump to	selection 0
 
 LevSel_Refresh:
-		move.w	d0,(v_levselitem).w ; set new selection
-		bsr.w	LevSelTextLoad	; refresh text
+		move.w	d0,(v_levselitem).w 	; set new selection
+		bsr.w	LevSelTextLoad		; refresh text
 		rts	
 ; ===========================================================================
 
@@ -2520,7 +2496,7 @@ LevSel_ChgSnd:				; XREF: LevSelTextLoad
 		andi.w	#$F,d0
 		cmpi.b	#$A,d0		; is digit $A-$F?
 		bcs.s	LevSel_Numb	; if not, branch
-		addi.b	#7,d0		; use alpha characters
+		addi.b	#4,d0		; use alpha characters
 
 	LevSel_Numb:
 		add.w	d3,d0
@@ -2545,6 +2521,11 @@ LevSel_ChgLine:				; XREF: LevSelTextLoad
 
 
 	LevSel_CharOk:
+		cmp.w	#$40, d0	; Check for $40 (End of ASCII number area)
+		blt.s	@notText	; If this is not an ASCII text character, branch
+		sub.w	#$3,d0		; Subtract an extra 3 (Compensate for missing characters in the font)
+	@notText:
+		sub.w	#$30,d0		; Subtract #$33 (Convert to S2 font from ASCII)
 		add.w	d3,d0		; combine char with VRAM setting
 		move.w	d0,(a6)		; send to VRAM
 		dbf	d2,LevSel_LineLoop
@@ -2556,7 +2537,27 @@ LevSel_ChgLine:				; XREF: LevSelTextLoad
 ; Level	select menu text
 ; ---------------------------------------------------------------------------
 LevelMenuText:
-		incbin	"misc\Level Select Text (JP1).bin"
+		dc.b	"GREEN HILL ZONE    ACT 1"
+		dc.b	"                   ACT 2"
+		dc.b	"                   ACT 3"
+		dc.b	"MARBLE ZONE        ACT 1"
+		dc.b	"                   ACT 2"
+		dc.b	"                   ACT 3"
+		dc.b	"SPRING YARD ZONE   ACT 1"
+		dc.b	"                   ACT 2"
+		dc.b	"                   ACT 3"
+		dc.b	"LABYRINTH          ACT 1"
+		dc.b	"                   ACT 2"
+		dc.b	"                   ACT 3"
+		dc.b	"STAR LIGHT ZONE    ACT 1"
+		dc.b	"                   ACT 2"
+		dc.b	"                   ACT 3"
+		dc.b	"SCRAP BRAIN ZONE   ACT 1"
+		dc.b	"                   ACT 2"
+		dc.b	"                   ACT 3"
+		dc.b	"FINAL ZONE              "             
+		dc.b	"SPECIAL STAGE           "          
+		dc.b	"SOUND TEST              "              
 		even
 ; ---------------------------------------------------------------------------
 ; Music	playlist
@@ -2648,10 +2649,8 @@ Level_ClrRam:
 		move.w	#$8A00+223,(v_hbla_hreg).w ; set palette change position (for water)
 		move.w	(v_hbla_hreg).w,(a6)
 		
-	if UseDMAQueue=1	;Mercury Use DMA Queue
-		clr.w	($FFFFC800).w
-		move.l	#$FFFFC800,($FFFFC8FC).w
-	endc	;end Use DMA Queue
+		clr.w	(VDP_Command_Buffer).w
+		move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
 		
 		cmpi.b	#id_LZ,(v_zone).w ; is level LZ?
 		bne.s	Level_LoadPal	; if not, branch
@@ -2761,7 +2760,7 @@ Level_LoadObj:
 		moveq	#0,d0
 		tst.b	(v_lastlamp).w	; are you starting from	a lamppost?
 		bne.s	Level_SkipClr	; if yes, branch
-		move.w	d0,(v_rings).w	; clear rings
+		;move.w	d0,(v_rings).w	; clear rings
 		move.l	d0,(v_time).w	; clear time
 		
 	if HUDCentiseconds=1	;Mercury HUD Centiseconds
@@ -3251,11 +3250,9 @@ loc_47D4:
 		bsr.w	NemDec
 		jsr	Hud_Base
 		
-	if UseDMAQueue=1	;Mercury Use DMA Queue
-		clr.w	($FFFFC800).w
-		move.l	#$FFFFC800,($FFFFC8FC).w
-	endc	;end Use DMA Queue
-		
+		clr.w	(VDP_Command_Buffer).w
+		move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
+	
 		move	#$2300,sr
 		moveq	#palid_SSResult,d0
 		bsr.w	PalLoad2	; load results screen palette
@@ -6867,12 +6864,7 @@ loc_12EA6:
 		include	"_incObj\Sonic Animate.asm"
 		include	"_anim\Sonic.asm"
 		
-	if UseDMAQueue=1	;Mercury Use DMA Queue
 		include	"_incObj\(Mercury) Sonic LoadGfx (dma).asm"
-	else
-		include	"_incObj\Sonic LoadGfx.asm"
-	endc	;end Use DMA Queue
-
 		include	"_incObj\0A Drowning Countdown.asm"
 
 
@@ -8297,14 +8289,14 @@ Art_LivesNums:	incbin	"artunc\Lives Counter Numbers.bin" ; 8x8 pixel numbers on 
 		include	"_inc\Pattern Load Cues.asm"
 
 		; Sound driver must start at $8A0000
-		align $8A0000
+		align 	$8A0000
 SoundDriver:
 		incbin "..\SMPS\SMPS.bin"
 		OBJEND
 ; ---------------------------------------------------------------------------
 ; Second half of bank 0, SH-2 access only!
 ; ---------------------------------------------------------------------------	
-		align $80000		
+		align 	$80000		
 		
 ; ---------------------------------------------------------------------------
 ; SH-2 Binary blob
@@ -8316,8 +8308,8 @@ SH2_END:
 ; ---------------------------------------------------------------------------
 ; Start of Bank 1
 ; ---------------------------------------------------------------------------
-		align $100000		
-		obj $900000		
+		align 	$100000		
+		obj 	$900000		
 
 Nem_SegaLogo:	incbin	"artnem\Sega Logo (JP1).bin" ; large Sega logo
 		even
@@ -8698,6 +8690,13 @@ Nem_Squirrel:	incbin	"artnem\Animal Squirrel.bin"
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
 
+Nem_Title:	incbin	"artnem\8x8 - Title.bin"
+		even
+Blk16_Title:	incbin	"map16\Title.bin"
+		even
+Blk256_Title:	incbin	"map256\Title.bin"
+		even		
+		
 Blk16_GHZ:	incbin	"map16\GHZ.bin"
 		even
 Nem_GHZ_1st:	incbin	"artnem\8x8 - GHZ1.bin"	; GHZ primary patterns
@@ -8869,84 +8868,84 @@ Level_Index:	dc.w Level_GHZ1-Level_Index, Level_GHZbg-Level_Index, byte_68D70-Le
 		dc.w byte_6A320-Level_Index, byte_6A320-Level_Index, byte_6A320-Level_Index
 		zonewarning Level_Index,24
 
-Level_GHZ1:	incbin	levels\ghz1.bin
+Level_GHZ1:	incbin	"levels\ghz1.bin"
 		even
 byte_68D70:	dc.b 0,	0, 0, 0
-Level_GHZ2:	incbin	levels\ghz2.bin
+Level_GHZ2:	incbin	"levels\ghz2.bin"
 		even
 byte_68E3C:	dc.b 0,	0, 0, 0
-Level_GHZ3:	incbin	levels\ghz3.bin
+Level_GHZ3:	incbin	"levels\ghz3.bin"
 		even
-Level_GHZbg:	incbin	levels\ghzbg.bin
+Level_GHZbg:	incbin	"levels\ghzbg.bin"
 		even
 byte_68F84:	dc.b 0,	0, 0, 0
 byte_68F88:	dc.b 0,	0, 0, 0
 
-Level_LZ1:	incbin	levels\lz1.bin
+Level_LZ1:	incbin	"levels\lz1.bin"
 		even
-Level_LZbg:	incbin	levels\lzbg.bin
+Level_LZbg:	incbin	"levels\lzbg.bin"
 		even
 byte_69190:	dc.b 0,	0, 0, 0
-Level_LZ2:	incbin	levels\lz2.bin
+Level_LZ2:	incbin	"levels\lz2.bin"
 		even
 byte_6922E:	dc.b 0,	0, 0, 0
-Level_LZ3:	incbin	levels\lz3.bin
+Level_LZ3:	incbin	"levels\lz3.bin"
 		even
 byte_6934C:	dc.b 0,	0, 0, 0
-Level_SBZ3:	incbin	levels\sbz3.bin
+Level_SBZ3:	incbin	"levels\sbz3.bin"
 		even
 byte_6940A:	dc.b 0,	0, 0, 0
 
-Level_MZ1:	incbin	levels\mz1.bin
+Level_MZ1:	incbin	"levels\mz1.bin"
 		even
-Level_MZ1bg:	incbin	levels\mz1bg.bin
+Level_MZ1bg:	incbin	"levels\mz1bg.bin"
 		even
-Level_MZ2:	incbin	levels\mz2.bin
+Level_MZ2:	incbin	"levels\mz2.bin"
 		even
-Level_MZ2bg:	incbin	levels\mz2bg.bin
+Level_MZ2bg:	incbin	"levels\mz2bg.bin"
 		even
 byte_6965C:	dc.b 0,	0, 0, 0
-Level_MZ3:	incbin	levels\mz3.bin
+Level_MZ3:	incbin	"levels\mz3.bin"
 		even
-Level_MZ3bg:	incbin	levels\mz3bg.bin
+Level_MZ3bg:	incbin	"levels\mz3bg.bin"
 		even
 byte_697E6:	dc.b 0,	0, 0, 0
 byte_697EA:	dc.b 0,	0, 0, 0
 
-Level_SLZ1:	incbin	levels\slz1.bin
+Level_SLZ1:	incbin	"levels\slz1.bin"
 		even
-Level_SLZbg:	incbin	levels\slzbg.bin
+Level_SLZbg:	incbin	"levels\slzbg.bin"
 		even
-Level_SLZ2:	incbin	levels\slz2.bin
+Level_SLZ2:	incbin	"levels\slz2.bin"
 		even
-Level_SLZ3:	incbin	levels\slz3.bin
+Level_SLZ3:	incbin	"levels\slz3.bin"
 		even
 byte_69B84:	dc.b 0,	0, 0, 0
 
-Level_SYZ1:	incbin	levels\syz1.bin
+Level_SYZ1:	incbin	"levels\syz1.bin"
 		even
 Level_SYZbg:	incbin	"levels\syzbg (JP1).bin"
 		even
 byte_69C7E:	dc.b 0,	0, 0, 0
-Level_SYZ2:	incbin	levels\syz2.bin
+Level_SYZ2:	incbin	"levels\syz2.bin"
 		even
 byte_69D86:	dc.b 0,	0, 0, 0
-Level_SYZ3:	incbin	levels\syz3.bin
+Level_SYZ3:	incbin	"levels\syz3.bin"
 		even
 byte_69EE4:	dc.b 0,	0, 0, 0
 byte_69EE8:	dc.b 0,	0, 0, 0
 
-Level_SBZ1:	incbin	levels\sbz1.bin
+Level_SBZ1:	incbin	"levels\sbz1.bin"
 		even
-Level_SBZ1bg:	incbin	levels\sbz1bg.bin
+Level_SBZ1bg:	incbin	"levels\sbz1bg.bin"
 		even
-Level_SBZ2:	incbin	levels\sbz2.bin
+Level_SBZ2:	incbin	"levels\sbz2.bin"
 		even
-Level_SBZ2bg:	incbin	levels\sbz2bg.bin
+Level_SBZ2bg:	incbin	"levels\sbz2bg.bin"
 		even
 byte_6A2F8:	dc.b 0,	0, 0, 0
 byte_6A2FC:	dc.b 0,	0, 0, 0
-Level_End:	incbin	levels\ending.bin
+Level_End:	incbin	"levels\ending.bin"
 		even
 byte_6A320:	dc.b 0,	0, 0, 0
 
@@ -8997,9 +8996,9 @@ ObjPos_Index:	dc.w ObjPos_GHZ1-ObjPos_Index, ObjPos_Null-ObjPos_Index
 		dc.w ObjPos_SBZ1pf5-ObjPos_Index, ObjPos_SBZ1pf6-ObjPos_Index
 		dc.w ObjPos_SBZ1pf1-ObjPos_Index, ObjPos_SBZ1pf2-ObjPos_Index
 		dc.b $FF, $FF, 0, 0, 0,	0
-ObjPos_GHZ1:	incbin	objpos\ghz1.bin
+ObjPos_GHZ1:	incbin	"objpos\ghz1.bin"
 		even
-ObjPos_GHZ2:	incbin	objpos\ghz2.bin
+ObjPos_GHZ2:	incbin	"objpos\ghz2.bin"
 		even
 ObjPos_GHZ3:
 		incbin	"objpos\ghz3 (JP1).bin"
@@ -9007,63 +9006,62 @@ ObjPos_GHZ3:
 ObjPos_LZ1:
 		incbin	"objpos\lz1 (JP1).bin"
 		even
-ObjPos_LZ2:	incbin	objpos\lz2.bin
+ObjPos_LZ2:	incbin	"objpos\lz2.bin"
 		even
 ObjPos_LZ3:	incbin	"objpos\lz3 (JP1).bin"
 		even
-ObjPos_SBZ3:	incbin	objpos\sbz3.bin
+ObjPos_SBZ3:	incbin	"objpos\sbz3.bin"
 		even
-ObjPos_LZ1pf1:	incbin	objpos\lz1pf1.bin
+ObjPos_LZ1pf1:	incbin	"objpos\lz1pf1.bin"
 		even
-ObjPos_LZ1pf2:	incbin	objpos\lz1pf2.bin
+ObjPos_LZ1pf2:	incbin	"objpos\lz1pf2.bin"
 		even
-ObjPos_LZ2pf1:	incbin	objpos\lz2pf1.bin
+ObjPos_LZ2pf1:	incbin	"objpos\lz2pf1.bin"
 		even
-ObjPos_LZ2pf2:	incbin	objpos\lz2pf2.bin
+ObjPos_LZ2pf2:	incbin	"objpos\lz2pf2.bin"
 		even
-ObjPos_LZ3pf1:	incbin	objpos\lz3pf1.bin
+ObjPos_LZ3pf1:	incbin	"objpos\lz3pf1.bin"
 		even
-ObjPos_LZ3pf2:	incbin	objpos\lz3pf2.bin
+ObjPos_LZ3pf2:	incbin	"objpos\lz3pf2.bin"
 		even
 ObjPos_MZ1:
 		incbin	"objpos\mz1 (JP1).bin"
 		even
-ObjPos_MZ2:	incbin	objpos\mz2.bin
+ObjPos_MZ2:	incbin	"objpos\mz2.bin"
 		even
-ObjPos_MZ3:	incbin	objpos\mz3.bin
+ObjPos_MZ3:	incbin	"objpos\mz3.bin"
 		even
-ObjPos_SLZ1:	incbin	objpos\slz1.bin
+ObjPos_SLZ1:	incbin	"objpos\slz1.bin"
 		even
-ObjPos_SLZ2:	incbin	objpos\slz2.bin
+ObjPos_SLZ2:	incbin	"objpos\slz2.bin"
 		even
-ObjPos_SLZ3:	incbin	objpos\slz3.bin
+ObjPos_SLZ3:	incbin	"objpos\slz3.bin"
 		even
-ObjPos_SYZ1:	incbin	objpos\syz1.bin
+ObjPos_SYZ1:	incbin	"objpos\syz1.bin"
 		even
-ObjPos_SYZ2:	incbin	objpos\syz2.bin
+ObjPos_SYZ2:	incbin	"objpos\syz2.bin"
 		even
 ObjPos_SYZ3:	incbin	"objpos\syz3 (JP1).bin"
 		even
-ObjPos_SBZ1:
-		incbin	"objpos\sbz1 (JP1).bin"
+ObjPos_SBZ1:	incbin	"objpos\sbz1 (JP1).bin"
 		even
-ObjPos_SBZ2:	incbin	objpos\sbz2.bin
+ObjPos_SBZ2:	incbin	"objpos\sbz2.bin"
 		even
-ObjPos_FZ:	incbin	objpos\fz.bin
+ObjPos_FZ:	incbin	"objpos\fz.bin"
 		even
-ObjPos_SBZ1pf1:	incbin	objpos\sbz1pf1.bin
+ObjPos_SBZ1pf1:	incbin	"objpos\sbz1pf1.bin"
 		even
-ObjPos_SBZ1pf2:	incbin	objpos\sbz1pf2.bin
+ObjPos_SBZ1pf2:	incbin	"objpos\sbz1pf2.bin"
 		even
-ObjPos_SBZ1pf3:	incbin	objpos\sbz1pf3.bin
+ObjPos_SBZ1pf3:	incbin	"objpos\sbz1pf3.bin"
 		even
-ObjPos_SBZ1pf4:	incbin	objpos\sbz1pf4.bin
+ObjPos_SBZ1pf4:	incbin	"objpos\sbz1pf4.bin"
 		even
-ObjPos_SBZ1pf5:	incbin	objpos\sbz1pf5.bin
+ObjPos_SBZ1pf5:	incbin	"objpos\sbz1pf5.bin"
 		even
-ObjPos_SBZ1pf6:	incbin	objpos\sbz1pf6.bin
+ObjPos_SBZ1pf6:	incbin	"objpos\sbz1pf6.bin"
 		even
-ObjPos_End:	incbin	objpos\ending.bin
+ObjPos_End:	incbin	"objpos\ending.bin"
 		even
 ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0		
 		
@@ -9074,7 +9072,9 @@ ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0
 ; ---------------------------------------------------------------------------
 ; Start of Bank 2 [Contains 32X data to be used by the SH-2
 ; ---------------------------------------------------------------------------
-		align $100000
-		obj $02200000 	; 2MB within 32X ROM
+;		align $100000
+;		obj $02200000 	; 2MB within 32X ROM
+	
+;		OBJEND
 EndOfRom: 
 		END

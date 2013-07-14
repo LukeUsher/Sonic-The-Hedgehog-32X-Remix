@@ -14,18 +14,12 @@ WallJumpActive: = 1
 ; Date: 2011-02-11 (Feb)
 MoveLamppostVRAM: = 1
 
-; Name: UseDMAQueue
-; Function: Uses a DMA queue to load Sonic's art, freeing RAM and allowing Spin Dash dust or the Insta-Shield to function.
-; Date: 2011-02-11 (Feb)
-; Thanks To: Sonic Retro How-To by (various)
-UseDMAQueue: = 1
-
 ; Name: Spin Dash
 ; Function: Enables the Sonic 2 Spin Dash
 ; Date: 2011-02-10 (Feb)
 ; Thanks To: Sonic Retro How-To by (various)
 SpinDashActive: = 1
-	SpinDashDustActive: = SpinDashActive*MoveLamppostVRAM*UseDMAQueue*1	; activates animated dust sprite when Spin Dashing
+	SpinDashDustActive: = SpinDashActive*MoveLamppostVRAM*1	; activates animated dust sprite when Spin Dashing
 	SpinDashCancel: = SpinDashActive*1	; makes Sonic stop Spin Dashing if the A/B/C button is let up for long enough
 	SpinDashNoRevDown: = SpinDashActive*1	; makes the Spin Dash not rev down as long as A/B/C button is held down
 	SpinDashCameraLag: = SpinDashActive*1	; makes the camera lag behind when Sonic launches
@@ -139,11 +133,6 @@ SonicCDRollJump: = 1
 ; Date: 2011-02-12 (Feb)
 ReboundMod: = 1
 
-; Name: Enable Press Start Button Message
-; Function: Makes the "Press Start Button" message appear correctly on the Title Screen
-; Date: 2011-02-09 (Feb)
-EnablePSBMessage: = 1
-
 ; Name: Limit LZ Block Rising Speed
 ; Function: Limits the rising speed of blocks in LZ so that Sonic can jump off them more comfortably.
 ; Date: 2011-02-10 (Feb)
@@ -191,12 +180,6 @@ SpikeFix: = 1
 ; Function: Makes it safe to roll into the caterkiller from the front at high speeds without fear of being hurt some times and not others.
 ; Date: 2011-02-11 (Feb)
 CaterkillerFix: = 1
-
-; Name: Custom Demo Delay
-; Function: Makes it possible to customise how long the Title Screen waits before going to a demo.
-; Date: 2011-03-02 (Mar)
-CustomDemoDelay: = 1
-	CustomDemoDelayTime: = $280	; delay until demo is played; default is $178; use -1 for never (will return to Sega Screen eventually, though).
 
 ; Name: Orbinaut Animation Tweak
 ; Function: Makes Orbinaut "notice" Sonic at a closer range so that it's more likely to happen onscreen, and "get angry" quicker.
@@ -263,13 +246,6 @@ GiantRingsInSBZ: = GiantRingArtLoadsWithEndSign*1
 	GiantRingsInSBZArtLoc2: = $568	; originally $518, this is where the SBZ Crumbling Floor art is loaded into VRAM
 	GiantRingsInSBZArtLoc3: = $3A0	; originally $400, this is where the SBZ Eggman art is loaded into VRAM
 	GiantRingsInSBZArtLoc4: = $4C0	; originally $4A0, this is where the SBZ Eggman Switch art is loaded into VRAM
-
-; Name: Padding Active
-; Function: Pads the ROM with a value until it reaches a certain number of megs
-; Date: 2011-02-27 (Feb)
-PaddingActive: = 1
-	PaddingValue: = $FF
-	PaddingMegs: = 1
 	
 ; Name: Quarterloop Fix
 ; Function: Makes Sonic behave better when running back down quarterloops by using Sonic 2's code.

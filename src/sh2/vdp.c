@@ -164,7 +164,7 @@ void VDP_DrawSprite(uint16_t id, uint16_t frame, uint16_t xpos, uint16_t ypos, u
 		
 		// Convert from BAMS (8-bit) to Degrees
 		angle = (fix16_mul(fix16_div(angle16, fix16_from_int(256)), fix16_from_int(360)));
-
+		
 		fix16_t angle_sin = fix16_sin(angle16);
 		fix16_t angle_cos = fix16_cos(angle16);
 
