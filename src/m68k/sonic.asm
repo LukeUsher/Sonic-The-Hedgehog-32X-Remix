@@ -103,17 +103,17 @@ StartOfRom:
 ; ---------------------------------------------------------------------------	
 MarsInitHeader:
 		dc.b	"MARS GAME       "		; Module name
-		dc.l	$00000000				; Version
+		dc.l	$00000000			; Version
 	
-		dc.l	SH2_BINARY				; Source address
-		dc.l	$00000000				; Destination address (SH2 memory)
+		dc.l	SH2_BINARY			; Source address
+		dc.l	$00000000			; Destination address (SH2 memory)
 		dc.l	SH2_END-SH2_BINARY		; Size
 	
-		dc.l	$06000240				; M-SH2 entry point
-		dc.l	$06000244				; S-SH2 entry point
+		dc.l	$06000240			; M-SH2 entry point
+		dc.l	$06000244			; S-SH2 entry point
 	
-		dc.l	$06000000				; M-SH2 VBR address
-		dc.l	$06000120				; S-SH2 VBR address
+		dc.l	$06000000			; M-SH2 VBR address
+		dc.l	$06000120			; S-SH2 VBR address
 	
 ; ---------------------------------------------------------------------------
 ; 32X IPL/Security code
@@ -184,7 +184,7 @@ ICD_MARS:
 		dc.w	$7000,$2340,$0028,$2340,$002C,$3E14,$2C7C,$FFFF
 		dc.w	$FFC0,$4CD6,$7FF9,$44FC,$0000,$6014,$43F9,$00A1
 		dc.w	$5100,$3340,$0006,$303C,$8000,$6004,$44FC,$0001
-		jmp		Init32X
+		jmp	Init32X
 ICD_MARS_END:
 
 	OBJ $880000+ICD_MARS_END
@@ -261,60 +261,49 @@ ptr_GM_Credits:
 ; ===========================================================================
 
 BusError:
-		jmp	ErrorTrap
 		move.b	#2,(v_errortype).w
 		bra.w	ErrorHandler
 
 AddressError:
-		jmp	ErrorTrap
 		move.b	#4,(v_errortype).w
 		bra.w	ErrorHandler
 
 IllegalInstr:
-		jmp	ErrorTrap
 		move.b	#6,(v_errortype).w
 		addq.l	#2,2(sp)
 		bra.w	loc_462
 
 ZeroDivide:
-		jmp	ErrorTrap
 		move.b	#8,(v_errortype).w
 		bra.w	loc_462
 
 ChkInstr:
-		jmp	ErrorTrap
 		move.b	#$A,(v_errortype).w
 		bra.w	loc_462
 
 TrapvInstr:
-		jmp	ErrorTrap
 		move.b	#$C,(v_errortype).w
 		bra.w	loc_462
 
 PrivilegeViol:
-		jmp	ErrorTrap
 		move.b	#$E,(v_errortype).w
 		bra.w	loc_462
 
 Trace:
-		jmp	ErrorTrap
 		move.b	#$10,(v_errortype).w
 		bra.w	loc_462
 
 Line1010Emu:
-		jmp	ErrorTrap
 		move.b	#$12,(v_errortype).w
 		addq.l	#2,2(sp)
 		bra.w	loc_462
 
 Line1111Emu:
-		jmp	ErrorTrap
 		move.b	#$14,(v_errortype).w
 		addq.l	#2,2(sp)
 		bra.w	loc_462
 
 ErrorExcept:
-		jmp	ErrorTrap
 		move.b	#0,(v_errortype).w
 		bra.w	loc_462
 ; ==========================================================================
@@ -470,18 +459,18 @@ VBlank_32X:
 		move.l	#$600020,(vdp_control_port).l	;program the control port
 		move.w	($c00000).l,d0					;get the colour (3,0)		
 		
-		bra @VBlank_Continue
+		bra.s	@VBlank_Continue
 @Sega:
 @Continue:
 		move.l	#$20,(vdp_control_port).l		;program the control port
 		move.w	($c00000).l,d0					;get the colour (0,0)		
-		bra		@VBlank_Continue
+		bra.s	@VBlank_Continue
 
 	
 @Title:
 		move.l	#$400020,(vdp_control_port).l	;program the control port
 		move.w	($c00000).l,d0					;get the colour (2,0)
-		bra		@VBlank_Continue
+		bra.s	@VBlank_Continue
 	
 @Special:
 		move.w	#$0400, d0
@@ -2151,10 +2140,10 @@ GM_Title:				; XREF: GameModeArray
 		disable_ints
 		bsr.w	ClearScreen
 		
-		lea		(vdp_control_port).l,a5
-		lea		(vdp_data_port).l,a6
-		lea		($FFFFF708).w,a3
-		lea		(v_lvllayout+$40).w,a4
+		lea	(vdp_control_port).l,a5
+		lea	(vdp_data_port).l,a6
+		lea	($FFFFF708).w,a3
+		lea	(v_lvllayout+$40).w,a4
 		move.w	#$6000,d2
 		bsr.w	DrawChunks		
 		
@@ -2197,9 +2186,9 @@ GM_Title:				; XREF: GameModeArray
 Tit_MainLoop:
 		move.b	#4,(v_vbla_routine).w
 		bsr.w	WaitForVBla
-		jsr		ExecuteObjects
+		jsr	ExecuteObjects
 		bsr.w	DeformLayers
-		jsr		BuildSprites
+		jsr	BuildSprites
 		bsr.w	PCycle_Title
 		bsr.w	RunPLC
 
@@ -5963,20 +5952,22 @@ BuildSprites:				; XREF: GM_Title; et al
 		lea	(v_spritequeue).w,a4
 		moveq	#7,d7
 
-loc_D66A:
+BuildSprites_LevelLoop:
 		tst.w	(a4)
-		beq.w	loc_D72E
+		beq.w	BuildSprites_NextLevel
 		moveq	#2,d6
 
-loc_D672:
+BuildSprites_ObjLoop:
 		movea.w	(a4,d6.w),a0
 		tst.b	(a0)
-		beq.w	loc_D726
+		beq.w	BuildSprites_NextObj
 		bclr	#7,obRender(a0)
 		move.b	obRender(a0),d0
 		move.b	d0,d4
+		
+		
 		andi.w	#$C,d0
-		beq.s	loc_D6DE
+		beq.s	BuildSprites_ScreenSpaceObj
 		movea.l	BldSpr_ScrPos(pc,d0.w),a1
 		moveq	#0,d0
 		move.b	obActWid(a0),d0
@@ -5984,45 +5975,45 @@ loc_D672:
 		sub.w	(a1),d3
 		move.w	d3,d1
 		add.w	d0,d1
-		bmi.w	loc_D726
+		bmi.w	BuildSprites_NextObj
 		move.w	d3,d1
 		sub.w	d0,d1
 		cmpi.w	#$140,d1
-		bge.s	loc_D726
+		bge.s	BuildSprites_NextObj
 		addi.w	#$80,d3
 		btst	#4,d4
-		beq.s	loc_D6E8
+		beq.s	BuildSprites_ApproxYCheck
 		moveq	#0,d0
 		move.b	obHeight(a0),d0
 		move.w	obY(a0),d2
 		sub.w	4(a1),d2
 		move.w	d2,d1
 		add.w	d0,d1
-		bmi.s	loc_D726
+		bmi.s	BuildSprites_NextObj
 		move.w	d2,d1
 		sub.w	d0,d1
 		cmpi.w	#$E0,d1
-		bge.s	loc_D726
+		bge.s	BuildSprites_NextObj
 		addi.w	#$80,d2
-		bra.s	loc_D700
+		bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
 
-loc_D6DE:
-		move.w	$A(a0),d2
+BuildSprites_ScreenSpaceObj:
+		move.w	obScreenY(a0),d2
 		move.w	obX(a0),d3
-		bra.s	loc_D700
+		bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
 
-loc_D6E8:
+BuildSprites_ApproxYCheck:
 		move.w	obY(a0),d2
 		sub.w	obMap(a1),d2
 		addi.w	#$80,d2
 		cmpi.w	#$60,d2
-		bcs.s	loc_D726
+		bcs.s	BuildSprites_NextObj
 		cmpi.w	#$180,d2
-		bcc.s	loc_D726
+		bcc.s	BuildSprites_NextObj
 
-loc_D700:
+BuildSprites_DrawSprite:
 		movea.l	obMap(a0),a1
 		moveq	#0,d1
 		btst	#5,d4
@@ -6035,19 +6026,19 @@ loc_D700:
 		bmi.s	loc_D720
 
 loc_D71C:
-		bsr.w	sub_D750
+		bsr.w	DrawSprite
 
 loc_D720:
 		bset	#7,obRender(a0)
 
-loc_D726:
+BuildSprites_NextObj:
 		addq.w	#2,d6
 		subq.w	#2,(a4)
-		bne.w	loc_D672
+		bne.w	BuildSprites_ObjLoop
 
-loc_D72E:
+BuildSprites_NextLevel:
 		lea	$80(a4),a4
-		dbf	d7,loc_D66A
+		dbf	d7,BuildSprites_LevelLoop
 		move.b	d5,(v_spritecount).w
 		cmpi.b	#$50,d5
 		beq.s	loc_D748
@@ -6064,13 +6055,13 @@ loc_D748:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-sub_D750:				; XREF: BuildSprites
+DrawSprite:				; XREF: BuildSprites
 		movea.w	obGfx(a0),a3
 		btst	#0,d4
 		bne.s	loc_D796
 		btst	#1,d4
 		bne.w	loc_D7E4
-; End of function sub_D750
+; End of function DrawSprite
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -6149,7 +6140,7 @@ locret_D7E2:
 		rts	
 ; ===========================================================================
 
-loc_D7E4:				; XREF: sub_D750
+loc_D7E4:				; XREF: DrawSprite
 		cmpi.b	#$50,d5
 		beq.s	locret_D828
 		move.b	(a1)+,d0
@@ -6599,9 +6590,9 @@ SonicPlayer:				; XREF: Obj_Index
 ; ===========================================================================
 
 Sonic_Normal:
-		move.b	#0, MARS_SYS_COMM6			; Clear 32X Angle Register
-		cmp.b	#0, obStatus(a0)			; Is Sonic is in his normal (ground) routine
-		bne		@Continue					; If not, branch
+		move.b	#0, MARS_SYS_COMM6		; Clear 32X Angle Register
+		cmp.b	#0, obStatus(a0)		; Is Sonic is in his normal (ground) routine
+		bne.s	@Continue					; If not, branch
 		move.b	obAngle(a0), MARS_SYS_COMM6	; Update Sonic's Angle
 @Continue:
 		moveq	#0,d0		

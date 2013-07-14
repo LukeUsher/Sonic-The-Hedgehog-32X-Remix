@@ -29,7 +29,7 @@ Debug_Main:	; Routine 0
 		clr.w	obVelY(a0)
 		clr.w	obInertia(a0)
 		btst	#staOnObj,obStatus(a0)	; is Sonic standing on an object?	;Mercury Constants
-		beq.s	@setpos		; if not, branch
+		beq.s	@setpos			; if not, branch
 		bclr	#staOnObj,obStatus(a0)	; clear Sonic's standing flag	;Mercury Constants
 		moveq	#0,d0
 		move.b	obPlatformID(a0),d0	; get object id	;Mercury Constants
@@ -43,11 +43,11 @@ Debug_Main:	; Routine 0
 	;end Debug Improvements
 		
 		cmpi.b	#id_Special,(v_gamemode).w ; is game mode $10 (special stage)?
-		bne.s	@islevel	; if not, branch
+		bne.s	@islevel		; if not, branch
 
-		move.w	#0,(v_ssrotate).w ; stop special stage rotating
-		move.w	#0,(v_ssangle).w ; make	special	stage "upright"
-		moveq	#6,d0		; use 6th debug	item list
+		move.w	#0,(v_ssrotate).w	; stop special stage rotating
+		move.w	#0,(v_ssangle).w 	; make	special	stage "upright"
+		moveq	#6,d0			; use 6th debug	item list
 		bra.s	@selectlist
 ; ===========================================================================
 
@@ -60,9 +60,9 @@ Debug_Main:	; Routine 0
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d6
-		cmp.b	(v_debugitem).w,d6 ; have you gone past the last item?
-		bhi.s	@noreset	; if not, branch
-		move.b	#0,(v_debugitem).w ; back to start of list
+		cmp.b	(v_debugitem).w,d6 	; have you gone past the last item?
+		bhi.s	@noreset		; if not, branch
+		move.b	#0,(v_debugitem).w 	; back to start of list
 
 	@noreset:
 		bsr.w	Debug_ShowItem
