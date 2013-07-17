@@ -79,31 +79,33 @@ LoadDMARoutines:
 
 ; sub_14AC: CopyToVRAM: IssueVDPCommands: Process_DMA: Process_DMA_Queue:
 ProcessDMAQueue_ROM:	
-	stopz80							; Stop the Z80, as it depends on 32X mapping
-	move.b  #1,	MARS_DREQ_CTRL+1	; Set RV bit (Disable 32X mapping for DMA)
+	disable_ints
+	stopz80					; Stop the Z80, as it depends on 32X mapping
+	move.b  #1, MARS_DREQ_CTRL+1		; Set RV bit (Disable 32X mapping for DMA)
 	
 	lea	($C00004).l,a5
 	lea	(VDP_Command_Buffer).w,a1
 ; loc_14B6:
 ProcessDMAQueue_Loop:
 	move.w	(a1)+,d0
-	beq.s	ProcessDMAQueue_Done ; branch if we reached a stop token
-	; issue a set of VDP commands...
-	move.w	d0,(a5)		; transfer length
-	move.w	(a1)+,(a5)	; transfer length
-	move.w	(a1)+,(a5)	; source address
-	move.w	(a1)+,(a5)	; source address
-	move.w	(a1)+,(a5)	; source address
-	move.w	(a1)+,(a5)	; destination
-	move.w	(a1)+,(a5)	; destination
-	cmpa.w	#$C8FC,a1
-	bne.s	ProcessDMAQueue_Loop ; loop if we haven't reached the end of the buffer
+	beq.s	ProcessDMAQueue_Done 		; branch if we reached a stop token
+						; issue a set of VDP commands...
+	move.w	d0,(a5)				; transfer length
+	move.w	(a1)+,(a5)			; transfer length
+	move.w	(a1)+,(a5)			; source address
+	move.w	(a1)+,(a5)			; source address
+	move.w	(a1)+,(a5)			; source address
+	move.w	(a1)+,(a5)			; destination
+	move.w	(a1)+,(a5)			; destination
+	cmpa.w	#VDP_Command_Buffer_Slot&$FFFF,a1	
+	bne.s	ProcessDMAQueue_Loop 		; loop if we haven't reached the end of the buffer
 ; loc_14CE:
 ProcessDMAQueue_Done:
 	move.w	#0,(VDP_Command_Buffer).w
 	move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
-	move.b  #0,	MARS_DREQ_CTRL+1	; Clear RV bit, re-enable 32X mapping	
-	startz80						; Restart Z80
+	move.b  #0, MARS_DREQ_CTRL+1		; Clear RV bit, re-enable 32X mapping	
+	startz80				; Restart Z80
+	enable_ints
 	rts
 ProcessDMAQueue_End:
 ; End of function ProcessDMAQueue
