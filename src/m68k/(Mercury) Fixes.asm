@@ -33,7 +33,7 @@ DashCDActive: = 1
 ; Name: Balance CD
 ; Function: Uses the Sonic CD balancing sprites (forward and back) instead of Sonic 1's.
 ; Date: 2011-02-11 (Feb)
-BalanceCDActive: = 1
+BalanceCDActive: = 0
 
 ; Name: Insta-Shield
 ; Function: Enables the Sonic 3/K Insta-Shield.
@@ -137,11 +137,6 @@ ReboundMod: = 1
 ; Function: Limits the rising speed of blocks in LZ so that Sonic can jump off them more comfortably.
 ; Date: 2011-02-10 (Feb)
 LimitLZBlockRisingSpeed: = 1
-
-; Name: Skip Check Sum Check
-; Function: Skips the Check Sum check in order to speed up the game booting, plus frees the 4 bytes of RAM with the 'init' string in them
-; Date: 2011-02-10 (Feb)
-SkipCheckSumCheck: = 1
 
 ; Name: Speed Up Score Tally
 ; Function: Allows the player to hold a button to speed up the score tally
@@ -255,7 +250,7 @@ QuarterloopFix: = 1
 ; Name: Magnetic Rings
 ; Function: Gives Rings ability to be attracted to Sonic while he has a Shield.
 ; Date: 2011-03-24 (Mar)
-MagneticRings: = 1
+MagneticRings: = 0
 
 ; Name:  Rings Bounce At Zone Bottom
 ; Function: Rings will bounce off of the bottom boundary of the Zone, making SYZ boss more fair.
@@ -289,7 +284,7 @@ staFacing:	equ 0
 staAir:		equ 1
 staSpin:	equ 2
 staOnObj:	equ 3
-staRollJump:equ 4
+staRollJump:	equ 4
 staPush:	equ 5
 staWater:	equ 6
 

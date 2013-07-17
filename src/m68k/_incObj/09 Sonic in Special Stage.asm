@@ -434,7 +434,7 @@ loc_1BCD4:
 
 
 sub_1BCE8:				; XREF: Obj09_Move; Obj09_Fall
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		moveq	#0,d4
 		swap	d2
 		move.w	d2,d4
@@ -493,7 +493,7 @@ loc_1BD46:
 
 
 Obj09_ChkItems:				; XREF: Obj09_Display
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		moveq	#0,d4
 		move.w	obY(a0),d4
 		addi.w	#$50,d4

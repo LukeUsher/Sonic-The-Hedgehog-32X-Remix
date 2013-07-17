@@ -473,24 +473,24 @@ VBlank_32X:
 
 	
 @Title:
-		move.l	#$400020,(vdp_control_port).l	;program the control port
-		move.w	($c00000).l,d0					;get the colour (2,0)
+		move.l	#$400020,(vdp_control_port).l		; program the control port
+		move.w	($c00000).l,d0				; get the colour (2,0)
 		bra.s	@VBlank_Continue
 	
 @Special:
 		move.w	#$0400, d0
 			
 @VBlank_Continue:
-		move.w	d0, MARS_SYS_COMM2				; Tell 32X background colour	
+		move.w	d0, MARS_SYS_COMM2			; Tell 32X background colour	
 
 VBlank_MD:
 		tst.b	(v_vbla_routine).w
 		beq.s	VBla_00
 		move.w	(vdp_control_port).l,d0
 		move.l	#$40000010,(vdp_control_port).l
-		move.l	(v_scrposy_dup).w,(vdp_data_port).l ; send screen y-axis pos. to VSRAM
-		btst	#6,(v_megadrive).w 					; is Megadrive PAL?
-		beq.s	@notPAL								; if not, branch
+		move.l	(v_scrposy_dup).w,(vdp_data_port).l 	; send screen y-axis pos. to VSRAM
+		btst	#6,(v_megadrive).w 			; is Megadrive PAL?
+		beq.s	@notPAL					; if not, branch
 
 		move.w	#$700,d0
 	@waitPAL:
@@ -1976,17 +1976,15 @@ GM_Sega:				; XREF: GameModeArray
 		locVRAM	0
 		lea	(Nem_SegaLogo).l,a0 ; load Sega	logo patterns
 		bsr.w	NemDec
-		lea	($FF0000).l,a1
-		lea	(Eni_SegaLogo).l,a0 ; load Sega	logo mappings
-		move.w	#0,d0
-		bsr.w	EniDec
 
-		copyTilemap	$FF0000,$E510,$17,7
-		copyTilemap	$FF0180,$C000,$27,$1B
+		move.w	#0,d0
+
+		copyTilemap	Eni_SegaLogo,$E510,$17,7
+		copyTilemap	Eni_SegaLogo+$180,$C000,$27,$1B
 	
 		tst.b   (v_megadrive).w	; is console Japanese?
 		bmi.s   @loadpal
-		copyTilemap	$FF0A40,$C53A,2,1 ; hide "TM" with a white rectxs = ((signed char)((xs)>>8))
+		copyTilemap	Eni_SegaLogo+$A40,$C53A,2,1 ; hide "TM" with a white rectxs = ((signed char)((xs)>>8))
 
 	@loadpal:
 		moveq	#palid_SegaBG,d0
@@ -2125,6 +2123,8 @@ GM_Title:					; XREF: GameModeArray
 		
 		copyTilemap	Eni_Title,$C206,$21,$15
 
+		copyTilemap	Title_Copyright,$C206,40,2
+		
 		locVRAM	0
 		lea	(Nem_Title).l,a0 ; load GHZ patterns
 		bsr.w	NemDec
@@ -2185,7 +2185,7 @@ Tit_EnterCheat:
 		addq.w	#1,(v_title_dcount).w ; next button press
 		tst.b	d0
 		bne.s	Tit_CountC
-		lea		(f_levselcheat).w,a0
+		lea	(f_levselcheat).w,a0
 		move.w	(v_title_ccount).w,d1
 		lsr.w	#1,d1
 		andi.w	#3,d1
@@ -2546,7 +2546,7 @@ LevelMenuText:
 		dc.b	"SPRING YARD ZONE   ACT 1"
 		dc.b	"                   ACT 2"
 		dc.b	"                   ACT 3"
-		dc.b	"LABYRINTH          ACT 1"
+		dc.b	"LABYRINTH ZONE     ACT 1"
 		dc.b	"                   ACT 2"
 		dc.b	"                   ACT 3"
 		dc.b	"STAR LIGHT ZONE    ACT 1"
@@ -3309,7 +3309,7 @@ SS_ToLevel:	cmpi.b	#id_Level,(v_gamemode).w
 
 
 SS_BGLoad:				; XREF: GM_Special
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		lea	(Eni_SSBg1).l,a0 ; load	mappings for the birds and fish
 		move.w	#$4051,d0
 		bsr.w	EniDec
@@ -3334,7 +3334,7 @@ loc_48CE:
 		bne.s	loc_48E2
 		cmpi.w	#6,d7
 		bne.s	loc_48F2
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 
 loc_48E2:
 		movem.l	d0-d4,-(sp)
@@ -3358,16 +3358,16 @@ loc_48F2:
 loc_491C:
 		adda.w	#$80,a2
 		dbf	d7,loc_48BE
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		lea	(Eni_SSBg2).l,a0 ; load	mappings for the clouds
 		move.w	#$4000,d0
 		bsr.w	EniDec
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		move.l	#$40000003,d0
 		moveq	#$3F,d1
 		moveq	#$1F,d2
 		bsr.w	TilemapToVRAM
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		move.l	#$50000003,d0
 		moveq	#$3F,d1
 		moveq	#$3F,d2
@@ -5936,54 +5936,51 @@ BldSpr_ScrPos:	dc.l 0			; blank
 		dc.l $FFF700		; main screen x-position
 		dc.l $FFF708		; background x-position	1
 		dc.l $FFF718		; background x-position	2
+		
 ; ---------------------------------------------------------------------------
 ; Subroutine to	convert	mappings (etc) to proper Megadrive sprites
 ; ---------------------------------------------------------------------------
-
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-
 BuildSprites:				; XREF: GM_Title; et al
-		lea	(v_spritetablebuffer).w,a2 ; set address for sprite table
-		moveq	#0,d5
-		lea	(v_spritequeue).w,a4
-		moveq	#7,d7
-
+		lea	(v_spritetablebuffer).w,a2 	
+		moveq	#0,d5				
+		lea	(v_spritequeue).w,a4		
+		moveq	#7,d7				
 BuildSprites_LevelLoop:
-		tst.w	(a4)
-		beq.w	BuildSprites_NextLevel
-		moveq	#2,d6
-
+		tst.w	(a4)				
+		beq.w	BuildSprites_NextLevel		
+		moveq	#2,d6				
+	
 BuildSprites_ObjLoop:
-		movea.w	(a4,d6.w),a0
+		movea.w	(a4,d6.w),a0			
 		tst.b	(a0)
 		beq.w	BuildSprites_NextObj
-		bclr	#7,obRender(a0)
-		move.b	obRender(a0),d0
-		move.b	d0,d4
-		
-		
-		andi.w	#$C,d0
-		beq.s	BuildSprites_ScreenSpaceObj
-		movea.l	BldSpr_ScrPos(pc,d0.w),a1
+		bclr	#7,obRender(a0)			; Clear on-screen bit
+		move.b	obRender(a0),d0			; Load render flag to d0	
+		move.b	d0,d4				; Make a copy in d4
+		andi.w	#$C,d0				; Get co-ordinate bits
+		beq.s	BuildSprites_ScreenSpaceObj	; If object is in screen space, branch
+		movea.l	BldSpr_ScrPos(pc,d0.w),a1	; Else, get offset from array
 		moveq	#0,d0
-		move.b	obActWid(a0),d0
-		move.w	obX(a0),d3
-		sub.w	(a1),d3
-		move.w	d3,d1
-		add.w	d0,d1
-		bmi.w	BuildSprites_NextObj
-		move.w	d3,d1
-		sub.w	d0,d1
-		cmpi.w	#$140,d1
-		bge.s	BuildSprites_NextObj
-		addi.w	#$80,d3
-		btst	#4,d4
-		beq.s	BuildSprites_ApproxYCheck
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		move.w	obY(a0),d2
-		sub.w	4(a1),d2
+		move.b	obActWid(a0),d0			; Store the objects width in d0
+		move.w	obX(a0),d3			; Store the objects X position in d3
+		sub.w	(a1),d3				; Subtract the screen offset from the objects X position
+		move.w	d3,d1				; Copy the result to d1
+		add.w	d0,d1				; Add the objects width to d1
+		bmi.w	BuildSprites_NextObj		; If the object is not on screen, branch 
+		move.w	d3,d1				; Restore d1 to before width was added
+		sub.w	d0,d1				; Subtract the objects width from d1
+		cmpi.w	#320,d1				; Compare with 320 (Screen width)
+		bge.w	BuildSprites_NextObj		; If off screen, branch
+		addi.w	#$80,d3				
+		btst	#4,d4				; Test render height flag
+		beq.s	BuildSprites_ApproxYCheck	; If set, use approximate Y position
+							; Else, use accurate Y positioning
+		moveq	#0,d0				
+		move.b	obHeight(a0),d0			; Load objects height to d0
+		move.w	obY(a0),d2			; Load objects Y position to d2
+		sub.w	4(a1),d2			
 		move.w	d2,d1
 		add.w	d0,d1
 		bmi.s	BuildSprites_NextObj
@@ -5996,8 +5993,8 @@ BuildSprites_ObjLoop:
 ; ===========================================================================
 
 BuildSprites_ScreenSpaceObj:
-		move.w	obScreenY(a0),d2
-		move.w	obX(a0),d3
+		move.w	obScreenY(a0),d2		; Load object position to d2 (Screen space)
+		move.w	obX(a0),d3			; Load objects X position to d3
 		bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
 
@@ -6011,22 +6008,32 @@ BuildSprites_ApproxYCheck:
 		bcc.s	BuildSprites_NextObj
 
 BuildSprites_DrawSprite:
-		movea.l	obMap(a0),a1
-		moveq	#0,d1
-		btst	#5,d4
-		bne.s	loc_D71C
-		move.b	obFrame(a0),d1
-		add.b	d1,d1
-		adda.w	(a1,d1.w),a1
-		move.b	(a1)+,d1
-		subq.b	#1,d1
-		bmi.s	loc_D720
+		cmp.b	#1, ob32X(a0)			; Is the object a 32X object?
+		bne.s	BuildSprites_DrawMD		; If not, branch
+BuildSprites_Draw32X:
+							; Load address to 32X display list
+							; Add sprite to 32X display list to be
+							; This display list is sent at VBlank
+		bra.s	BuildSprites_SkipDraw	
+		
+BuildSprites_DrawMD:
+		movea.l	obMap(a0),a1			; Load object mappings to a1
+		moveq	#0,d1		
+		btst	#5,d4				; Does object use direct (5-byte) mappings?
+		bne.s	BuildSprites_DrawDirect		; If yes, branch
+		move.b	obFrame(a0),d1			; Read objects frame
+		add.b	d1,d1				; Convert to mappings offset
+		adda.w	(a1,d1.w),a1			; Set a1 to this new offset
+		move.b	(a1)+,d1			; Read a byte from a1
+		subq.b	#1,d1				; Decrement it by #1
+		bmi.s	BuildSprites_SkipDraw		; If negative, do not draw
 
-loc_D71C:
-		bsr.w	DrawSprite
-
-loc_D720:
-		bset	#7,obRender(a0)
+BuildSprites_DrawDirect:
+		bsr.w	DrawSprite			; Draw the sprite
+		bra	BuildSprites_SkipDraw		
+	
+BuildSprites_SkipDraw:
+		bset	#7,obRender(a0)			; Set the on screen flag
 
 BuildSprites_NextObj:
 		addq.w	#2,d6
@@ -6587,11 +6594,6 @@ SonicPlayer:				; XREF: Obj_Index
 ; ===========================================================================
 
 Sonic_Normal:
-		move.b	#0, MARS_SYS_COMM6		; Clear 32X Angle Register
-		cmp.b	#0, obStatus(a0)		; Is Sonic is in his normal (ground) routine
-		bne.s	@Continue					; If not, branch
-		move.b	obAngle(a0), MARS_SYS_COMM6	; Update Sonic's Angle
-@Continue:
 		moveq	#0,d0		
 		move.b	obRoutine(a0),d0	
 		move.w	Sonic_Index(pc,d0.w),d1
@@ -6606,6 +6608,7 @@ Sonic_Index:
 ; ===========================================================================
 
 Sonic_Main:	; Routine 0
+		;move.b	#1, ob32X(a0)			; Set 32X render flag
 		addq.b	#2,obRoutine(a0)
 		move.b	#$13,obHeight(a0)
 		move.b	#9,obWidth(a0)
@@ -6621,6 +6624,8 @@ Sonic_Main:	; Routine 0
 	if (SpinDashDustActive|InstaShieldActive)=1	;Mercury Spin Dash Dust, Insta-Shield
 		move.b	#id_SonicEffects,(v_objspace+$1C0).w
 	endc	;end Spin Dash Dust, Insta-Shield
+	
+	
 
 Sonic_Control:	; Routine 2
 
@@ -7647,7 +7652,7 @@ loc_1B1C0:
 		dbf	d7,loc_1B19E
 
 		move.w	(sp)+,d5
-		lea	($FF0000).l,a0
+		lea	(v_256x256).l,a0
 		moveq	#0,d0
 		move.w	(v_screenposy).w,d0
 		divu.w	#$18,d0
@@ -8128,7 +8133,7 @@ SS_LoadData:
 		lea	($FF4000).l,a1
 		move.w	#0,d0
 		jsr	(EniDec).l
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		move.w	#$FFF,d0
 
 SS_ClrRAM3:

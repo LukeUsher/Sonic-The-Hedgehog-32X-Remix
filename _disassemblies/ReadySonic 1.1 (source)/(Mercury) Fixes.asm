@@ -38,7 +38,7 @@ DashCDActive: = 1
 ; Name: Balance CD
 ; Function: Uses the Sonic CD balancing sprites (forward and back) instead of Sonic 1's.
 ; Date: 2011-02-11 (Feb)
-BalanceCDActive: = 1
+BalanceCDActive: = 0
 
 ; Name: Insta-Shield
 ; Function: Enables the Sonic 3/K Insta-Shield.
