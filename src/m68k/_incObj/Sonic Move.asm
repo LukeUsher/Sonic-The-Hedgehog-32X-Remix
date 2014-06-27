@@ -25,12 +25,12 @@ Sonic_Move:				; XREF: Obj01_MdNormal
 	@notright:
 		move.b	obAngle(a0),d0
 		addi.b	#$20,d0
-		andi.b	#$C0,d0		; is Sonic on a	slope?
-		bne.w	Sonic_ResetScr	; if yes, branch
-		tst.w	obInertia(a0)	; is Sonic moving?
-		bne.w	Sonic_ResetScr	; if yes, branch
+		andi.b	#$C0,d0			; is Sonic on a	slope?
+		bne.w	Sonic_ResetScr		; if yes, branch
+		tst.w	obInertia(a0)		; is Sonic moving?
+		bne.w	Sonic_ResetScr		; if yes, branch
 		bclr	#staPush,obStatus(a0)	;Mercury Constants
-		move.b	#id_Wait,obAnim(a0) ; use "standing" animation
+		move.b	#id_Wait,obAnim(a0)	 ; use "standing" animation
 		btst	#staOnObj,obStatus(a0)	;Mercury Constants
 		beq.s	Sonic_Balance
 		moveq	#0,d0
@@ -48,38 +48,7 @@ Sonic_Move:				; XREF: Obj01_MdNormal
 		add.w	obX(a0),d1
 		sub.w	obX(a1),d1
 		cmpi.w	#4,d1
-		
-	if BalanceCDActive=1	;Mercury Balance CD
-		blt.s	Sonic_BalanceLeft
-		cmp.w	d2,d1
-		bge.s	Sonic_BalanceRight
-		bra.s	Sonic_LookUp
 
-Sonic_Balance:
-		jsr	ObjFloorDist
-		cmpi.w	#$C,d1
-		blt.s	Sonic_LookUp
-		cmpi.b	#3,obFrontAngle(a0)	;Mercury Constants
-		beq.s	Sonic_BalanceRight
-		cmpi.b	#3,obRearAngle(a0)	;Mercury Constants
-		bne.s	Sonic_LookUp
-
-Sonic_BalanceLeft:
-		btst	#staFacing,obStatus(a0)	; is Sonic facing left?	;Mercury Constants
-		beq.s	Sonic_BalanceBackward	; if not, balance backward
-		move.b	#id_BalanceForward,obAnim(a0) ; use forward balancing animation
-		bra.w	Sonic_ResetScr	; branch
-
-Sonic_BalanceRight:
-		btst	#staFacing,obStatus(a0)	; is Sonic facing left?	;Mercury Constants
-		bne.s	Sonic_BalanceBackward	; if so, balance backward
-		move.b	#id_BalanceForward,obAnim(a0) ; use forward balancing animation
-		bra.w	Sonic_ResetScr	; branch
-
-Sonic_BalanceBackward:
-		move.b	#id_BalanceBack,obAnim(a0) ; use backward balancing animation
-		bra.w	Sonic_ResetScr
-	else
 		blt.s	loc_12F6A
 		cmp.w	d2,d1
 		bge.s	loc_12F5A
@@ -108,7 +77,6 @@ loc_12F6A:
 loc_12F70:
 		move.b	#id_Balance,obAnim(a0) ; use "balancing" animation
 		bra.w	Sonic_ResetScr	;Mercury Look Shift Fix	(bsr.s -> bsr.w)
-	endc	;end Balance CD
 	
 ; ===========================================================================
 
@@ -148,6 +116,7 @@ Sonic_Duck:
 		btst	#bitDn,(v_jpadhold2).w ; is down being pressed?
 		beq.s	Sonic_ResetScr	; if not, branch
 		move.b	#id_Duck,obAnim(a0) ; use "ducking" animation
+		move.b	#$E,obHeight(a0)
 		
 	if ScrollDelay=1	;Mercury Scroll Delay
 		addq.b	#1,(v_scrolldelay).w			; add 1 to the scroll timer
@@ -180,7 +149,7 @@ Sonic_Duck:
 ; ===========================================================================
 
 Sonic_ResetScr:
-
+		move.b	#$13,obHeight(a0)
 	if ScrollDelay=1	;Mercury Scroll Delay
 		move.b	#0,(v_scrolldelay).w	; clear the scroll timer, because up/down are not being held
 

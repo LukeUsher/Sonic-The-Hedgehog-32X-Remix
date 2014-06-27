@@ -9,7 +9,7 @@ Sonic_Dash:
 		move.b	#id_Run,obAnim(a0)
 		move.w	#0,$3A(a0)
 		move.w	#sfx_SpinDash,d0
-		jsr		(PlaySound_Special).l
+		jsr	(PlaySound_Special).l
 		addq.l	#4,sp
 		bset	#staDash,obStatus2(a0)
  

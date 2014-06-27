@@ -22,11 +22,12 @@ Obj09_Index:	dc.w Obj09_Main-Obj09_Index
 ; ===========================================================================
 
 Obj09_Main:	; Routine 0
+		;move.b	#1, ob32X(a0)			; Set 32X render flag
 		addq.b	#2,obRoutine(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
-		move.l	#Map_Sonic,obMap(a0)
-		move.w	#$780,obGfx(a0)
+		move.l	#$DEADBEEF,obMap(a0)		; Set sprite ID (32X)
+		move.b	#1,obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#0,obPriority(a0)
 		move.b	#id_Roll,obAnim(a0)
@@ -47,7 +48,7 @@ Obj09_NoDebug:
 		andi.w	#2,d0
 		move.w	Obj09_Modes(pc,d0.w),d1
 		jsr	Obj09_Modes(pc,d1.w)
-		jsr	Sonic_LoadGfx
+		;jsr	Sonic_LoadGfx
 		jmp	DisplaySprite
 ; ===========================================================================
 Obj09_Modes:	dc.w Obj09_OnWall-Obj09_Modes
@@ -352,7 +353,7 @@ loc_1BC12:
 		add.w	(v_ssrotate).w,d0
 		move.w	d0,(v_ssangle).w
 		jsr	Sonic_Animate
-		jsr	Sonic_LoadGfx
+		;jsr	Sonic_LoadGfx
 		bsr.w	SS_FixCamera
 		jmp	DisplaySprite
 ; ===========================================================================
@@ -364,7 +365,7 @@ Obj09_Exit2:				; XREF: Obj09_Index
 
 loc_1BC40:
 		jsr	Sonic_Animate
-		jsr	Sonic_LoadGfx
+		;jsr	Sonic_LoadGfx
 		bsr.w	SS_FixCamera
 		jmp	DisplaySprite
 

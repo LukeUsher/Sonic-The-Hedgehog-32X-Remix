@@ -250,7 +250,7 @@ master_lvl4_5:
 !-----------------------------------------------------------------------
 
 master_vbi:
-		! save registers
+	! save registers
         sts.l   pr,@-r15
         mov.l   r0,@-r15
         mov.l   r1,@-r15
@@ -268,11 +268,11 @@ master_vbi:
         nop
         nop
 
-		mov.l   m_vbi_handler,r0 
+	mov.l   m_vbi_handler,r0 
         jsr     @r0 
         nop 
 
-		! restore registers
+	! restore registers
         mov.l   @r15+,r7
         mov.l   @r15+,r6
         mov.l   @r15+,r5
@@ -295,7 +295,7 @@ m_vbi_handler:
 !-----------------------------------------------------------------------
 
 master_hbi:
-		! save registers
+	! save registers
         sts.l   pr,@-r15
         mov.l   r0,@-r15
         mov.l   r1,@-r15
@@ -314,11 +314,11 @@ master_hbi:
         nop
 
         ! handle H IRQ
-		mov.l   m_hbi_handler,r0 
+	mov.l   m_hbi_handler,r0 
         jsr     @r0 
         nop 
 
-		! restore registers
+	! restore registers
         mov.l   @r15+,r7
         mov.l   @r15+,r6
         mov.l   @r15+,r5
@@ -341,7 +341,7 @@ m_hbi_handler:
 !-----------------------------------------------------------------------
 
 master_cmd:
-		! save registers
+	! save registers
         sts.l   pr,@-r15
         mov.l   r0,@-r15
         mov.l   r1,@-r15
@@ -360,11 +360,11 @@ master_cmd:
         nop
 
         ! handle CMD IRQ
-		mov.l   m_cmd_handler,r0 
+	mov.l   m_cmd_handler,r0 
         jsr     @r0 
         nop 
 
-		! restore registers
+	! restore registers
         mov.l   @r15+,r7
         mov.l   @r15+,r6
         mov.l   @r15+,r5
@@ -475,7 +475,7 @@ slave_start:
         shll2   r0
         ldc     r0,sr                   /* disallow ints */
 
-! purge cache, turn it on, and run slave()
+	!purge cache, turn it on, and run slave()
         mov.l   _slave_cctl,r0
         mov     #0x11,r1
         mov.b   r1,@r0
@@ -620,7 +620,7 @@ sci_mars_adapter:
 !-----------------------------------------------------------------------
 
 slave_pwm:
-		! save registers
+	! save registers
         sts.l   pr,@-r15
         mov.l   r0,@-r15
         mov.l   r1,@-r15
@@ -639,7 +639,7 @@ slave_pwm:
         nop
 
 		
-		! restore registers
+	! restore registers
         mov.l   @r15+,r7
         mov.l   @r15+,r6
         mov.l   @r15+,r5

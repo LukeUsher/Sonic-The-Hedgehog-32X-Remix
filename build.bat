@@ -25,6 +25,6 @@ cd ..
 cd ..
 
 REM Fixup for real hardware
-fixheadr s1built.32x
+fixheadr sonic.32x
 
 pause

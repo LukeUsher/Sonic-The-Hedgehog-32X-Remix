@@ -23,5 +23,5 @@ rm sonic.lst
 cd ..
 
 cd ..
-rm s1built.32x
+rm sonic.32x
 

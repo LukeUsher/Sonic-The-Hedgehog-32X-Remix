@@ -25,16 +25,6 @@ SpinDashActive: = 1
 	SpinDashCameraLag: = SpinDashActive*1	; makes the camera lag behind when Sonic launches
 ; Notes: You should also apply the following fixes to avoid bugs: Walking In Air Fix, Pushing While Walking Fix, High Speed Camera Fix, Caterkiller Fix
 
-; Name: Dash CD
-; Function: Enables the Sonic CD Dash (aka Super Peel Out).
-; Date: 2011-02-11 (Feb)
-DashCDActive: = 1
-
-; Name: Balance CD
-; Function: Uses the Sonic CD balancing sprites (forward and back) instead of Sonic 1's.
-; Date: 2011-02-11 (Feb)
-BalanceCDActive: = 0
-
 ; Name: Insta-Shield
 ; Function: Enables the Sonic 3/K Insta-Shield.
 ; Date: 2011-02-11 (Feb)
@@ -288,40 +278,11 @@ staRollJump:	equ 4
 staPush:	equ 5
 staWater:	equ 6
 
-	if DashCDActive=1	;Mercury Dash CD
-staDash:	equ 1
-	endc	;end Dash CD
-
 	if SpinDashActive=1	;Mercury Spin Dash
 staSpinDash:	equ 0
 	endc	;end Spin Dash
 
-; Sonic OST Bytes
-obWallJump:	equ $2C	; Wall Jump flag
-			; $2D reserved, as well
-obInvuln:	equ $30	; Invulnerable (blinking) timer
-			; $31 reserved as well
-obInvinc:	equ $32	; Invincibility timer
-			; $33 reserved as well
-obShoes:	equ $34	; Speed Shoes timer
-			; $35 reserved as well
-			
-obFrontAngle:	equ $36
-obRearAngle:	equ $37
-			
-obOnWheel:	equ $38	; on convex wheel flag
 
-obStatus2:	equ $39	; status for abilities such as Spin Dash
-
-	if SpinDashActive|DashCDActive=1	;Mercury Spin Dash
-obRevSpeed:	equ $3A	; rev speed for Spin Dash or Dash
-			; $3B reserved as well
-	endc	;end Spin Dash
-
-obRestartTimer:	equ $3A ; level restart timer
-obJumping:	equ $3C	; jumping flag
-obPlatformID:	equ $3D	; ost slot of the object Sonic's on top of
-obLRLock:	equ $3E	; flag for preventing left and right input
 
 ; MACROS
 ; ================================================================================

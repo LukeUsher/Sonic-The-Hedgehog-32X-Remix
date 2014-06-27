@@ -43,19 +43,10 @@ Shi_Shield:	; Routine 2
 	;Mercury Shield/Invincibility Positioning Fix
 		move.b	obStatus(a0),d0
 		move.w	#$A,d1
-		
-	if BalanceCDActive=1	;Mercury Balance CD
-		cmpi.b	#id_BalanceForward,(v_player+obAnim).w
-		beq.s	@shift
-		cmpi.b	#id_BalanceBack,(v_player+obAnim).w
-		bne.s	@noshift
-		bchg	#staFacing,d0	;Mercury Constants
-		move.w	#4,d1
-	else
+
 		cmpi.b	#id_Balance,(v_player+obAnim).w
 		bne.s	@noshift
-	endc	;end Balance CD
-		
+
 	@shift:
 		sub.w	d1,obX(a0)
 		btst	#staFacing,d0	;Mercury Constants
@@ -123,18 +114,8 @@ Shi_Stars:	; Routine 4
 		move.b	obStatus(a0),d0
 		move.w	#$A,d1
 		
-	if BalanceCDActive=1	;Mercury Balance CD
-		cmpi.b	#id_BalanceForward,(v_player+obAnim).w
-		beq.s	@shift
-		cmpi.b	#id_BalanceBack,(v_player+obAnim).w
-		bne.s	@noshift
-		bchg	#staFacing,d0	;Mercury Constants
-		move.w	#4,d1
-	else
 		cmpi.b	#id_Balance,(v_player+obAnim).w
-		bne.s	@noshift
-	endc	;end Balance CD
-		
+		bne.s	@noshift	
 	@shift:
 		sub.w	d1,obX(a0)
 		btst	#staFacing,d0	;Mercury Constants

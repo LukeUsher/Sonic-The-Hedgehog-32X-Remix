@@ -1,11 +1,5 @@
-; Variables (v) and Flags (f)
-
-v_256x256:		=   $FF0000	; 256x256 tile mappings ($4 bytes bytes)
-
-v_regbuffer:		= $FFFFFC00	; stores registers d0-a7 during an error event ($40 bytes)
-v_spbuffer:		= $FFFFFC40	; stores most recent sp address (4 bytes)
-v_errortype:		= $FFFFFC44	; error type
-
+v_256x256:		= $FFFF0000		; 256x256 tile mappings ($4 bytes)
+v_16x16:		= $FFFF0004		; 16x16 tile mappings ($4 bytes)
 
 v_lvllayout:		= $FFFFA400	; level and background layouts ($400 bytes)
 v_ngfx_buffer:		= $FFFFAA00	; Nemesis graphics decompression buffer ($200 bytes)
@@ -18,10 +12,6 @@ VDP_Command_Buffer_Slot	= $FFFFC8FC
 v_objspace:		= $FFFFD000	; object variable space ($40 bytes per object) ($2000 bytes)
 v_player:		= v_objspace	; object variable space for Sonic ($40 bytes)
 v_lvlobjspace:		= $FFFFD800	; level object variable space ($1800 bytes)
-
-; =================================================================================
-; From here on, no longer relative to sound driver RAM
-; =================================================================================
 
 v_gamemode:		= $FFFFF600	; game mode (00=Sega; 04=Title; 08=Demo; 0C=Level; 10=SS; 14=Cont; 18=End; 1C=Credit; +8C=PreLevel)
 v_jpadhold2:		= $FFFFF602	; joypad input - held, duplicate
@@ -148,6 +138,11 @@ v_pal_water:		= $FFFFFA80	; main underwater palette ($80 bytes)
 v_pal_dry:		= $FFFFFB00	; main palette ($80 bytes)
 v_pal_dry_dup:		= $FFFFFB80	; duplicate palette, used for transitions ($80 bytes)
 v_objstate:		= $FFFFFC00	; object state list ($200 bytes)
+
+v_regbuffer:		= $FFFFFC00	; stores registers d0-a7 during an error event ($40 bytes)
+v_spbuffer:		= $FFFFFC40	; stores most recent sp address (4 bytes)
+v_errortype:		= $FFFFFC44	; error type
+
 f_restart:		= $FFFFFE02	; restart level flag (2 bytes)
 v_framecount:		= $FFFFFE04	; frame counter (adds 1 every frame) (2 bytes)
 v_framebyte:		= v_framecount+1; low byte for frame counter
@@ -198,7 +193,6 @@ v_lamp_lives:		= v_lastlamp+$24 ; lives counter at lamppost
 v_emeralds:		= $FFFFFE57	; number of chaos emeralds
 v_emldlist:		= $FFFFFE58	; which individual emeralds you have (00 = no; 01 = yes) (6 bytes)
 v_oscillate:		= $FFFFFE5E	; values which oscillate - for swinging platforms, et al ($42 bytes)
-
 v_ani0_time:		= $FFFFFEC0	; synchronised sprite animation 0 - time until next frame (used for synchronised animations)
 v_ani0_frame:		= $FFFFFEC1	; synchronised sprite animation 0 - current frame
 v_ani1_time:		= $FFFFFEC2	; synchronised sprite animation 1 - time until next frame
@@ -210,7 +204,6 @@ v_ani3_frame:		= $FFFFFEC7	; synchronised sprite animation 3 - current frame
 v_ani3_buf:		= $FFFFFEC8	; synchronised sprite animation 3 - info buffer (2 bytes)
 v_limittopdb:		= $FFFFFEF0	; level upper boundary, buffered for debug mode (2 bytes)
 v_limitbtmdb:		= $FFFFFEF2	; level bottom boundary, buffered for debug mode (2 bytes)
-
 v_levseldelay:		= $FFFFFF80	; level select - time until change when up/down is held (2 bytes)
 v_levselitem:		= $FFFFFF82	; level select - item selected (2 bytes)
 v_levselsound:		= $FFFFFF84	; level select - sound selected (2 bytes)
@@ -223,10 +216,11 @@ f_debugcheat:		= $FFFFFFE2	; debug mode cheat flag
 f_creditscheat:		= $FFFFFFE3	; hidden credits & press start cheat flag
 v_title_dcount:		= $FFFFFFE4	; number of times the d-pad is pressed on title screen (2 bytes)
 v_title_ccount:		= $FFFFFFE6	; number of times C is pressed on title screen (2 bytes)
-
 f_demo:			= $FFFFFFF0	; demo mode flag (0 = no; 1 = yes; $8001 = ending) (2 bytes)
 v_demonum:		= $FFFFFFF2	; demo level number (not the same as the level number) (2 bytes)
 v_creditsnum:		= $FFFFFFF4	; credits index number (2 bytes)
 v_megadrive:		= $FFFFFFF8	; Megadrive machine type
 f_debugmode:		= $FFFFFFFA	; debug mode flag (sometimes 2 bytes)
 v_init:			= $FFFFFFFC	; 'init' text string (4 bytes)
+
+	OBJEND

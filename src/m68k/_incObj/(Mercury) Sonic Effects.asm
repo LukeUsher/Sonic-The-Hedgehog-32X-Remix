@@ -35,6 +35,7 @@ Dust_Main:
 		lea	(v_player).l,a2
 		move.w	obX(a2),obX(a0)		; match Player's position
 		move.w	obY(a2),obY(a0)
+		sub.w	#5, obY(a0)		; Correct for different obHeight
 		move.b	obStatus(a2),obStatus(a0)	; match Player's x orientation
 		bclr	#staFacing,obRender(a0)	;Mercury Constants
 		andi.b	#1,obStatus(a0)

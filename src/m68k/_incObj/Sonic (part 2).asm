@@ -24,7 +24,7 @@ loc_1380C:
 		bsr.w	Sonic_RecordPosition
 		bsr.w	Sonic_Water	;Mercury Hurt Splash Fix
 		bsr.w	Sonic_Animate
-		bsr.w	Sonic_LoadGfx
+		;bsr.w	Sonic_LoadGfx
 		jmp	DisplaySprite
 
 ; ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ Sonic_Death:	; Routine 6
 		jsr	ObjectMoveAndFall
 		bsr.w	Sonic_RecordPosition
 		bsr.w	Sonic_Animate
-		bsr.w	Sonic_LoadGfx
+		;bsr.w	Sonic_LoadGfx
 		jmp	DisplaySprite
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||

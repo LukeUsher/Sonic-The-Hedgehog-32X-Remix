@@ -21,14 +21,14 @@
 
 ; ---------------------------------------------------------------------------------------------
 ; PSG flutter equates
-	if SonicDriverVer==1
-		enum fTone_01=$01,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
-		enum fTone_07=fTone_06+1,fTone_08,fTone_09
-	elseif SonicDriverVer==2
-		enum fTone_01=$01,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
-		enum fTone_07=fTone_06+1,fTone_08,fTone_09,fTone_0A,fTone_0B,fTone_0C
-		enum fTone_0D=fTone_0C+1
-	else
+	;if SonicDriverVer==1
+	;	enum fTone_01=$01,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
+;		enum fTone_07=fTone_06+1,fTone_08,fTone_09
+;	elseif SonicDriverVer==2
+;		enum fTone_01=$01,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
+;		enum fTone_07=fTone_06+1,fTone_08,fTone_09,fTone_0A,fTone_0B,fTone_0C
+;		enum fTone_0D=fTone_0C+1
+;	else
 		enum sTone_01=$01,sTone_02,sTone_03,sTone_04,sTone_05,sTone_06
 		enum sTone_07=sTone_06+1,sTone_08,sTone_09,sTone_0A,sTone_0B,sTone_0C
 		enum sTone_0D=sTone_0C+1,sTone_0E,sTone_0F,sTone_10,sTone_11,sTone_12
@@ -42,18 +42,18 @@
 			enum fTone_07=fTone_06+1,fTone_08,fTone_09,fTone_0A,fTone_0B,fTone_0C
 			enum fTone_0D=fTone_0C+1
 		endif
-	endif
+;	endif
 
 ; ---------------------------------------------------------------------------------------------
 ; DAC Equates
-	if SonicDriverVer==1
-		enum dKick=$81,dSnare,dTimpani
-		enum dHiTimpani=$88,dMidTimpani,dLowTimpani,dVLowTimpani
-	elseif SonicDriverVer==2
-		enum dKick=$81,dSnare,dClap,dScratch,dTimpani,dHiTom,dVLowClap,dHiTimpani,dMidTimpani
-		enum dLowTimpani=dMidTimpani+1,dVLowTimpani,dMidTom,dLowTom,dFloorTom,dHiClap
-		enum dMidClap=dHiClap+1,dLowClap
-	else;if SonicDriverVer>=3
+	;if SonicDriverVer==1
+	;	enum dKick=$81,dSnare,dTimpani
+	;	enum dHiTimpani=$88,dMidTimpani,dLowTimpani,dVLowTimpani
+	;elseif SonicDriverVer==2
+	;	enum dKick=$81,dSnare,dClap,dScratch,dTimpani,dHiTom,dVLowClap,dHiTimpani,dMidTimpani
+	;	enum dLowTimpani=dMidTimpani+1,dVLowTimpani,dMidTom,dLowTom,dFloorTom,dHiClap
+	;	enum dMidClap=dHiClap+1,dLowClap
+	;else;if SonicDriverVer>=3
 		if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
 			enum dSnareS3=$81,dHighTom,dMidTomS3,dLowTomS3,dFloorTomS3,dKickS3,dMuffledSnare
 			enum dCrashCymbal=dMuffledSnare+1,dRideCymbal,dLowMetalHit,dMetalHit,dHighMetalHit
@@ -105,7 +105,7 @@
 				enum dEchoedClapHit_S3=dLowestPowerKickHit+1,dLowerEchoedClapHit_S3
 			endif
 		endif
-	endif
+	;endif
 
 ; ---------------------------------------------------------------------------------------------
 ; Channel IDs for SFX

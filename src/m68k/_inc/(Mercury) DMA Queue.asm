@@ -62,8 +62,8 @@ QueueDMATransfer_Done:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 LoadDMARoutines:
-		lea	(ProcessDMAQueue_ROM).l,a0	; load sound driver
-		lea	(ProcessDMAQueue).l,a1		; target Z80 RAM
+		lea	(ProcessDMAQueue_ROM).l,a0	
+		lea	(ProcessDMAQueue).l,a1		
 		move.w	#ProcessDMAQueue_End-ProcessDMAQueue_ROM, d0
 @WriteData		
 		move.b (a0)+, (a1)+

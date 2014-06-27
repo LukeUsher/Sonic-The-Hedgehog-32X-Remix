@@ -36,13 +36,13 @@ loc_1341C:
 		addq.l	#4,sp
 		move.b	#1,obJumping(a0)	;Mercury Constants
 		clr.b	obOnWheel(a0)	;Mercury Constants
-		
+
 	;Mercury Clear Control Lock When Jump
 		clr.w	obLRLock(a0)	;clear horiz control lock	;Mercury Constants
 	;end Clear Control Lock When Jump
 
 		sfx	sfx_Jump	; play jumping sound
-		move.b	#$13,obHeight(a0)
+		move.b	#$E,obHeight(a0)
 		move.b	#9,obWidth(a0)
 		btst	#2,obStatus(a0)
 		bne.s	loc_13490

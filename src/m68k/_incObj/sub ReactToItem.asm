@@ -339,10 +339,6 @@ HurtSonic:
 
 	@isleft:
 	
-	if DashCDActive=1 ;Mercury Dash CD
-		bclr	#staDash,obStatus2(a0)	; clear Dash flag
-	endc	;end Dash CD
-	
 	if SpinDashActive=1	;Mercury Spin Dash
 		bclr	#staSpinDash,obStatus2(a0)	; clear Spin Dash flag
 	endc	;end Spin Dash

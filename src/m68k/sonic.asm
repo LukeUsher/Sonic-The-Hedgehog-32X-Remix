@@ -61,16 +61,16 @@ StartOfRom:
 ; Exception Vectors
 ; ---------------------------------------------------------------------------
 		jmp	(Init32X).l		; Reset
-		jmp	(BusError).l		; Bus Error
-		jmp	(AddressError).l	; Address Error
-		jmp	(IllegalInstr).l	; Illegal Instruction
-		jmp	(ZeroDivide).l		; Divide by Zero
-		jmp	(ChkInstr).l		; CHK Instruction
-		jmp	(TrapvInstr).l		; TRAPV Instruction
-		jmp	(PrivilegeViol).l	; Privilege Violation
-		jmp	(Trace).l		; Trace
-		jmp	(Line1010Emu).l		; LINE 1010
-		jmp	(Line1111Emu).l		; LINE 1111
+		jmp	(ErrorTrap).l		; Bus Error
+		jmp	(ErrorTrap).l		; Address Error
+		jmp	(ErrorTrap).l		; Illegal Instruction
+		jmp	(ErrorTrap).l		; Divide by Zero
+		jmp	(ErrorTrap).l		; CHK Instruction
+		jmp	(ErrorTrap).l		; TRAPV Instruction
+		jmp	(ErrorTrap).l		; Privilege Violation
+		jmp	(ErrorTrap).l		; Trace
+		jmp	(ErrorTrap).l		; LINE 1010
+		jmp	(ErrorTrap).l		; LINE 1111
 		ds.w	36
 		jmp	(ErrorTrap).l		; Spurious Interrupt
 		jmp	(ErrorTrap).l		; Level 1 Interrupt
@@ -256,184 +256,6 @@ ptr_GM_Credits:
 		bra.w	GM_Credits	; Credits ($1C)
 		rts
 		
-; ===========================================================================
-
-BusError:
-		move.b	#2,(v_errortype).w
-		bra.w	ErrorHandler
-
-AddressError:
-		move.b	#4,(v_errortype).w
-		bra.w	ErrorHandler
-
-IllegalInstr:
-		move.b	#6,(v_errortype).w
-		addq.l	#2,2(sp)
-		bra.w	loc_462
-
-ZeroDivide:
-		move.b	#8,(v_errortype).w
-		bra.w	loc_462
-
-ChkInstr:
-		move.b	#$A,(v_errortype).w
-		bra.w	loc_462
-
-TrapvInstr:
-		move.b	#$C,(v_errortype).w
-		bra.w	loc_462
-
-PrivilegeViol:
-		move.b	#$E,(v_errortype).w
-		bra.w	loc_462
-
-Trace:
-		move.b	#$10,(v_errortype).w
-		bra.w	loc_462
-
-Line1010Emu:
-		move.b	#$12,(v_errortype).w
-		addq.l	#2,2(sp)
-		bra.w	loc_462
-
-Line1111Emu:
-		move.b	#$14,(v_errortype).w
-		addq.l	#2,2(sp)
-		bra.w	loc_462
-
-ErrorExcept:
-		move.b	#0,(v_errortype).w
-		bra.w	loc_462
-; ==========================================================================
-
-ErrorHandler:
-		disable_ints
-		addq.w	#2,sp
-		move.l	(sp)+,(v_spbuffer).w
-		addq.w	#2,sp
-		movem.l	d0-a7,(v_regbuffer).w
-		bsr.w	ShowErrorMessage
-		move.l	2(sp),d0
-		bsr.w	ShowErrorValue
-		move.l	(v_spbuffer).w,d0
-		bsr.w	ShowErrorValue
-		bra.s	loc_478
-; ===========================================================================
-
-loc_462:
-		disable_ints
-		movem.l	d0-a7,(v_regbuffer).w
-		bsr.w	ShowErrorMessage
-		move.l	2(sp),d0
-		bsr.w	ShowErrorValue
-
-loc_478:
-		music	$28	
-		jmp	ErrorTrap
-		bsr.w	ErrorWaitForC
-		movem.l	(v_regbuffer).w,d0-a7
-		enable_ints
-		rte	
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ShowErrorMessage:
-		jsr	ClearScreen
-		lea	(vdp_data_port).l,a6
-		locVRAM	$F800
-		lea	(Art_Text).l,a0
-		move.w	#$27F,d1
-	@loadgfx:
-		move.w	(a0)+,(a6)
-		dbf	d1,@loadgfx
-
-		moveq	#0,d0		; clear	d0
-		move.b	(v_errortype).w,d0 ; load error code
-		move.w	ErrorText(pc,d0.w),d0
-		lea	ErrorText(pc,d0.w),a0
-		locVRAM	(vram_fg+$604)
-		moveq	#$12,d1		; number of characters (minus 1)
-
-	@showchars:
-		moveq	#0,d0		; Clear D0
-		move.b	(a0)+,d0	; Read character
-		cmp.w	#$40, d0	; Check for $40 (End of ASCII number area)
-		blt.s	@notText	; If this is not an ASCII text character, branch
-		sub.w	#$3,d0		; Subtract an extra 3 (Compensate for missing characters in the font)
-	@notText:
-		addi.w	#$790,d0	; Add #$790 to get VRAM address
-		move.w	d0,(a6)		; Write to the VDP
-		dbf	d1,@showchars	; repeat for number of characters
-		rts	
-; End of function ShowErrorMessage
-
-; ===========================================================================
-ErrorText:	
-		dc.w @exception-ErrorText, @bus-ErrorText
-		dc.w @address-ErrorText, @illinstruct-ErrorText
-		dc.w @zerodivide-ErrorText, @chkinstruct-ErrorText
-		dc.w @trapv-ErrorText, @privilege-ErrorText
-		dc.w @trace-ErrorText, @line1010-ErrorText
-		dc.w @line1111-ErrorText
-			
-@exception:	dc.b "ERROR EXCEPTION    "
-@bus:		dc.b "BUS ERROR          "
-@address:	dc.b "ADDRESS ERROR      "
-@illinstruct:	dc.b "ILLEGAL INSTRUCTION"
-@zerodivide:	dc.b "ZERO DIVIDE        "
-@chkinstruct:	dc.b "CHK INSTRUCTION    "
-@trapv:		dc.b "TRAPV INSTRUCTION  "
-@privilege:	dc.b "PRIVILEGE VIOLATION"
-@trace:		dc.b "TRACE              "
-@line1010:	dc.b "LINE 1010 EMULATOR "
-@line1111:	dc.b "LINE 1111 EMULATOR "
-		even
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ShowErrorValue:
-		move.w	#$7CA,(a6)	; display "$" symbol
-		moveq	#7,d2
-
-	@loop:
-		rol.l	#4,d0
-		bsr.s	@shownumber	; display 8 numbers
-		dbf	d2,@loop
-		rts	
-; End of function ShowErrorValue
-
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-@shownumber:
-		move.w	d0,d1
-		andi.w	#$F,d1
-		cmpi.w	#$A,d1
-		bcs.s	@chars0to9
-		addq.w	#4,d1		; add 4 for characters A-F
-
-	@chars0to9:
-		addi.w	#$7C0,d1
-		move.w	d1,(a6)
-		rts	
-; End of function sub_5CA
-
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ErrorWaitForC:				; XREF: loc_478
-		bsr.w	ReadJoypads
-		cmpi.b	#btnC,(v_jpadpress1).w ; is button C pressed?
-		bne.w	ErrorWaitForC	; if not, branch
-		rts	
-; End of function ErrorWaitForC
-
-; ===========================================================================
-
 Art_Text:	
 		incbin	"artunc\menutext.bin" ; text used in level select and debug mode
 		even
@@ -450,7 +272,7 @@ VBlank:					; XREF: Vectors
 		; FIND A MUCH BETTER WAY TO DO THIS
 		; THIS USES PRECIOUS VBLANK CYCLES!
 		; Lookup table maybe?
-		
+
 VBlank_32X:		
 		cmpi.b	#id_Title,(v_gamemode).w
 		beq.s	@Title		
@@ -2106,7 +1928,7 @@ GM_Title:					; XREF: GameModeArray
 		bsr.w	LevelSizeLoad
 		bsr.w	DeformLayers
 
-		move.l	#Blk16_Title,(v_256x256+4).l	; store the ROM address for the block mappings
+		move.l	#Blk16_Title,(v_16x16).l	; store the ROM address for the block mappings
 		move.l	#Blk256_Title,(v_256x256).l	; store the ROM address for the chunk mappings	
 		
 		bsr.w	LevelLayoutLoad		
@@ -2123,7 +1945,7 @@ GM_Title:					; XREF: GameModeArray
 		
 		copyTilemap	Eni_Title,$C206,$21,$15
 
-		copyTilemap	Title_Copyright,$C206,40,2
+		;copyTilemap	Title_Copyright,$C206,40,2
 		
 		locVRAM	0
 		lea	(Nem_Title).l,a0 ; load GHZ patterns
@@ -4662,7 +4484,7 @@ DrawBlocks:				; XREF: DrawTiles_LR_2; DrawTiles_TB_2
 DrawBlocks_2:
 		add.w	4(a3),d4
 			
-		movea.l	(v_256x256+4).l,a1
+		movea.l	(v_16x16).l,a1
 
 
 		move.w	d4,d3
@@ -4880,8 +4702,8 @@ LevelDataLoad:				; XREF: GM_Level; GM_Ending
 		addq.l	#4,a2
 		
 
-		move.l	(a2)+,(v_256x256+4).l	; store the ROM address for the block mappings
-		andi.l	#$FFFFFF,(v_256x256+4).l
+		move.l	(a2)+,(v_16x16).l	; store the ROM address for the block mappings
+		andi.l	#$FFFFFF,(v_16x16).l
 
 		move.l	(a2)+,(v_256x256).l	; store the ROM address for the chunk mappings
 
@@ -5076,7 +4898,7 @@ SlopeObject:				; XREF: Obj1A_Slope; Obj5E_Slope
 		add.w	d1,d1
 		cmp.w	d1,d0
 		bcc.s	Plat_Exit
-		btst	#0,obRender(a0)
+		btst	#0,obRender(a0)	
 		beq.s	loc_754A
 		not.w	d0
 		add.w	d1,d0
@@ -5942,7 +5764,7 @@ BldSpr_ScrPos:	dc.l 0			; blank
 ; ---------------------------------------------------------------------------
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-BuildSprites:				; XREF: GM_Title; et al
+BuildSprites:				; XREF: GM_Title; et al	
 		lea	(v_spritetablebuffer).w,a2 	
 		moveq	#0,d5				
 		lea	(v_spritequeue).w,a4		
@@ -5983,11 +5805,11 @@ BuildSprites_ObjLoop:
 		sub.w	4(a1),d2			
 		move.w	d2,d1
 		add.w	d0,d1
-		bmi.s	BuildSprites_NextObj
+		bmi.w	BuildSprites_NextObj
 		move.w	d2,d1
 		sub.w	d0,d1
 		cmpi.w	#$E0,d1
-		bge.s	BuildSprites_NextObj
+		bge.w	BuildSprites_NextObj
 		addi.w	#$80,d2
 		bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
@@ -6003,18 +5825,45 @@ BuildSprites_ApproxYCheck:
 		sub.w	obMap(a1),d2
 		addi.w	#$80,d2
 		cmpi.w	#$60,d2
-		bcs.s	BuildSprites_NextObj
+		bcs.w	BuildSprites_NextObj
 		cmpi.w	#$180,d2
-		bcc.s	BuildSprites_NextObj
+		bcc.w	BuildSprites_NextObj
 
 BuildSprites_DrawSprite:
-		cmp.b	#1, ob32X(a0)			; Is the object a 32X object?
+		cmp.l	#$DEADBEEF, obMap(a0)		; Is the object a 32X object?
 		bne.s	BuildSprites_DrawMD		; If not, branch
-BuildSprites_Draw32X:
-							; Load address to 32X display list
-							; Add sprite to 32X display list to be
-							; This display list is sent at VBlank
-		bra.s	BuildSprites_SkipDraw	
+							; Read objects X and Y positions
+		move.w	obX(a0),d1			; Store the objects X position in d1
+		move.w	obY(a0),d2			; Store the objects Y position in d2
+			
+		move.b	obRender(a0),d3			; Load render flag to d3	
+		andi.w	#$C,d3				; Get co-ordinate bits
+		beq.s	@ScreenSpace			; If object is in screen space, branch
+		
+							; Convert objects to screen space co-ordinates
+		sub.w	v_screenposx,d1			; Subtract the screen offset from the objects X position
+		sub.w	v_screenposy,d2			; Subtract the screen offset from the objects Y position		
+
+@ScreenSpace:
+		move.b	obHeight(a0),d3			; Store object height in d0
+		ext.w	d3				; Extend to word
+		sub.w	d3, d2				; Subtract from obY	
+		
+
+		; TODO: Add to RAM buffer to be sent to 32X during VBlank
+@Wait32XReady:
+		cmp.b	#0, MARS_SYS_COMM0		; Check if 32X is busy
+		;bne.s	@Wait32XReady			; If yes, wait until not busy
+
+		; Fill data registers for the command		
+		move.b	obGfx(a0), MARS_SYS_COMM0+1	; Write object ID
+		move.b	obFrame(a0), MARS_SYS_COMM4	; Write object Frame
+		move.b	obRender(a0), MARS_SYS_COMM4+1	; Write object render flag	
+		move.w	d1, MARS_SYS_COMM6		; Write objects X position	
+		move.w	d2, MARS_SYS_COMM8		; Write objects Y position
+		move.b	#1, MARS_SYS_COMM0		; Write 32X Command (Add to Display List)
+		
+		bra.s	BuildSprites_SkipDraw		; Skip DrawMD
 		
 BuildSprites_DrawMD:
 		movea.l	obMap(a0),a1			; Load object mappings to a1
@@ -6060,21 +5909,21 @@ loc_D748:
 
 
 DrawSprite:				; XREF: BuildSprites
-		movea.w	obGfx(a0),a3
-		btst	#0,d4
-		bne.s	loc_D796
-		btst	#1,d4
-		bne.w	loc_D7E4
+		movea.w	obGfx(a0),a3	; a3 = ptr to obGfx(a0)
+		btst	#0,d4		; Check if mirrored horizontally
+		bne.s	DrawSprite_FlipX; If yes, branch
+		btst	#1,d4		; Check if mirrored vertically
+		bne.w	DrawSprite_FlipY; If yes, branch
 ; End of function DrawSprite
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-sub_D762:				; XREF: sub_D762; SS_ShowLayout
-		cmpi.b	#$50,d5
-		beq.s	locret_D794
-		move.b	(a1)+,d0
+DrawSprite_Normal:				; XREF: DrawSprite_Normal; SS_ShowLayout
+		cmpi.b	#$50,d5			; Is sprite count $50
+		beq.s	locret_D794		; If yes, branch
+		move.b	(a1)+,d0		
 		ext.w	d0
 		add.w	d2,d0
 		move.w	d0,(a2)+
@@ -6095,19 +5944,19 @@ sub_D762:				; XREF: sub_D762; SS_ShowLayout
 
 loc_D78E:
 		move.w	d0,(a2)+
-		dbf	d1,sub_D762
+		dbf	d1,DrawSprite_Normal
 
 locret_D794:
 		rts	
-; End of function sub_D762
+; End of function DrawSprite_Normal
 
 ; ===========================================================================
 
-loc_D796:
-		btst	#1,d4
-		bne.w	loc_D82A
+DrawSprite_FlipX:
+		btst	#1,d4			; Check if vertically flipped
+		bne.w	DrawSprite_FlipXY	; If yes, branch
 
-loc_D79E:
+DrawSprite_FlipXOnly:
 		cmpi.b	#$50,d5
 		beq.s	locret_D7E2
 		move.b	(a1)+,d0
@@ -6138,13 +5987,13 @@ loc_D79E:
 
 loc_D7DC:
 		move.w	d0,(a2)+
-		dbf	d1,loc_D79E
+		dbf	d1,DrawSprite_FlipXOnly
 
 locret_D7E2:
 		rts	
 ; ===========================================================================
 
-loc_D7E4:				; XREF: DrawSprite
+DrawSprite_FlipY:				; XREF: DrawSprite
 		cmpi.b	#$50,d5
 		beq.s	locret_D828
 		move.b	(a1)+,d0
@@ -6175,13 +6024,13 @@ loc_D7E4:				; XREF: DrawSprite
 
 loc_D822:
 		move.w	d0,(a2)+
-		dbf	d1,loc_D7E4
+		dbf	d1,DrawSprite_FlipY
 
 locret_D828:
 		rts	
 ; ===========================================================================
 
-loc_D82A:
+DrawSprite_FlipXY:
 		cmpi.b	#$50,d5
 		beq.s	locret_D87C
 		move.b	(a1)+,d0
@@ -6218,7 +6067,7 @@ loc_D82A:
 
 loc_D876:
 		move.w	d0,(a2)+
-		dbf	d1,loc_D82A
+		dbf	d1,DrawSprite_FlipXY
 
 locret_D87C:
 		rts	
@@ -6608,12 +6457,11 @@ Sonic_Index:
 ; ===========================================================================
 
 Sonic_Main:	; Routine 0
-		;move.b	#1, ob32X(a0)			; Set 32X render flag
 		addq.b	#2,obRoutine(a0)
 		move.b	#$13,obHeight(a0)
 		move.b	#9,obWidth(a0)
-		move.l	#Map_Sonic,obMap(a0)
-		move.w	#$780,obGfx(a0)
+		move.l	#$DEADBEEF,obMap(a0)		; Set sprite ID (32X)
+		move.b	#1,obGfx(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#$18,obActWid(a0)
 		move.b	#4,obRender(a0)
@@ -6707,7 +6555,7 @@ loc_12CA6:
 
 loc_12CB6:
 		bsr.w	Sonic_Loops
-		bsr.w	Sonic_LoadGfx
+		;bsr.w	Sonic_LoadGfx
 		rts	
 ; ===========================================================================
 Sonic_Modes:	
@@ -6733,10 +6581,6 @@ MusicList2:	dc.b bgm_GHZ, bgm_LZ, bgm_MZ, bgm_SLZ, bgm_SYZ, bgm_SBZ
 
 Sonic_MdNormal:				; XREF: Sonic_Modes
 
-	if DashCDActive=1 ;Mercury Dash CD
-		bsr.w	Sonic_Dash
-	endc	;end Dash CD
-
 	if SpinDashActive=1	;Mercury Spin Dash
 		bsr.w	Sonic_SpinDash
 	endc	;end Spin Dash
@@ -6753,11 +6597,6 @@ Sonic_MdNormal:				; XREF: Sonic_Modes
 ; ===========================================================================
 
 Sonic_MdJump:				; XREF: Sonic_Modes
-
-	if DashCDActive=1 ;Mercury Dash CD
-		bclr	#staDash,obStatus2(a0)	; clear Dash flag
-	endc	;end Dash CD
-
 	if SpinDashActive=1	;Mercury Spin Dash
 		bclr	#staSpinDash,obStatus2(a0)	; clear Spin Dash flag
 	endc	;end Spin Dash
@@ -6804,11 +6643,6 @@ Sonic_MdRoll:				; XREF: Sonic_Modes
 ; ===========================================================================
 
 Sonic_MdJump2:				; XREF: Sonic_Modes
-
-	if DashCDActive=1 ;Mercury Dash CD
-		bclr	#staDash,obStatus2(a0)	; clear Dash flag
-	endc	;end Dash CD
-
 	if SpinDashActive=1	;Mercury Spin Dash
 		bclr	#staSpinDash,obStatus2(a0)	; clear Spin Dash flag
 	endc	;end Spin Dash
@@ -6849,11 +6683,7 @@ loc_12EA6:
 		include	"_incObj\Sonic Roll.asm"
 		include	"_incObj\Sonic Jump.asm"
 		include	"_incObj\Sonic JumpHeight.asm"
-		
-	if DashCDActive=1 ;Mercury Dash CD
-		include	"_incObj\(Mercury) Sonic Dash.asm"
-	endc	;end Dash CD
-		
+
 	if SpinDashActive=1	;Mercury Spin Dash
 		include	"_incObj\(Mercury) Sonic SpinDash.asm"
 	endc	;end Spin Dash
@@ -6868,13 +6698,13 @@ loc_12EA6:
 		include	"_incObj\Sonic Loops.asm"
 		include	"_incObj\Sonic Animate.asm"
 		include	"_anim\Sonic.asm"
-		
-		include	"_incObj\(Mercury) Sonic LoadGfx (dma).asm"
+		even		
 		include	"_incObj\0A Drowning Countdown.asm"
 
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to	play music for LZ/SBZ3 after a countdown
+
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -7698,7 +7528,7 @@ loc_1B210:
 		move.b	(a1)+,d1
 		subq.b	#1,d1
 		bmi.s	loc_1B268
-		jsr	sub_D762
+		jsr	DrawSprite_Normal
 
 loc_1B268:
 		addq.w	#4,a4
@@ -8335,33 +8165,9 @@ Nem_JapNames:	incbin	"artnem\Hidden Japanese Credits.bin"
 		even
 
 		include	"_maps\Sonic.asm"
-		include	"_maps\Sonic - Dynamic Gfx Script.asm"
-
 ; ---------------------------------------------------------------------------
 ; Uncompressed graphics	- Sonic
 ; ---------------------------------------------------------------------------
-Art_Sonic:	incbin	"artunc\Sonic.bin"	; Sonic
-		even
-		
-	if WallJumpActive=1 ;Mercury Wall Jump
-Art_SonicWallJump:	incbin	"artunc\(Mercury) Sonic WallJump.bin"
-		even
-	endc	;end Wall Jump
-	
-	if SpinDashActive=1 ;Mercury Spin Dash
-Art_SonicSpinDash:	incbin	"artunc\(Mercury) Sonic SpinDash.bin"
-		even
-	endc	;end Spin Dash
-
-	if BalanceCDActive=1 ;Mercury Balance CD
-Art_SonicBalanceCD:	incbin	"artunc\(Mercury) Sonic BalanceCD.bin"
-		even
-	endc	;end Balance CD
-	
-	if DashCDActive=1 ;Mercury Dash CD
-Art_SonicDashCD:	incbin	"artunc\(Mercury) Sonic DashCD.bin"
-		even
-	endc	;end Dash CD
 	
 	if InstaShieldActive=1 ;Mercury Insta-Shield
 Art_InstaShield:	incbin	"artunc\(Mercury) InstaShield.bin"
@@ -9077,9 +8883,27 @@ ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0
 ; ---------------------------------------------------------------------------
 ; Start of Bank 2 [Contains 32X data to be used by the SH-2
 ; ---------------------------------------------------------------------------
-;		align $100000
-;		obj $02200000 	; 2MB within 32X ROM
-	
-;		OBJEND
+		align $100000
+		obj $02200000 	; 2MB within 32X ROM
+		
+; ---------------------------------------------------------------------------
+; 32X Colour palettes, must be located at $02200000
+; ---------------------------------------------------------------------------	
+Pal_32X:
+		incbin "art32X\palette.p32"
+Pal_32X_Wet:
+		incbin "art32X\palette.p32"
+; ---------------------------------------------------------------------------
+; 32X Art Pointers. must be at $02200400
+; ---------------------------------------------------------------------------			
+ArtPts_32X:
+		dc.l	0
+		dc.l	Art32X_Sonic
+		
+Art32X_Sonic:
+		incbin "art32X\sonic.a32"
+		even
+
+		OBJEND
 EndOfRom: 
 		END

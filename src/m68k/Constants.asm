@@ -151,9 +151,24 @@ ob2ndRout:	equ $25	; secondary routine number
 obAngle:	equ $26	; angle
 obSubtype:	equ $28	; object subtype
 obSolid:	equ ob2ndRout ; solid status flag
-ob32X		equ $2F	; Set if object is to be rendered by 32X flag
+obWallJump:	equ $2C	; Wall Jump flag
+			; $2D reserved, as well
+obInvuln:	equ $30	; Invulnerable (blinking) timer
+			; $31 reserved as well
+obInvinc:	equ $32	; Invincibility timer
+			; $33 reserved as well
+obShoes:	equ $34	; Speed Shoes timer
+			; $35 reserved as well		
+obFrontAngle:	equ $36
+obRearAngle:	equ $37	
+obOnWheel:	equ $38	; on convex wheel flag
+obStatus2:	equ $39	; status for abilities such as Spin Dash
+obRevSpeed:	equ $3A	; rev speed for Spin Dash
+obRestartTimer:	equ $3A ; level restart timer
+obJumping:	equ $3C	; jumping flag
+obPlatformID:	equ $3D	; ost slot of the object Sonic's on top of
+obLRLock:	equ $3E	; flag for preventing left and right input
 
-		
 ; Animation flags
 afEnd:		equ $FF	; return to beginning of animation
 afBack:		equ $FE	; go back (specified number) bytes
