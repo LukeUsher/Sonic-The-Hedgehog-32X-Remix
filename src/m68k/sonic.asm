@@ -5853,7 +5853,7 @@ BuildSprites_DrawSprite:
 		; TODO: Add to RAM buffer to be sent to 32X during VBlank
 @Wait32XReady:
 		cmp.b	#0, MARS_SYS_COMM0		; Check if 32X is busy
-		;bne.s	@Wait32XReady			; If yes, wait until not busy
+		bne.s	@Wait32XReady			; If yes, wait until not busy
 
 		; Fill data registers for the command		
 		move.b	obGfx(a0), MARS_SYS_COMM0+1	; Write object ID

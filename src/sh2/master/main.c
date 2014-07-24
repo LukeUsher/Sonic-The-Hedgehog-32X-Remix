@@ -19,9 +19,13 @@
 	0x0002 = Clear display list
 */
 
+// IMPORTANT TODO:
+// We need to keep track of what pixels have changed, and only update those pixels when clearing the screen.
+// One idea I've had is to store a copy of the framebuffer in main RAM, but this wastes resources.
+// An alternative would be a data structure which contains a list of rectangles that need updating.
+
 #include "32x.h"
 static uint16_t currentFB = 0;
-
 
 typedef struct
 {
@@ -33,12 +37,12 @@ typedef struct
 
 void ClearCurrentScreen()
 {
-	volatile uint16_t *frameBuffer16 = &MARS_FRAMEBUFFER;
+	volatile uint8_t *frameBuffer16 = &MARS_FRAMEBUFFER;
 
 	// Clear current frame buffer
-	for (int i=0x100; i<0x10000; i++)
+	for (int i=0x200; i<0x9600; i++)
 	{
-		frameBuffer16[i] = 0;
+			frameBuffer16[i] = 0;
 	}
 }
 
@@ -55,9 +59,10 @@ void FlipBuffers(int32_t wait)
 	}
 }
 
+int screenChanged = 0;
+
 void DrawSprite(uint16_t id, uint16_t frame, uint16_t xpos, uint16_t ypos, int16_t angle)
 {
-
 	// Get offset to art data
 	uint32_t* artPtr = (uint32_t*)((uint32_t*)0x02200400)[id];
 	
@@ -80,9 +85,15 @@ void DrawSprite(uint16_t id, uint16_t frame, uint16_t xpos, uint16_t ypos, int16
 			
 	for(int x = 0, rx = artFrame->width-1; x < artFrame->width; x++, rx--) 
 	{
+		int rx_xpos = rx + xpos;
+		int x_xpos = x + xpos;
+		
 		for(int y = 0, ry = artFrame->height-1; y < artFrame->height; y++, ry--) 
 		{	
 			int index =  0;
+			int ry_ypos = ry + ypos;
+			int y_ypos = y + ypos;
+			
 		
 			// Check if X flipped
 			if((obRender & 1) == 1)
@@ -92,27 +103,26 @@ void DrawSprite(uint16_t id, uint16_t frame, uint16_t xpos, uint16_t ypos, int16
 				{
 					// FAST MULTIPLY OF 320
 					//x <<8 + x <<6
-					index = 0x200 + (((ry + ypos) << 8) + ((ry + ypos) << 6)) + (rx + xpos);
+					index = 0x200 + (((ry_ypos) << 8) + ((ry_ypos) << 6)) + (rx_xpos);
 				}
 				// Flip on X axis only
 				else
 				{
-					index = 0x200 + (((y + ypos) << 8) + ((y + ypos) << 6)) + (rx + xpos);
+					index = 0x200 + (((y_ypos) << 8) + ((y_ypos) << 6)) + (rx_xpos);
 				}				
 			}
 			// Check if only Y flipped
 			else if((obRender & 2) == 2)
 			{
-				index = 0x200 + (((ry + ypos) << 8) + ((ry + ypos) << 6)) + (x + xpos);
+				index = 0x200 + (((ry_ypos) << 8) + ((ry_ypos) << 6)) + (x_xpos);
 			}
 			else
 			{
-				index = 0x200 + (((y + ypos) << 8) + ((y + ypos) << 6)) + (x + xpos);
+				index = 0x200 + (((y_ypos) << 8) + ((y_ypos) << 6)) + (x_xpos);
 			}
-			
-			
+
 			// Prevent rendering out of range
-			if(index >= 0x200 && index < (0x200 + 76800))
+			if(index >= 0x200 && index < (0x12E00))
 			{
 				// Make sure the pixel is on screen
 				if (x + xpos < 320 && y + ypos < 240)
@@ -127,9 +137,8 @@ void DrawSprite(uint16_t id, uint16_t frame, uint16_t xpos, uint16_t ypos, int16
 // Vertical Blank Handler
 void master_vbi_handler()
 {
-	// Clear screen
 	ClearCurrentScreen();	
-		
+
 	// Read entry from display list
 	// If entry is valid, process and remove from queue
 
