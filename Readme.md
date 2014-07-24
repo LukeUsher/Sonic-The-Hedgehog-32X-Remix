@@ -3,7 +3,7 @@ Sonic 1 32X Remix
 A 32X enhanced port of Sonic The Hedgehog from the Mega Drive. 
 Currently makes little use of the 32X hardware, however using
 the 32X PWM for audio (Chaotix-like format) and using the VDP
-for realtime sprite rotation are both planned features.
+for sprite rendering are planned.
 
 Credits:
 Original Game (C) 1991 SEGA
