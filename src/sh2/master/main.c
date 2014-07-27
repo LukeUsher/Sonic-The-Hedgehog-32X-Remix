@@ -37,12 +37,11 @@ typedef struct
 
 void ClearCurrentScreen()
 {
-	volatile uint8_t *frameBuffer16 = &MARS_FRAMEBUFFER;
-
-	// Clear current frame buffer
-	for (int i=0x200; i<0x9600; i++)
+	for(int line = 0; line < 240; line++)
 	{
-			frameBuffer16[i] = 0;
+		MARS_VDP_FILADR = 0x100 + (line*160);
+		MARS_VDP_FILLEN = 0xFF;
+		MARS_VDP_FILDAT = 0x0000;
 	}
 }
 
