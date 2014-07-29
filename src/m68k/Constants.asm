@@ -3,12 +3,13 @@
 ; ---------------------------------------------------------------------------
 
 ; SMPS Control Registers
-zPalFlag:		equ $A01BA8
-zTempoSpeedup:		equ $A01BA9
-zMusicNumber:		equ $A01BAA			
-zSFXNumber0:		equ $A01BAB			
-zSFXNumber1:		equ $A01BAC				
-zPauseFlag:		equ $A01BAD
+SMPS_BASE:		equ $A019F2
+zPalFlag:		equ SMPS_BASE
+zTempoSpeedup:		equ zPalFlag+1
+zMusicNumber:		equ zTempoSpeedup+1			
+zSFXNumber0:		equ zMusicNumber+1		
+zSFXNumber1:		equ zSFXNumber0+1				
+zPauseFlag:		equ zSFXNumber1+1
 
 ; 32X Control Registers
 MARS_BASE:		equ $A15000

@@ -246,8 +246,9 @@ int main(void)
 			case 02:
 				break;
 		}
+		
 		// Clear command register
-		MARS_SYS_COMM0 = MARS_SYS_COMM0 & 0x00FF;
+		MARS_SYS_COMM0 &= 0x00FF;
 	}
 	return 0;
 }

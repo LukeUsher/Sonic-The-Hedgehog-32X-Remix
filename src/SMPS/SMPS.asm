@@ -17,30 +17,30 @@
 
 ; Set this to 1 to fix some bugs in the driver.
 SonicDriverVer          =  5
-fix_sndbugs				=  1
+fix_sndbugs		=  1
 ; Set the following to non-zero to use all S2 DAC samples, or to zero otherwise.
 ; The S1 samples are a subset of this.
-use_s2_samples			=  1
+use_s2_samples		=  1
 ; Set the following to non-zero to use all S3D DAC samples, or to zero
 ; otherwise. Most of the S3D samples are also present in S3/S&K, but
 ; there are two samples specific to S3D.
-use_s3d_samples			=  1
+use_s3d_samples		=  1
 ; Set the following to non-zero to use all S3 DAC samples,
 ; or to zero otherwise.
-use_s3_samples			=  1
+use_s3_samples		=  1
 ; Set the following to non-zero to use all S&K DAC samples,
 ; or to zero otherwise.
-use_sk_samples			=  1
+use_sk_samples		=  1
 
-		CPU 68000
-		!org $8A0000	
-		
-		include "SMPS.macrosetup.asm"
-		include "SMPS.macros.asm"
+	CPU 68000
+	!org $8A0000	
+	
+	include "SMPS.macrosetup.asm"
+	include "SMPS.macros.asm"
 			
 
 z80_SoundDriver:
-		!org	0							; z80 Align, handled by the build process
+		!org	0			; z80 Align, handled by the build process
 		CPU Z80
 		listing off
 
@@ -62,12 +62,12 @@ SndID_Sega		= 0FFh
 NoteRest            	= 080h
 FirstCoordFlag      	= 0E0h
 ; ---------------------------------------------------------------------------
-zID_MusicPointers0 = 0
-zID_UniVoiceBank = 2
-zID_MusicPointers4 = 4
-zID_SFXPointers = 6
+zID_MusicPointers0 	= 0
+zID_UniVoiceBank 	= 2
+zID_MusicPointers4 	= 4
+zID_SFXPointers 	= 6
 zID_FreqFlutterPointers = 8
-zID_PSGTonePointers = 0Ah
+zID_PSGTonePointers 	= 0Ah
 ; ---------------------------------------------------------------------------
 z80_stack				=	2000h
 ; equates: standard (for Genesis games) addresses in the memory map
@@ -75,7 +75,7 @@ zYM2612_A0				=	4000h
 zYM2612_D0				=	4001h
 zYM2612_A1				=	4002h
 zYM2612_D1				=	4003h
-zBankRegister			=	6000h
+zBankRegister				=	6000h
 zPSG					=	7F11h
 zROMWindow				=	8000h
 
@@ -99,18 +99,18 @@ zTrackPlaybackControl	=  0
 ; 	4 (10h)		Unknown/unused
 ; 	5-6    		PSG Channel assignment bits (00 = PSG1, 01 = PSG2, 10 = PSG3, 11 = Noise)
 ; 	7 (80h)		PSG track if set, FM or DAC track otherwise
-zTrackVoiceControl		=  1
-zTrackTempoDivider		=  2
+zTrackVoiceControl	=  1
+zTrackTempoDivider	=  2
 zTrackDataPointerLow	=  3
 zTrackDataPointerHigh	=  4
-zTrackKeyOffset			=  5
-zTrackVolume			=  6
+zTrackKeyOffset		=  5
+zTrackVolume		=  6
 zTrackModulationCtrl	=  7				; Modulation is on if nonzero. If only bit 7 is set, then it is normal modulation; otherwise, this-1 is index on frequency flutter pointer table
-zTrackVoiceIndex		=  8				; FM instrument/PSG voice
-zTrackStackPointer		=  9				; For call subroutine coordination flag
-zTrackAMSFMSPan			= 0Ah
+zTrackVoiceIndex	=  8				; FM instrument/PSG voice
+zTrackStackPointer	=  9				; For call subroutine coordination flag
+zTrackAMSFMSPan		= 0Ah
 zTrackDurationTimeout	= 0Bh
-zTrackSavedDuration		= 0Ch				; Already multiplied by timing divisor
+zTrackSavedDuration	= 0Ch				; Already multiplied by timing divisor
 ; ---------------------------------
 ; Alternate names for same offset:
 zTrackSavedDAC          = 0Dh				; For DAC channel
@@ -158,7 +158,7 @@ zTrackModulationSteps   = 27h
 zTrackLoopCounters      = 28h				; May end u overwriting following data
 zTrackVoicesLow         = 2Ah				; Low byte of pointer to track's voices, used only if zUpdatingSFX is set
 zTrackVoicesHigh        = 2Bh				; High byte of pointer to track's voices, used only if zUpdatingSFX is set
-zTrackSz				= 30h				; Size of all tracks
+zTrackSz		= 30h				; Size of all tracks
 
 ; ===========================================================================
 ; Macros
@@ -225,13 +225,10 @@ zmake68kBank function addr,((((addr+8A0000h)&3F8000h)/zROMWindow))
 ; ===========================================================================
 
 ; EntryPoint:
-		di									; Disable interrupts
-		di									; Disable interrupts
-		im	1								; set interrupt mode 1
+		di						; Disable interrupts
+		di						; Disable interrupts
+		im	1					; set interrupt mode 1
 		jp	zInitAudioDriver
-; ---------------------------------------------------------------------------
-		nop							; Filler; broken jp p,loc?
-
 ; =============== S U B	R O U T	I N E =======================================
 ;
 ; Gets the correct pointer to pointer table for the data type in question
@@ -246,21 +243,21 @@ zmake68kBank function addr,((((addr+8A0000h)&3F8000h)/zROMWindow))
 	align	8
 GetPointerTable:	rsttarget
 		ld	hl, (ptrMasterIndex)			; Read pointer to (pointer to pointer table) table
-		ld	b, 0							; b = 0
-		add	hl, bc							; Add offset into pointer table
-		ex	af, af'							; Back up af
-		ld	a, (hl)							; Read low byte of pointer into a
+		ld	b, 0					; b = 0
+		add	hl, bc					; Add offset into pointer table
+		ex	af, af'					; Back up af
+		ld	a, (hl)					; Read low byte of pointer into a
 		inc	hl
-		ld	h, (hl)							; Read high byte of pointer into h
-		ld	l, a							; Put low byte of pointer into l
-		ex	af, af'							; Restore af
+		ld	h, (hl)					; Read high byte of pointer into h
+		ld	l, a					; Put low byte of pointer into l
+		ex	af, af'					; Restore af
 		ret
 ; End of function GetPointerTable
 
 ; ---------------------------------------------------------------------------
 ;word_15
 ptrMasterIndex:
-		dw		z80_SoundDriverPointers
+		dw	z80_SoundDriverPointers
 
 ; =============== S U B	R O U T	I N E =======================================
 ;
@@ -268,17 +265,17 @@ ptrMasterIndex:
 ;
 ;
 ; Input:  a    Index into pointer table
-;	      hl   Pointer to pointer table
+;	  hl   Pointer to pointer table
 ; Output: hl   Selected	pointer	in pointer table
 ;         bc   Trashed
 
 ; sub_18
 	align	8
 PointerTableOffset:	rsttarget
-		ld	c, a							; c = index into pointer table
-		ld	b, 0							; b = 0
-		add	hl, bc							; hl += bc
-		add	hl, bc							; hl += bc
+		ld	c, a					; c = index into pointer table
+		ld	b, 0					; b = 0
+		add	hl, bc					; hl += bc
+		add	hl, bc					; hl += bc
 		nop
 		nop
 		nop
@@ -294,10 +291,10 @@ PointerTableOffset:	rsttarget
 ; loc_20
 	align	8
 ReadPointer:	rsttarget
-		ld	a, (hl)							; Read low byte of pointer into a
+		ld	a, (hl)					; Read low byte of pointer into a
 		inc	hl
-		ld	h, (hl)							; Read high byte of pointer into h
-		ld	l, a							; Put low byte of pointer into l
+		ld	h, (hl)					; Read high byte of pointer into h
+		ld	l, a					; Put low byte of pointer into l
 		ret
 ; End of function PointerTableOffset
 
@@ -315,65 +312,66 @@ ReadPointer:	rsttarget
 ;
 ;zsub_38
 zVInt:	rsttarget
-		di									; Disable interrupts
-		push	af							; Save af
-		push	iy							; Save iy
-		exx									; Save bc,de,hl
+		di						; Disable interrupts
+		push	af					; Save af
+		push	iy					; Save iy
+		exx						; Save bc,de,hl
 
--		ld	a, r							; Get memory refresh register
-		ld	(unk_1C17), a					; Save it
+-		ld	a, r					; Get memory refresh register
+		ld	(unk_1C17), a				; Save it
 		call	zUpdateEverything			; Update all tracks
-		ld	a, (zPalFlag)					; Get PAL flag
-		or	a								; Is it set?
-		jr	z, ++							; Branch if not (NTSC)
+		ld	a, (zPalFlag)				; Get PAL flag
+		or	a					; Is it set?
+		jr	z, ++					; Branch if not (NTSC)
 		ld	a, (zPalDblUpdCounter)			; Get PAL double-update timeout counter
-		or	a								; Is it zero?
-		jr	nz, +							; Branch if not
-		ld	a, 5							; Set it back to 5...
+		or	a					; Is it zero?
+		jr	nz, +					; Branch if not
+		ld	a, 5					; Set it back to 5...
 		ld	(zPalDblUpdCounter), a			; ... and save it
-		jp	-								; Go again
+		jp	-					; Go again
 
 +
-		dec	a								; Decrease PAL double-update timeout counter
+		dec	a					; Decrease PAL double-update timeout counter
 		ld	(zPalDblUpdCounter), a			; Store it
 +
-		ld	a, (zDACIndex)					; Get index of playing DAC sample
-		and	7Fh								; Strip 'DAC playing' bit
-		ld	c, a							; c = a
-		ld	b, 0							; Sign extend c to bc
-		ld	hl, DAC_Banks					; Make hl point to DAC bank table
-		add	hl, bc							; Offset into entry for current sample
-		ld	a, (hl)							; Get bank index
-		bankswitch1							; Switch to current DAC sample's bank
-		exx									; Restore bc,de,hl
-		pop	iy								; Restore iy
-		pop	af								; Restore af
-		ld	b, 1							; b = 1
+		;ld	a, (zDACIndex)				; Get index of playing DAC sample
+		;and	7Fh					; Strip 'DAC playing' bit
+		;ld	c, a					; c = a
+		;ld	b, 0					; Sign extend c to bc
+		;ld	hl, DAC_Banks				; Make hl point to DAC bank table
+		;add	hl, bc					; Offset into entry for current sample
+		;ld	a, (hl)					; Get bank index
+		;bankswitch1					; Switch to current DAC sample's bank
+		exx						; Restore bc,de,hl
+		pop	iy					; Restore iy
+		pop	af					; Restore af
+		ld	b, 1					; b = 1
 		ret
 ; ---------------------------------------------------------------------------
 ;loc_85
 zInitAudioDriver:
-		ld	sp, z80_stack			    ; set the stack pointer to 0x2000 (end of z80 RAM)
-			; The following instruction block keeps the z80 in a tight loop.
-		ld	c, 0							; c = 0
+		ld	sp, z80_stack				; set the stack pointer to 0x2000 (end of z80 RAM)
+								; The following instruction block keeps the z80 in a tight loop.
+		ld	c, 0					; c = 0
 -
-		ld	b, 0							; b = 0
-		djnz	$							; Loop in this instruction, decrementing b each iteration, until b = 0
-		dec	c								; c--
-		jr	z, -							; Loop if c = 0
+		ld	b, 0					; b = 0
+		djnz	$					; Loop in this instruction, decrementing b each iteration, until b = 0
+		dec	c					; c--
+		jr	z, -					; Loop if c = 0
 		
-		call	zMusicFade					; Stop all music
-		ld	a, 0							; Set song bank to second DAC bank (default value)
-		ld	(zSongBank), a					; Store it
-		xor	a								; a = 0
-		ld	(zSpindashRev), a				; Reset spindash rev
-		ld	(zDACIndex), a					; Clear current DAC sample index
+		call	zMusicFade				; Stop all music
+		ld	a, 0					; Set song bank to second DAC bank (default value)
+		ld	(zSongBank), a				; Store it
+		xor	a					; a = 0
+		ld	(zSpindashRev), a			; Reset spindash rev
+		ld	(zDACIndex), a				; Clear current DAC sample index
 		ld	(PlaySegaPCMFlag), a			; Clear the Sega sound flag
-		ld	(zRingSpeaker), a				; Make rings play on left speaker
-		ld	a, 5							; Set PAL double-update counter to 5
+		ld	(zRingSpeaker), a			; Make rings play on left speaker
+		ld	a, 5					; Set PAL double-update counter to 5
 		ld	(zPalDblUpdCounter), a			; (that is, do not double-update for 5 frames)
-		ei									; Enable interrupts
-		jp	zPlayDigitalAudio				; Start digital audio loop
+		ei						; Enable interrupts
+-		
+		jp	-					; Infinite loop
 
 ; =============== S U B	R O U T	I N E =======================================
 ;
@@ -386,13 +384,13 @@ zInitAudioDriver:
 ;sub_AF
 zWriteFMIorII:
 		bit	7, (ix+zTrackVoiceControl)		; Is this a PSG track?
-		ret	nz								; Is so, quit
-		bit	2, (ix+zTrackPlaybackControl)	; Is SFX overriding this track?
-		ret	nz								; Return if yes
+		ret	nz					; Is so, quit
+		bit	2, (ix+zTrackPlaybackControl)		; Is SFX overriding this track?
+		ret	nz					; Return if yes
 		add	a, (ix+zTrackVoiceControl)		; Add the channel bits to the register address
 		bit	2, (ix+zTrackVoiceControl)		; Is this the DAC channel or FM4 or FM5 or FM6?
 		jr	nz, zWriteFMII_reduced			; If yes, write reg/data pair to part II;
-											; otherwise, write reg/data pair as is to part I.
+								; otherwise, write reg/data pair as is to part I.
 ; End of function zWriteFMIorII
 
 
@@ -405,10 +403,10 @@ zWriteFMIorII:
 
 ;sub_C2
 zWriteFMI:
-		ld	(zYM2612_A0), a					; Select YM2612 register
-		nop									; Wait
-		ld	a, c							; a = data to send
-		ld	(zYM2612_D0), a					; Send data to register
+		ld	(zYM2612_A0), a				; Select YM2612 register
+		nop						; Wait
+		ld	a, c					; a = data to send
+		ld	(zYM2612_D0), a				; Send data to register
 		ret
 ; End of function zWriteFMI
 
@@ -417,7 +415,7 @@ zWriteFMI:
 
 ;loc_CB
 zWriteFMII_reduced:
-		sub	4								; Strip 'bound to part II regs' bit
+		sub	4					; Strip 'bound to part II regs' bit
 ; END OF FUNCTION CHUNK	FOR zWriteFMIorII
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -429,57 +427,12 @@ zWriteFMII_reduced:
 
 ;sub_CD
 zWriteFMII:
-		ld	(zYM2612_A1), a					; Select YM2612 register
-		nop									; Wait
-		ld	a, c							; a = data to send
-		ld	(zYM2612_D1), a					; Send data to register
+		ld	(zYM2612_A1), a				; Select YM2612 register
+		nop						; Wait
+		ld	a, c					; a = data to send
+		ld	(zYM2612_D1), a				; Send data to register
 		ret
 ; End of function zWriteFMII
-
-; ===========================================================================
-; DAC BANKS
-; ===========================================================================
-; Note: this table has a dummy first entry for the case when there is no DAC
-; sample being played -- the code still results in a valid bank switch, and
-; does not need to worry about special cases.
-DAC_Banks:
-; Set to zero to not use S3/S&K DAC samples:
-		db		zmake68kBank(DacBank1)
-	if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-		db		zmake68kBank(DAC_81_Data)            ,zmake68kBank(DAC_82_83_84_85_Data)   ,zmake68kBank(DAC_82_83_84_85_Data)   ,zmake68kBank(DAC_82_83_84_85_Data)
-		db		zmake68kBank(DAC_82_83_84_85_Data)   ,zmake68kBank(DAC_86_Data)            ,zmake68kBank(DAC_87_Data)            ,zmake68kBank(DAC_88_Data)
-		db		zmake68kBank(DAC_89_Data)            ,zmake68kBank(DAC_8A_8B_Data)         ,zmake68kBank(DAC_8A_8B_Data)         ,zmake68kBank(DAC_8C_Data)
-		db		zmake68kBank(DAC_8D_8E_Data)         ,zmake68kBank(DAC_8D_8E_Data)         ,zmake68kBank(DAC_8F_Data)            ,zmake68kBank(DAC_90_91_92_93_Data)
-		db		zmake68kBank(DAC_90_91_92_93_Data)   ,zmake68kBank(DAC_90_91_92_93_Data)   ,zmake68kBank(DAC_90_91_92_93_Data)   ,zmake68kBank(DAC_94_95_96_97_Data)
-		db		zmake68kBank(DAC_94_95_96_97_Data)   ,zmake68kBank(DAC_94_95_96_97_Data)   ,zmake68kBank(DAC_94_95_96_97_Data)   ,zmake68kBank(DAC_98_99_9A_Data)
-		db		zmake68kBank(DAC_98_99_9A_Data)      ,zmake68kBank(DAC_98_99_9A_Data)      ,zmake68kBank(DAC_9B_Data)            ,zmake68kBank(DAC_9C_Data)
-		db		zmake68kBank(DAC_9D_Data)            ,zmake68kBank(DAC_9E_Data)
-	endif
-	if (use_s3_samples<>0)||(use_sk_samples<>0)
-		db		zmake68kBank(DAC_9F_Data)            ,zmake68kBank(DAC_A0_Data)            ,zmake68kBank(DAC_A1_Data)            ,zmake68kBank(DAC_A2_Data)
-		db		zmake68kBank(DAC_A3_Data)            ,zmake68kBank(DAC_A4_Data)            ,zmake68kBank(DAC_A5_Data)            ,zmake68kBank(DAC_A6_Data)
-		db		zmake68kBank(DAC_A7_Data)            ,zmake68kBank(DAC_A8_Data)            ,zmake68kBank(DAC_A9_Data)            ,zmake68kBank(DAC_AA_Data)
-		db		zmake68kBank(DAC_AB_Data)            ,zmake68kBank(DAC_AC_Data)            ,zmake68kBank(DAC_AD_AE_Data)         ,zmake68kBank(DAC_AD_AE_Data)
-		db		zmake68kBank(DAC_AF_B0_Data)         ,zmake68kBank(DAC_AF_B0_Data)         ,zmake68kBank(DAC_B1_Data)            ,zmake68kBank(DAC_B2_B3_Data)
-		db		zmake68kBank(DAC_B2_B3_Data)         ,zmake68kBank(DAC_B4_C1_C2_C3_C4_Data),zmake68kBank(DAC_B5_Data)            ,zmake68kBank(DAC_B6_Data)
-		db		zmake68kBank(DAC_B7_Data)            ,zmake68kBank(DAC_B8_B9_Data)         ,zmake68kBank(DAC_B8_B9_Data)         ,zmake68kBank(DAC_BA_Data)
-		db		zmake68kBank(DAC_BB_Data)            ,zmake68kBank(DAC_BC_Data)            ,zmake68kBank(DAC_BD_Data)            ,zmake68kBank(DAC_BE_Data)
-		db		zmake68kBank(DAC_BF_Data)            ,zmake68kBank(DAC_C0_Data)            ,zmake68kBank(DAC_B4_C1_C2_C3_C4_Data),zmake68kBank(DAC_B4_C1_C2_C3_C4_Data)
-		db		zmake68kBank(DAC_B4_C1_C2_C3_C4_Data),zmake68kBank(DAC_B4_C1_C2_C3_C4_Data)
-	endif
-	if (use_s2_samples<>0)
-		db		zmake68kBank(DAC_C5_Data)            ,zmake68kBank(DAC_C6_Data)            ,zmake68kBank(DAC_C7_Data)            ,zmake68kBank(DAC_C8_Data)
-		db		zmake68kBank(DAC_C9_CC_CD_CE_CF_Data),zmake68kBank(DAC_CA_D0_D1_D2_Data)   ,zmake68kBank(DAC_CB_D3_D4_D5_Data)   ,zmake68kBank(DAC_C9_CC_CD_CE_CF_Data)
-		db		zmake68kBank(DAC_C9_CC_CD_CE_CF_Data),zmake68kBank(DAC_C9_CC_CD_CE_CF_Data),zmake68kBank(DAC_C9_CC_CD_CE_CF_Data),zmake68kBank(DAC_CA_D0_D1_D2_Data)
-		db		zmake68kBank(DAC_CA_D0_D1_D2_Data)   ,zmake68kBank(DAC_CA_D0_D1_D2_Data)   ,zmake68kBank(DAC_CB_D3_D4_D5_Data)   ,zmake68kBank(DAC_CB_D3_D4_D5_Data)
-		db		zmake68kBank(DAC_CB_D3_D4_D5_Data)
-	endif
-	if (use_s3d_samples<>0)
-		db		zmake68kBank(DAC_D6_Data)            ,zmake68kBank(DAC_D7_Data)
-	endif
-	if (use_s3_samples<>0)
-		db		zmake68kBank(DAC_D8_D9_Data)         ,zmake68kBank(DAC_D8_D9_Data)
-	endif
 	
 ; =============== S U B	R O U T	I N E =======================================
 ;
@@ -490,90 +443,90 @@ zUpdateEverything:
 
 ;loc_121
 zUpdateMusic:
-		call	TempoWait					; Delay song tracks as appropriate for main tempo mod
+		call	TempoWait				; Delay song tracks as appropriate for main tempo mod
 		call	zDoMusicFadeOut				; Check if music should be faded out and fade if needed
 		call	zDoMusicFadeIn				; Check if music should be faded in and fade if needed
 		ld	a, (zFadeToPrevFlag)			; Get fade-to-prev flag
-		cp	MusID_1UP-1						; Is it still 1-Up?
-		jr	nz, zlocCheckFadeIn				; Branch if not
-		ld	a, (zMusicNumber)				; Get next music to play
-		cp	MusID_1UP						; Is it another 1-Up?
-		jr	z, +							; Branch if yes
-		cp	MusID__End-1					; Is it music (except credits song)?
-		jr	c, ++							; Branch if not
+		cp	MusID_1UP-1				; Is it still 1-Up?
+		jr	nz, zlocCheckFadeIn			; Branch if not
+		ld	a, (zMusicNumber)			; Get next music to play
+		cp	MusID_1UP				; Is it another 1-Up?
+		jr	z, +					; Branch if yes
+		cp	MusID__End-1				; Is it music (except credits song)?
+		jr	c, ++					; Branch if not
 +
-		xor	a								; a = 0
-		ld	(zMusicNumber), a				; Clear queue entry
+		xor	a					; a = 0
+		ld	(zMusicNumber), a			; Clear queue entry
 +
-		xor	a								; a = 0
-		ld	(zSFXNumber0), a				; Clear first queued SFX
-		ld	(zSFXNumber1), a				; Clear second queued SFX
+		xor	a					; a = 0
+		ld	(zSFXNumber0), a			; Clear first queued SFX
+		ld	(zSFXNumber1), a			; Clear second queued SFX
 		jr	+
 
 ;loc_149
 zlocCheckFadeIn:
 		ld	a, (zFadeToPrevFlag)			; Get fade-to-previous flag
-		cp	0FFh							; Is it 0FFh?
-		jr	z, +							; Branch if yes
-		ld	hl, zMusicNumber				; Point hl to M68K input
-		ld	e, (hl)							; e = next song to play
-		inc	hl								; Advance pointer
-		ld	d, (hl)							; d = next SFX to play
-		inc	hl								; Advance pointer
-		ld	a, (hl)							; a = next SFX to play
-		or	d								; Combine bits of a and d
-		or	e								; Is anything in the play queue?
-		jr	z, +							; Branch if not
+		cp	0FFh					; Is it 0FFh?
+		jr	z, +					; Branch if yes
+		ld	hl, zMusicNumber			; Point hl to M68K input
+		ld	e, (hl)					; e = next song to play
+		inc	hl					; Advance pointer
+		ld	d, (hl)					; d = next SFX to play
+		inc	hl					; Advance pointer
+		ld	a, (hl)					; a = next SFX to play
+		or	d					; Combine bits of a and d
+		or	e					; Is anything in the play queue?
+		jr	z, +					; Branch if not
 		call	zFillSoundQueue				; Transfer M68K input
 		call	zCycleSoundQueue			; Cycle queue and play first entry
 		call	zCycleSoundQueue			; Cycle queue and play second entry
 		call	zCycleSoundQueue			; Cycle queue and play third entry
 +
-		ld	a, (zSongBank)					; Get bank ID for music
-		bankswitch2							; Bank switch to it
-		xor	a								; a = 0
-		ld	(zUpdatingSFX), a				; Updating music
+		ld	a, (zSongBank)				; Get bank ID for music
+		bankswitch2					; Bank switch to it
+		xor	a					; a = 0
+		ld	(zUpdatingSFX), a			; Updating music
 		ld	a, (zFadeToPrevFlag)			; Get fade-to-previous flag
-		cp	0FFh							; Is it 0FFh?
-		call	z, zFadeInToPrevious		; Fade to previous if yes
-		ld	ix, zTracksStart				; ix = track RAM
-		bit	7, (ix+zTrackPlaybackControl)	; Is FM6/DAC track playing?
-		call	nz, zUpdateDACTrack			; Branch if yes
-		ld	b, (zTracksEnd-zSongFM1)/zTrackSz; Number of tracks
-		ld	ix, zSongFM1					; ix = FM1 track RAM
-		jr	+								; Play all tracks
+		cp	0FFh					; Is it 0FFh?
+		call	z, zFadeInToPrevious			; Fade to previous if yes
+		ld	ix, zTracksStart			; ix = track RAM
+		;bit	7, (ix+zTrackPlaybackControl)		; Is FM6/DAC track playing?
+		;call	nz, zUpdateDACTrack			; Branch if yes
+		ld	b, (zTracksEnd-zSongFM1)/zTrackSz	; Number of tracks
+		ld	ix, zSongFM1				; ix = FM1 track RAM
+		jr	+					; Play all tracks
 
 ; =============== S U B	R O U T	I N E =======================================
 ;
 ;sub_19E
 zUpdateSFXTracks:
-		ld	a, 1							; a = 1
-		ld	(zUpdatingSFX), a				; Updating SFX
+		ld	a, 1					; a = 1
+		ld	(zUpdatingSFX), a			; Updating SFX
 		ld	a, zmake68kBank(SndBank)		; Get SFX bank ID
-		bankswitch2							; Bank switch to SFX
-		ld	ix, zTracksSFXStart				; ix = start of SFX track RAM
+		bankswitch2					; Bank switch to SFX
+		ld	ix, zTracksSFXStart			; ix = start of SFX track RAM
 		ld	b, (zTracksSFXEnd-zTracksSFXStart)/zTrackSz	; Number of channels
 
-/		push	bc							; Save bc
-		bit	7, (ix+zTrackPlaybackControl)	; Is track playing?
-		call	nz, zUpdateFMorPSGTrack		; Call routine if yes
-		ld	de, zTrackSz					; Spacing between tracks
-		add	ix, de							; Advance to next track
-		pop	bc								; Restore bc
-		djnz	-							; Loop for all tracks
+/		push	bc					; Save bc
+		bit	7, (ix+zTrackPlaybackControl)		; Is track playing?
+		call	nz, zUpdateFMorPSGTrack			; Call routine if yes
+		ld	de, zTrackSz				; Spacing between tracks
+		add	ix, de					; Advance to next track
+		pop	bc					; Restore bc
+		djnz	-					; Loop for all tracks
 		
-		ld	a, (zTempoSpeedup)				; Get tempo speed-up value
-		or	a								; Is music sped up?
-		ret	z								; Return if not
+		ld	a, (zTempoSpeedup)			; Get tempo speed-up value
+		or	a					; Is music sped up?
+		ret	z					; Return if not
 		ld	a, (zSpeedupTimeout)			; Get extra tempo timeout
-		or	a								; Has it expired?
-		jp	nz, +							; Branch if not
-		ld	a, (zTempoSpeedup)				; Get master tempo speed-up value
+		or	a					; Has it expired?
+		jp	nz, +					; Branch if not
+		ld	a, (zTempoSpeedup)			; Get master tempo speed-up value
 		ld	(zSpeedupTimeout), a			; Reset extra tempo timeout to it
-		jp	zUpdateMusic					; Update music again
+		jp	zUpdateMusic				; Update music again
 ; ---------------------------------------------------------------------------
 +
-		dec	a								; Decrement timeout...
+		dec	a					; Decrement timeout...
 		ld	(zSpeedupTimeout), a			; ... then store new value
 		ret
 ; End of function zUpdateSFXTracks
@@ -585,31 +538,31 @@ zUpdateSFXTracks:
 ;sub_1E9
 zUpdateFMorPSGTrack:
 		bit	7, (ix+zTrackVoiceControl)		; Is this a PSG channel?
-		jp	nz, zUpdatePSGTrack				; Branch if yes
+		jp	nz, zUpdatePSGTrack			; Branch if yes
 		call	zTrackRunTimer				; Run note timer
-		jr	nz, +							; Branch if note hasn't expired yet
+		jr	nz, +					; Branch if note hasn't expired yet
 		call	zGetNextNote				; Get next note for FM track
-		bit	4, (ix+zTrackPlaybackControl)	; Is track resting?
-		ret	nz								; Return if yes
+		bit	4, (ix+zTrackPlaybackControl)		; Is track resting?
+		ret	nz					; Return if yes
 		call	zPrepareModulation			; Initialize modulation
-		call	zUpdateFreq					; Add frequency displacement to frequency
+		call	zUpdateFreq				; Add frequency displacement to frequency
 		call	zDoModulation				; Apply modulation
-		call	zFMSendFreq					; Send frequancy to YM2612
-		jp	zFMNoteOn						; Note on on all operators
+		call	zFMSendFreq				; Send frequancy to YM2612
+		jp	zFMNoteOn				; Note on on all operators
 ; ---------------------------------------------------------------------------
 +
-		bit	4, (ix+zTrackPlaybackControl)	; Is track resting?
-		ret	nz								; Return if yes
+		bit	4, (ix+zTrackPlaybackControl)		; Is track resting?
+		ret	nz					; Return if yes
 		call	zDoFMFlutter				; Do FM flutter for track
-		ld	a, (ix+zTrackNoteFillTimeout)	; Get note fill timeout
-		or	a								; Has timeout expired?
-		jr	z, +							; Branch if yes
+		ld	a, (ix+zTrackNoteFillTimeout)		; Get note fill timeout
+		or	a					; Has timeout expired?
+		jr	z, +					; Branch if yes
 		dec	(ix+zTrackNoteFillTimeout)		; Update note fill timeout
-		jp	z, zKeyOffIfActive				; Send key off if needed
+		jp	z, zKeyOffIfActive			; Send key off if needed
 +
-		call	zUpdateFreq					; Add frequency displacement to frequency
-		bit	6, (ix+zTrackPlaybackControl)	; Is 'sustain frequency' bit set?
-		ret	nz								; Return if yes
+		call	zUpdateFreq				; Add frequency displacement to frequency
+		bit	6, (ix+zTrackPlaybackControl)		; Is 'sustain frequency' bit set?
+		ret	nz					; Return if yes
 		call	zDoModulation				; Apply modulation then fall through
 ; End of function zUpdateFMorPSGTrack
 
@@ -627,75 +580,75 @@ zUpdateFMorPSGTrack:
 ;
 ;sub_22B
 zFMSendFreq:
-		bit	2, (ix+zTrackPlaybackControl)	; Is SFX overriding this track?
-		ret	nz								; Return if yes
-		bit	0, (ix+zTrackPlaybackControl)	; Is track in special mode (FM3 only)?
-		jp	nz, +							; Branch if yes
+		bit	2, (ix+zTrackPlaybackControl)		; Is SFX overriding this track?
+		ret	nz					; Return if yes
+		bit	0, (ix+zTrackPlaybackControl)		; Is track in special mode (FM3 only)?
+		jp	nz, +					; Branch if yes
 
--		ld	a, 0A4h							; Command to update frequency MSB
-		ld	c, h							; High byte of frequency
+-		ld	a, 0A4h					; Command to update frequency MSB
+		ld	c, h					; High byte of frequency
 		call	zWriteFMIorII				; Send it to YM2612
-		ld	a, 0A0h							; Command to update frequency LSB
-		ld	c, l							; Low byte of frequency
+		ld	a, 0A0h					; Command to update frequency LSB
+		ld	c, l					; Low byte of frequency
 		call	zWriteFMIorII				; Send it to YM2612
 		ret
 ; ---------------------------------------------------------------------------
 +
 		ld	a, (ix+zTrackVoiceControl)		; a = voice control byte
-		cp	2								; Is this FM3?
-		jr	nz, -							; Branch if not
+		cp	2					; Is this FM3?
+		jr	nz, -					; Branch if not
 	if fix_sndbugs
-		call	zGetSpecialFM3DataPointer	; de = pointer to saved FM3 frequency shifts
+		call	zGetSpecialFM3DataPointer		; de = pointer to saved FM3 frequency shifts
 	endif
 		ld	b, zSpecialFreqCommands_End-zSpecialFreqCommands	; Number of entries
 		ld	hl, zSpecialFreqCommands		; Lookup table
 
 		; DANGER! de is unset here, and could be pointing anywhere! Luckily,
 		; only reads are performed from it.
--		push	bc							; Save bc
-		ld	a, (hl)							; a = register selector
-		inc	hl								; Advance pointer
-		push	hl							; Save hl
-		ex	de, hl							; Exchange de and hl
-		ld	c, (hl)							; Get byte from whatever the hell de was pointing to
-		inc	hl								; Advance pointer
-		ld	b, (hl)							; Get byte from whatever the hell de was pointing to
-		inc	hl								; Advance pointer
-		ex	de, hl							; Exchange de and hl
+-		push	bc					; Save bc
+		ld	a, (hl)					; a = register selector
+		inc	hl					; Advance pointer
+		push	hl					; Save hl
+		ex	de, hl					; Exchange de and hl
+		ld	c, (hl)					; Get byte from whatever the hell de was pointing to
+		inc	hl					; Advance pointer
+		ld	b, (hl)					; Get byte from whatever the hell de was pointing to
+		inc	hl					; Advance pointer
+		ex	de, hl					; Exchange de and hl
 		ld	l, (ix+zTrackFreqLow)			; l = low byte of track frequency
 		ld	h, (ix+zTrackFreqHigh)			; h = high byte of track frequency
-		add	hl, bc							; hl = full frequency for operator
-		push	af							; Save af
-		ld	c, h							; High byte of frequency
-		call	zWriteFMI					; Sent it to YM2612
-		pop	af								; Restore af
-		sub	4								; Move on to frequency LSB
-		ld	c, l							; Low byte of frequency
-		call	zWriteFMI					; Sent it to YM2612
-		pop	hl								; Restore hl
-		pop	bc								; Restore bc
-		djnz	-							; Loop for all operators
+		add	hl, bc					; hl = full frequency for operator
+		push	af					; Save af
+		ld	c, h					; High byte of frequency
+		call	zWriteFMI				; Sent it to YM2612
+		pop	af					; Restore af
+		sub	4					; Move on to frequency LSB
+		ld	c, l					; Low byte of frequency
+		call	zWriteFMI				; Sent it to YM2612
+		pop	hl					; Restore hl
+		pop	bc					; Restore bc
+		djnz	-					; Loop for all operators
 		ret
 ; End of function zFMSendFreq
 
 ; ---------------------------------------------------------------------------
 ;loc_272
 zSpecialFreqCommands:
-		db 0ADh								; Operator 4 frequency MSB
-		db 0AEh								; Operator 3 frequency MSB
-		db 0ACh								; Operator 2 frequency MSB
-		db 0A6h								; Operator 1 frequency MSB
+		db 0ADh						; Operator 4 frequency MSB
+		db 0AEh						; Operator 3 frequency MSB
+		db 0ACh						; Operator 2 frequency MSB
+		db 0A6h						; Operator 1 frequency MSB
 zSpecialFreqCommands_End
 
 ; =============== S U B	R O U T	I N E =======================================
 ;
 	if fix_sndbugs
 zGetSpecialFM3DataPointer:
-		ld	de,zSpecFM3Freqs				; de = pointer to saved FM3 frequency shifts
-		ld	a, (zUpdatingSFX)				; Get flag
-		or	a								; Is this a SFX track?
-		ret	z								; Return if not
-		ld	de,zSpecFM3FreqsSFX				; de = pointer to saved FM3 frequency shifts
+		ld	de,zSpecFM3Freqs			; de = pointer to saved FM3 frequency shifts
+		ld	a, (zUpdatingSFX)			; Get flag
+		or	a					; Is this a SFX track?
+		ret	z					; Return if not
+		ld	de,zSpecFM3FreqsSFX			; de = pointer to saved FM3 frequency shifts
 	endif
 znullsub_A:
 		ret
@@ -714,52 +667,52 @@ znullsub_A:
 ;
 ;sub_277
 zGetNextNote:
-		ld	e, (ix+zTrackDataPointerLow)	; e = low byte of track data pointer
-		ld	d, (ix+zTrackDataPointerHigh)	; d = high byte of track data pointer
-		res	1, (ix+zTrackPlaybackControl)	; Clear 'do not attack next note' flag
-		res	4, (ix+zTrackPlaybackControl)	; Clear 'track is at rest' flag
+		ld	e, (ix+zTrackDataPointerLow)		; e = low byte of track data pointer
+		ld	d, (ix+zTrackDataPointerHigh)		; d = high byte of track data pointer
+		res	1, (ix+zTrackPlaybackControl)		; Clear 'do not attack next note' flag
+		res	4, (ix+zTrackPlaybackControl)		; Clear 'track is at rest' flag
 
 ;loc_285
 zGetNextNote_cont:
-		ld	a, (de)							; Get next byte from track
-		inc	de								; Advance pointer
-		cp	FirstCoordFlag					; Is it a coordination flag?
+		ld	a, (de)					; Get next byte from track
+		inc	de					; Advance pointer
+		cp	FirstCoordFlag				; Is it a coordination flag?
 		jp	nc, zHandleFMorPSGCoordFlag		; Branch if yes
 		ex	af, af'							; Save af
 		call	zKeyOffIfActive				; Kill note
 		ex	af, af'							; Restore af
-		bit	3, (ix+zTrackPlaybackControl)	; Is alternate SMPS mode flag set?
-		jp	nz, zAlternateSMPS				; Branch if yes
-		or	a								; Is this a duration?
-		jp	p, zStoreDuration				; Branch if yes
-		sub	81h								; Make the note into a 0-based index
-		jp	p, +							; Branch if it is a note and not a rest
-		call	zRestTrack					; Put track at rest
+		bit	3, (ix+zTrackPlaybackControl)		; Is alternate SMPS mode flag set?
+		jp	nz, zAlternateSMPS			; Branch if yes
+		or	a					; Is this a duration?
+		jp	p, zStoreDuration			; Branch if yes
+		sub	81h					; Make the note into a 0-based index
+		jp	p, +					; Branch if it is a note and not a rest
+		call	zRestTrack				; Put track at rest
 		jr	zGetNoteDuration
 ; ---------------------------------------------------------------------------
 +
 		add	a, (ix+zTrackKeyOffset)			; Add in key displacement
-		ld	hl, zPSGFrequencies				; PSG frequency lookup table
-		push	af							; Save af
-		rst	PointerTableOffset				; hl = frequency value for note
-		pop	af								; Restore af
+		ld	hl, zPSGFrequencies			; PSG frequency lookup table
+		push	af					; Save af
+		rst	PointerTableOffset			; hl = frequency value for note
+		pop	af					; Restore af
 		bit	7, (ix+zTrackVoiceControl)		; Is this a PSG track?
-		jr	nz, zGotNoteFreq				; Branch if yes
-		push	de							; Save de
-		ld	d, 8							; Each octave above the first adds this to frequency high bits
-		ld	e, 0Ch							; 12 notes per octave
-		ex	af, af'							; Exchange af with af'
-		xor	a								; Clear a (which will clear a')
+		jr	nz, zGotNoteFreq			; Branch if yes
+		push	de					; Save de
+		ld	d, 8					; Each octave above the first adds this to frequency high bits
+		ld	e, 0Ch					; 12 notes per octave
+		ex	af, af'					; Exchange af with af'
+		xor	a						; Clear a (which will clear a')
 
--		ex	af, af'							; Exchange af with af'
-		sub	e								; Subtract 1 octave from the note
-		jr	c, +							; If this is less than zero, we are done
-		ex	af, af'							; Exchange af with af'
-		add	a, d							; One octave up
-		jr	-								; Loop
+-		ex	af, af'					; Exchange af with af'
+		sub	e					; Subtract 1 octave from the note
+		jr	c, +					; If this is less than zero, we are done
+		ex	af, af'					; Exchange af with af'
+		add	a, d					; One octave up
+		jr	-					; Loop
 ; ---------------------------------------------------------------------------
 	if fix_sndbugs=0
-		ex	af, af'							; Exchange af with af' (dead code)
+		ex	af, af'					; Exchange af with af' (dead code)
 	endif
 ; ---------------------------------------------------------------------------
 +
@@ -1517,87 +1470,87 @@ zPlayMusic_DoFade:
 
 ;loc_5DE
 zBGMLoad:
-		pop	af								; Restore af
-		push	af							; Then save it back again
+		pop	af						; Restore af
+		push	af						; Then save it back again
 		ld	hl, z80_MusicBanks				; hl = table of music banks
-			; The following block adds the music index to the table address as a 16-bit offset
-		add	a, l							; a += l
-		ld	l, a							; l = low byte of offset into music entry
-		adc	a, h							; a += h, plus 1 if a + l overflowed the 8-bit register
-		sub	l								; Now, a = high byte of offset into music entry
-		ld	h, a							; hl is the offset to the music bank
+		; The following block adds the music index to the table address as a 16-bit offset
+		add	a, l						; a += l
+		ld	l, a						; l = low byte of offset into music entry
+		adc	a, h						; a += h, plus 1 if a + l overflowed the 8-bit register
+		sub	l						; Now, a = high byte of offset into music entry
+		ld	h, a						; hl is the offset to the music bank
 		ld	(loc_5EB+1), hl					; Store into next instruction (self-modifying code)
 loc_5EB:
 		ld	a, (z80_MusicBanks)				; self-modified code; a is set to correct bank for the song to play
 		ld	(zSongBank), a					; Save the song's bank...
-		bankswitch2							; ... then bank switch to it
-		ld	a, 0B6h							; Set Panning / AMS / FMS
+		bankswitch2						; ... then bank switch to it
+		ld	a, 0B6h						; Set Panning / AMS / FMS
 		ld	(zYM2612_A1), a					; Write destination address to YM2612 address register
 		nop
-		ld	a, 0C0h							; default Panning / AMS / FMS settings (only stereo L/R enabled)
+		ld	a, 0C0h						; default Panning / AMS / FMS settings (only stereo L/R enabled)
 		ld	(zYM2612_D1), a					; Write to YM2612 data register
-		pop	af								; Restore af
-		ld	c, zID_MusicPointers4			; c = 4 (music pointer table)
+		pop	af						; Restore af
+		ld	c, zID_MusicPointers4				; c = 4 (music pointer table)
 		rst	GetPointerTable					; hl = pointer table for music pointers
 		rst	PointerTableOffset				; hl = pointer to song data
-		push	hl							; Save hl...
-		push	hl							; ... twice
-		rst	ReadPointer						; Dereference pointer, so that hl = pointer to voice table
+		push	hl						; Save hl...
+		push	hl						; ... twice
+		rst	ReadPointer					; Dereference pointer, so that hl = pointer to voice table
 		ld	(zVoiceTblPtr), hl				; Store voice table pointer
-		pop	hl								; Restore hl to pointer to song data
-		pop	iy								; Also set iy = pointer to song data
-		ld	a, (iy+5)						; Main tempo value
-		ld	(zTempoAccumulator), a			; Set starting accumulator value
+		pop	hl						; Restore hl to pointer to song data
+		pop	iy						; Also set iy = pointer to song data
+		ld	a, (iy+5)					; Main tempo value
+		ld	(zTempoAccumulator), a				; Set starting accumulator value
 		ld	(zCurrentTempo), a				; Store current song tempo
-		ld	de, 6							; Offset into DAC pointer
-		add	hl, de							; hl = pointer to DAC pointer
+		ld	de, 6						; Offset into DAC pointer
+		add	hl, de						; hl = pointer to DAC pointer
 		ld	(zSongPosition), hl				; Save it to RAM
-		ld	hl, zFMDACInitBytes				; Load pointer to init data
+		ld	hl, zFMInitBytes				; Load pointer to init data
 		ld	(zTrackInitPos), hl				; Save it to RAM
 		ld	de, zTracksStart				; de = pointer to track RAM
-		ld	b, (iy+2)						; b = number of FM + DAC channels
-		ld	a, (iy+4)						; a = tempo divider
+		ld	b, (iy+2)					; b = number of FM tracks
+		ld	a, (iy+4)					; a = tempo divider
 
--		push	bc							; Save bc (gets damaged by ldi instructions)
+-		push	bc						; Save bc (gets damaged by ldi instructions)
 		ld	hl, (zTrackInitPos)				; Restore saved position for init bytes
-		ldi									; *de++ = *hl++	(copy initial playback control)
-		ldi									; *de++ = *hl++	(copy channel assignment bits)
-		ld	(de), a							; Copy tempo divider
-		inc	de								; Advance pointer
+		ldi							; *de++ = *hl++	(copy initial playback control)
+		ldi							; *de++ = *hl++	(copy channel assignment bits)
+		ld	(de), a						; Copy tempo divider
+		inc	de						; Advance pointer
 		ld	(zTrackInitPos), hl				; Save current position in channel assignment bits
 		ld	hl, (zSongPosition)				; Load current position in BGM data
-		ldi									; *de++ = *hl++ (copy track address low byte)
-		ldi									; *de++ = *hl++ (copy track address high byte)
-		ldi									; *de++ = *hl++ (default key offset)
-		ldi									; *de++ = *hl++ (track default volume)
+		ldi							; *de++ = *hl++ (copy track address low byte)
+		ldi							; *de++ = *hl++ (copy track address high byte)
+		ldi							; *de++ = *hl++ (default key offset)
+		ldi							; *de++ = *hl++ (track default volume)
 		ld	(zSongPosition), hl				; Store current potition in BGM data
-		call	zInitFMDACTrack				; Init the remainder of the track RAM
-		pop	bc								; Restore bc
-		djnz	-							; Loop for all tracks (stored in b)
+		call	zInitFMTrack					; Init the remainder of the track RAM
+		pop	bc						; Restore bc
+		djnz	-						; Loop for all tracks (stored in b)
 		
-		ld	a, (iy+3)						; Get number of PSG tracks
-		or	a								; Do we have any PSG channels?
+		ld	a, (iy+3)					; Get number of PSG tracks
+		or	a						; Do we have any PSG channels?
 		jp	z, zClearNextSound				; Branch if not
-		ld	b, a							; b = number of PSG tracks
+		ld	b, a						; b = number of PSG tracks
 		ld	hl, zPSGInitBytes				; Load pointer to init data
 		ld	(zTrackInitPos), hl				; Save it to RAM
 		ld	de, zSongPSG1					; de = pointer to RAM for song PSG tracks
-		ld	a, (iy+4)						; a = tempo divider
+		ld	a, (iy+4)					; a = tempo divider
 
--		push	bc							; Save bc (gets damaged by ldi instructions)
+-		push	bc						; Save bc (gets damaged by ldi instructions)
 		ld	hl, (zTrackInitPos)				; Restore saved position for init bytes
-		ldi									; *de++ = *hl++
-		ldi									; *de++ = *hl++
-		ld	(de), a							; Copy tempo divider
-		inc	de								; Advance pointer
+		ldi							; *de++ = *hl++
+		ldi							; *de++ = *hl++
+		ld	(de), a						; Copy tempo divider
+		inc	de						; Advance pointer
 		ld	(zTrackInitPos), hl				; Save current position in channel assignment bits
 		ld	hl, (zSongPosition)				; Load current position in BGM data
-		ld	bc, 6							; Copy 6 bytes
-		ldir								; while (bc-- > 0) *de++ = *hl++; (copy track address, default key offset, default volume, modulation control, default PSG tone)
+		ld	bc, 6						; Copy 6 bytes
+		ldir							; while (bc-- > 0) *de++ = *hl++; (copy track address, default key offset, default volume, modulation control, default PSG tone)
 		ld	(zSongPosition), hl				; Store current potition in BGM data
-		call	zZeroFillTrackRAM			; Init the remainder of the track RAM
-		pop	bc								; Restore bc
-		djnz	-							; Loop for all tracks (stored in b)
+		call	zZeroFillTrackRAM				; Init the remainder of the track RAM
+		pop	bc						; Restore bc
+		djnz	-						; Loop for all tracks (stored in b)
 
 ; =============== S U B	R O U T	I N E =======================================
 ; Clears next sound to play.
@@ -1615,7 +1568,7 @@ zClearNextSound:
 ; The second byte in every pair goes as follows:
 ; The first is for DAC; then 0, 1, 2 then 4, 5, 6 for the FM channels (the missing 3
 ; is the gap between part I and part II for YM2612 port writes).
-zFMDACInitBytes:
+zFMInitBytes:
 		db   80h,   6, 80h,   0, 80h,   1, 80h,   2, 80h,   4, 80h,   5, 80h,   6
 ;loc_6A3
 ; Default values for PSG tracks
@@ -1627,10 +1580,10 @@ zPSGInitBytes:
 ;loc_6A9
 zPlaySound_CheckRing:
 		sub	SndID__First					; Make it a 0-based index
-		or	a								; Is it the ring sound?
-		jp	nz, zPlaySound_Bankswitch		; Branch if not
+		or	a						; Is it the ring sound?
+		jp	nz, zPlaySound_Bankswitch			; Branch if not
 		ld	a, (zRingSpeaker)				; Get speaker on which ring sound is played
-		xor	1								; Toggle bit 0
+		xor	1						; Toggle bit 0
 		ld	(zRingSpeaker), a				; Save it
 
 ;loc_6B7
@@ -1742,7 +1695,7 @@ zSFXTrackInitLoop:
 		ldi									; *de++ = *hl++ (high byte of channel data pointer)
 		ldi									; *de++ = *hl++ (key displacement)
 		ldi									; *de++ = *hl++ (channel volume)
-		call	zInitFMDACTrack				; Init the remainder of the track RAM
+		call	zInitFMTrack				; Init the remainder of the track RAM
 
 	if fix_sndbugs=0
 		; SPECULATION: The code until the '+' label below was likely related to
@@ -1836,7 +1789,7 @@ zGetSFXChannelPointers:
 ; =============== S U B	R O U T	I N E =======================================
 ;
 ;sub_7C5
-zInitFMDACTrack:
+zInitFMTrack:
 		ex	af, af'							; Save af
 		xor	a								; a = 0
 		ld	(de), a							; Set modulation to inactive
@@ -1863,7 +1816,7 @@ zZeroFillTrackRAM:
 		inc	hl								; Make hl point to next track
 		ex	de, hl							; Exchange the contents of de and hl
 		ret
-; End of function zInitFMDACTrack
+; End of function zInitFMTrack
 
 ; ---------------------------------------------------------------------------
 ;zloc_7DF
@@ -1871,7 +1824,7 @@ zSFXChannelData:
 		dw  zSFX_FM3						; FM3
 		dw  zSFX_FM4						; FM4
 		dw  zSFX_FM5						; FM5
-		dw  zSFX_FM6						; FM6 or DAC
+		dw  zSFX_FM6						; FM6
 		dw  zSFX_PSG1						; PSG1
 		dw  zSFX_PSG2						; PSG2
 		dw  zSFX_PSG3						; PSG3
@@ -1881,7 +1834,7 @@ zSFXOverriddenChannel:
 		dw  zSongFM3						; FM3
 		dw  zSongFM4						; FM4
 		dw  zSongFM5						; FM5
-		dw  zSongFM6_DAC					; FM6 or DAC
+		dw  zSongFM6						; FM6
 		dw  zSongPSG1						; PSG1
 		dw  zSongPSG2						; PSG2
 		dw  zSongPSG3						; PSG3
@@ -2092,7 +2045,7 @@ zMusicFade:
 		xor	a								; a = 0
 		ld	(zTempoSpeedup), a				; Fade in normal speed
 		
-		ld	ix, zFMDACInitBytes				; Initialization data for channels
+		ld	ix, zFMInitBytes				; Initialization data for channels
 		ld	b, (zSongPSG2-zSongFM1)/zTrackSz	; Number of channels
 
 -		push	bc							; Save bc for loop
@@ -2317,7 +2270,7 @@ zFadeInToPrevious:
 		ld	de, zTracksStart				; Start of track data
 		ld	bc, zTracksSaveEnd-zTracksSaveStart	; Number of bytes to copy
 		ldir								; while (bc-- > 0) *de++ = *hl++;
-		ld	a, (zTracksStart)				; a = FM6/DAC track playback control
+		ld	a, (zTracksStart)				; a = FM6 track playback control
 		or	84h								; Set 'track is playing' and 'track is resting' flags
 		ld	(zTracksStart), a				; Set new value
 		ld	ix, zSongFM1					; ix = pointer to FM1 track RAM
@@ -2390,59 +2343,6 @@ z80_MusicBanks:
 		db  zmake68kBank(Music_31),zmake68kBank(Music_32),zmake68kBank(Music_33)
 
 
-; =============== S U B	R O U T	I N E =======================================
-;
-;sub_B98
-zUpdateDACTrack:
-		call	zTrackRunTimer				; Advance track duration timer
-		ret	nz								; Branch if note is still going
-		ld	e, (ix+zTrackDataPointerLow)	; e = low byte of track data pointer
-		ld	d, (ix+zTrackDataPointerHigh)	; d = high byte of track data pointer
-
-;loc_BA2
-zUpdateDACTrack_cont:
-		ld	a, (de)							; Get next byte from track
-		inc	de								; Advance pointer
-		cp	FirstCoordFlag					; Is it a coordination flag?
-		jp	nc, zHandleDACCoordFlag			; Branch if yes
-		or	a								; Is it a note?
-		jp	m, +							; Branch if yes
-		dec	de								; We got a duration, so go back to it
-		ld	a, (ix+zTrackSavedDAC)			; Reuse previous DAC sample
-+
-		ld	(ix+zTrackSavedDAC), a			; Store new DAC sample
-		cp	NoteRest						; Is it a rest?
-		jp	z, ++							; Branch if yes
-		res	7, a							; Clear bit 7
-		push	de							; Save de
-		ex	af, af'							; Save af
-		call	zKeyOffIfActive				; Kill note (will do nothing if 'do not attack' is on)
-		call	zFM3NormalMode				; Set FM3 to normal mode
-		ex	af, af'							; Restore af
-		ld	ix, zTracksStart				; ix = pointer to start of track data
-		bit	2, (ix+zTrackPlaybackControl)	; Is SFX overriding DAC channel?
-		jp	nz, +							; Branch if yes
-		ld	(zDACIndex), a					; Queue DAC sample
-+
-		pop	de								; Restore de
-+
-		ld	a, (de)							; Get note duration
-		inc	de								; Advance pointer
-		or	a								; Is it a duration?
-		jp	p, zStoreDuration				; Branch if yes
-		dec	de								; Put the byte back to the stream
-		ld	a, (ix+zTrackSavedDuration)		; Reuse last duration
-		ld	(ix+zTrackDurationTimeout), a	; Set new duration timeout
-		jp	zFinishTrackUpdate
-; ---------------------------------------------------------------------------
-;loc_BE3
-zHandleDACCoordFlag:
-		ld	hl, loc_BE9						; hl = desired return address
-		jp	zHandleCoordFlag
-; ---------------------------------------------------------------------------
-loc_BE9:
-		inc	de								; Advance to next byte in track
-		jp	zUpdateDACTrack_cont			; Continue processing DAC track
 ; ---------------------------------------------------------------------------
 ;loc_BED
 zHandleFMorPSGCoordFlag:
@@ -2456,7 +2356,6 @@ zHandleCoordFlag:
 		rst	PointerTableOffset				; hl = pointer to target location
 		ld	a, (de)							; a = coordination flag parameter
 		jp	(hl)							; Indirect jump to coordination flag handler
-; End of function zUpdateDACTrack
 
 ; ---------------------------------------------------------------------------
 loc_BF9:
@@ -3701,156 +3600,8 @@ zSilencePSGChannel:
 ; End of function zSilencePSGChannel
 
 
-; =============== S U B	R O U T	I N E =======================================
-;
-; Plays digital audio on the DAC, if any is queued. The z80 will be stuck in
-; this function unless an interrupt occurs (that is, V-Int); after the V-Int
-; is processed, the z80 will return back here.
-;loc_108A
-zPlayDigitalAudio:
-		di									; Disable interrupts
-		ld	a, 2Bh							; DAC enable/disable register
-		ld	c, 0							; Value to disable DAC
-		call	zWriteFMI					; Send YM2612 command
-
-loc_1092:
-		ei									; Enable interrupts
-		ld	a, (PlaySegaPCMFlag)			; a = play SEGA PCM flag
-		or	a								; Is SEGA sound being played?
-		jp	nz, zPlaySEGAPCM				; Branch if yes
-		ld	a, (zDACIndex)					; a = DAC index/flag
-		or	a								; Is DAC channel being used?
-		jr	z, loc_1092						; Loop if not
-		ld	a, 2Bh							; DAC enable/disable register
-		ld	c, 80h							; Value to enable DAC
-		di									; Disable interrupts
-		call	zWriteFMI					; Send YM2612 command
-		ei									; Re-enable interrupts
-		ld	iy, DecTable					; iy = pointer to jman2050 decode lookup table
-		ld	hl, zDACIndex					; hl = pointer to DAC index/flag
-		ld	a, (hl)							; a = DAC index
-		dec	a								; a -= 1
-		set	7, (hl)							; Set bit 7 to indicate that DAC sample is being played
-		ld	hl, zROMWindow					; hl = pointer to ROM window
-		rst	PointerTableOffset				; hl = pointer to DAC data
-		ld	c, 80h							; c is an accumulator below; this initializes it to 80h
-		ld	a, (hl)							; a = DAC rate
-		ld	(loc_10CA+1), a					; Store into following instruction (self-modifying code)
-		ld	(loc_10E7+1), a					; Store into following instruction (self-modifying code)
-		inc	hl								; hl = pointer to low byte of DAC sample's length
-		ld	e, (hl)							; e = low byte of DAC sample's length
-		inc	hl								; hl = pointer to high byte of DAC sample's length
-		ld	d, (hl)							; d = high byte of DAC sample's length
-		inc	hl								; hl = pointer to low byte of DAC sample's in-bank location
-		ld	a, (hl)							; a = low byte of DAC sample's in-bank location
-		inc	hl								; hl = pointer to high byte of DAC sample's in-bank location
-		ld	h, (hl)							; h = high byte of DAC sample's in-bank location
-		ld	l, a							; l = low byte of DAC sample's in-bank location
-		; hl is now pointer to DAC data, while de is the DAC sample's length
-
-loc_10CA:
-		ld	b,0Ah							; self-modified code; b is set to DAC rate
-		ei									; Enable interrupts
-		djnz	$							; Loop in this instruction, decrementing b each iteration, until b = 0
-
-		di									; Disable interrupts
-		ld	a, 2Ah							; DAC channel register
-		ld	(zYM2612_A0), a					; Send to YM2612
-		ld	a, (hl)							; a = next byte of DAC sample
-		; Want only the high nibble now, so shift it into position
-		rlca
-		rlca
-		rlca
-		rlca
-		and	0Fh								; Get only low nibble (which was the high nibble originally)
-		ld	(loc_10E0+2), a					; Store into following instruction (self-modifying code)
-		ld	a, c							; a = c
-loc_10E0:
-		add	a, (iy+0)						; Self-modified code: the index offset is not zero, but what was set above
-		ld	(zYM2612_D0), a					; Send byte to DAC
-		ld	c,a								; Set c to the new value of a
-loc_10E7:
-		ld	b,0Ah							; self-modified code; b is set to DAC rate
-		ei									; Enable interrupts
-		djnz	$							; Loop in this instruction, decrementing b each iteration, until b = 0
-
-		di									; Disable interrupts
-		ld	a, 2Ah							; DAC channel register
-		ld	(zYM2612_A0), a					; Send to YM2612
-		ld	a, (hl)							; a = next byte of DAC sample
-		and	0Fh								; Want only the low nibble
-		ld	(loc_10F9+2), a					; Store into following instruction (self-modifying code)
-		ld	a, c							; a = c
-loc_10F9:
-		add	a, (iy+0)						; Self-modified code: the index offset is not zero, but what was set above
-		ld	(zYM2612_D0), a					; Send byte to DAC
-		ei									; Enable interrupts
-		ld	c, a							; Set c to the new value of a
-		ld	a, (zDACIndex)					; a = DAC index/flag
-		or	a								; Is playing flag set?
-		jp	p, loc_1092						; Branch if not
-
-		inc	hl								; Advance to next sample byte
-		dec	de								; Mark one byte as being done
-		ld	a, d							; a = d
-		or	e								; Is length zero?
-		jp	nz, loc_10CA					; Loop if not
-
-		xor	a								; a = 0
-		ld	(zDACIndex),a					; Mark DAC as being idle
-		jp	zPlayDigitalAudio				; Loop
-
-; ===========================================================================
-; JMan2050's DAC decode lookup table
-; ===========================================================================
-DecTable:
-		db	   0,  1,   2,   4,   8,  10h,  20h,  40h
-		db	 80h, -1,  -2,  -4,  -8, -10h, -20h, -40h
 ; ---------------------------------------------------------------------------
 
-; =============== S U B	R O U T	I N E =======================================
-;
-; Plays the SEGA PCM sound. The z80 will be "stuck" in this function (as it
-; disables interrupts) until either of the following conditions hold:
-;
-;	(1)	The SEGA PCM is fully played
-;	(2)	The next song to play is 0FEh (SndID_StopSega)
-;loc_1126
-zPlaySEGAPCM:
-		di									; Disable interrupts
-		xor	a								; a = 0
-		ld	(PlaySegaPCMFlag), a			; Clear flag
-		ld	a, 2Bh							; DAC enable/disable register
-		ld	(zYM2612_A0), a					; Select the register
-		nop									; Delay
-		ld	a, 80h							; Value to enable DAC
-		ld	(zYM2612_D0), a					; Enable DAC
-		ld	a, zmake68kBank(SEGA_PCM)		; a = sound bank index
-		bankswitch3							; Bank switch to sound bank
-		ld	hl, zmake68kPtr(SEGA_PCM)		; hl = pointer to SEGA PCM
-		ld	de, SEGA_PCM_End-SEGA_PCM		; de = length of SEGA PCM
-		ld	a, 2Ah							; DAC channel register
-		ld	(zYM2612_A0), a					; Send to YM2612
-		nop									; Delay
-
--		ld	a, (hl)							; a = next byte of SEGA PCM
-		ld	(zYM2612_D0), a					; Send to DAC
-		ld	a, (zMusicNumber)				; Check next song number
-		cp	SndID_StopSega					; Is it the command to stop playing SEGA PCM?
-		jr	z, +							; Break the loop if yes
-		nop
-		nop
-
-		ld	b, 0Ch							; Loop counter
-		djnz	$							; Loop in this instruction, decrementing b each iteration, until b = 0
-
-		inc	hl								; Advance to next byte of SEGA PCM
-		dec	de								; Mark one byte as being done
-		ld	a, d							; a = d
-		or	e								; Is length zero?
-		jr	nz, -							; Loop if not
-
-+		jp	zPlayDigitalAudio				; Go back to normal DAC code
 ; ---------------------------------------------------------------------------
 			; db    0
 PSGTone_2D:     db	  0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2
@@ -4020,7 +3771,7 @@ z80_MusicPointers:
 		dw	zmake68kPtr(Music_29),zmake68kPtr(Music_2A),zmake68kPtr(Music_2B),zmake68kPtr(Music_2C)
 		dw	zmake68kPtr(Music_2D),zmake68kPtr(Music_2E),zmake68kPtr(Music_2F),zmake68kPtr(Music_30)
 
-		dw	zmake68kPtr(Music_31),zmake68kPtr(Music_32);,zmake68kPtr(Music_33)
+		dw	zmake68kPtr(Music_31),zmake68kPtr(Music_32),zmake68kPtr(Music_33)
 ; ---------------------------------------------------------------------------
 ; ===========================================================================
 ; SFX Pointers
@@ -4193,35 +3944,35 @@ z80_UniVoiceBank:
 	    db  20h, 36h, 35h, 30h, 31h,0DFh,0DFh, 9Fh, 9Fh,   7,   6,   9,   6
 		db         7,   6,   6,   8, 20h, 10h, 10h,0F8h, 19h, 37h, 13h, 80h				; 850
 
-zPalFlag				ds 1
+zPalFlag			ds 1
 zTempoSpeedup			ds 1
 
 ; The following 3 variables are used for M68K input
 zMusicNumber			ds 1				; Play_Sound
-zSFXNumber0				ds 1				; Play_Sound_2
-zSFXNumber1				ds 1				; Play_Sound_2
-zPauseFlag				ds 1
+zSFXNumber0			ds 1				; Play_Sound_2
+zSFXNumber1			ds 1				; Play_Sound_2
+zPauseFlag			ds 1
 
 zPalDblUpdCounter		ds 1
 zSoundQueue0			ds 1
 zSoundQueue1			ds 1
 zSoundQueue2			ds 1
-zNextSound				ds 1
+zNextSound			ds 1
 zFadeOutTimeout			ds 1
-zFadeDelay				ds 1
+zFadeDelay			ds 1
 zFadeDelayTimeout		ds 1
 
-zSpecFM3Freqs          	ds 8
-zSpecFM3FreqsSFX       	ds 8
+zSpecFM3Freqs          		ds 8
+zSpecFM3FreqsSFX       		ds 8
 
-zHaltFlag				ds 1
+zHaltFlag			ds 1
 zFM3Settings			ds 1
 zTempoAccumulator		ds 1
-unk_1C15				ds 1				; Set twice, never read
+unk_1C15			ds 1				; Set twice, never read
 zFadeToPrevFlag			ds 1
 
-unk_1C17				ds 1				; Set once, never read
-unk_1C18				ds 1
+unk_1C17			ds 1				; Set once, never read
+unk_1C18			ds 1
 zUpdatingSFX			ds 1
 zCurrentTempo			ds 1
 zContinousSFX			ds 1
@@ -4235,7 +3986,7 @@ zCurrentTempoSave		ds 2				; For 1-up
 zSongBankSave			ds 2				; For 1-up
 zTempoSpeedupSave		ds 1				; For 1-up
 zSpeedupTimeout			ds 1
-zDACIndex				ds 1				; bit 7 = 1 if playing, 0 if not; remaining 7 bits are index into DAC tables (1-based)
+zDACIndex			ds 1				; bit 7 = 1 if playing, 0 if not; remaining 7 bits are index into DAC tables (1-based)
 zContSFXLoopCnt			ds 1				; Used as a loop counter for continuous SFX
 zSFXSaveIndex			ds 1
 zSongPosition			ds 2
@@ -4243,21 +3994,25 @@ zTrackInitPos			ds 2
 zVoiceTblPtr			ds 2				; 2 bytes
 zSFXVoiceTblPtr			ds 2				; 2 bytes
 zSFXTempoDivider		ds 1
-zSongBank				ds 1 				; Bits 15 to 22 of M68K bank address
+zSongBank			ds 1 				; Bits 15 to 22 of M68K bank address
 PlaySegaPCMFlag			ds 1
 
 ; Now starts song and SFX z80 RAM
-; Max number of music channels: 6 FM + 3 PSG or 1 DAC + 5 FM + 3 PSG
+; Max number of music channels: 6 FM + 3 PSG
 zTracksStart:			
-zSongFM6_DAC			ds	zTrackSz		; Music DAC or FM6 track
-zSongFM1				ds	zTrackSz
-zSongFM2				ds	zTrackSz
-zSongFM3				ds	zTrackSz
-zSongFM4				ds	zTrackSz
-zSongFM5				ds	zTrackSz
-zSongPSG1				ds	zTrackSz
-zSongPSG2				ds	zTrackSz
-zSongPSG3				ds	zTrackSz
+zSongFM1			ds	zTrackSz
+zSongFM2			ds	zTrackSz
+zSongFM3			ds	zTrackSz
+zSongFM4			ds	zTrackSz
+zSongFM5			ds	zTrackSz
+zSongFM6			ds	zTrackSz	
+zSongPSG1			ds	zTrackSz
+zSongPSG2			ds	zTrackSz
+zSongPSG3			ds	zTrackSz
+zSongPWM1			ds	zTrackSz
+zSongPWM2			ds	zTrackSz
+zSongPWM3			ds	zTrackSz
+zSongPWM4			ds	zTrackSz
 zTracksEnd:				
 			
 ; This is RAM for backup of songs (e.g., for 1-up jingle)
@@ -4327,350 +4082,6 @@ finishBank macro
 offsetBankTableEntry macro ptr
 	dc.ATTRIBUTE k68z80Pointer(ptr-soundBankStart)
     endm
-
-; Special BINCLUDE wrapper function
-DACBINCLUDE macro file,{INTLABEL}
-__LABEL__ label *
-	BINCLUDE file
-__LABEL___Len  := little_endian(*-__LABEL__)
-__LABEL___Ptr  := k68z80Pointer(__LABEL__-soundBankStart)
-__LABEL___Bank := soundBankStart
-    endm
-
-; Setup macro for DAC samples.
-DAC_Setup macro rate,dacptr
-	dc.b	rate
-	dc.w 	dacptr_Len
-	dc.w	dacptr_Ptr
-    endm
-
-; Macro for printing the DAC master table
-DAC_Master_Table macro
-	if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-		offsetBankTableEntry.w	DAC_81_Setup
-		offsetBankTableEntry.w	DAC_82_Setup
-		offsetBankTableEntry.w	DAC_83_Setup
-		offsetBankTableEntry.w	DAC_84_Setup
-		offsetBankTableEntry.w	DAC_85_Setup
-		offsetBankTableEntry.w	DAC_86_Setup
-		offsetBankTableEntry.w	DAC_87_Setup
-		offsetBankTableEntry.w	DAC_88_Setup
-		offsetBankTableEntry.w	DAC_89_Setup
-		offsetBankTableEntry.w	DAC_8A_Setup
-		offsetBankTableEntry.w	DAC_8B_Setup
-		offsetBankTableEntry.w	DAC_8C_Setup
-		offsetBankTableEntry.w	DAC_8D_Setup
-		offsetBankTableEntry.w	DAC_8E_Setup
-		offsetBankTableEntry.w	DAC_8F_Setup
-		
-		offsetBankTableEntry.w	DAC_90_Setup
-		offsetBankTableEntry.w	DAC_91_Setup
-		offsetBankTableEntry.w	DAC_92_Setup
-		offsetBankTableEntry.w	DAC_93_Setup
-		offsetBankTableEntry.w	DAC_94_Setup
-		offsetBankTableEntry.w	DAC_95_Setup
-		offsetBankTableEntry.w	DAC_96_Setup
-		offsetBankTableEntry.w	DAC_97_Setup
-		offsetBankTableEntry.w	DAC_98_Setup
-		offsetBankTableEntry.w	DAC_99_Setup
-		offsetBankTableEntry.w	DAC_9A_Setup
-		offsetBankTableEntry.w	DAC_9B_Setup
-		offsetBankTableEntry.w	DAC_9C_Setup
-		offsetBankTableEntry.w	DAC_9D_Setup
-		offsetBankTableEntry.w	DAC_9E_Setup
-	endif
-	if (use_s3_samples<>0)||(use_sk_samples<>0)
-		offsetBankTableEntry.w	DAC_9F_Setup
-
-		offsetBankTableEntry.w	DAC_A0_Setup
-		offsetBankTableEntry.w	DAC_A1_Setup
-		offsetBankTableEntry.w	DAC_A2_Setup
-		offsetBankTableEntry.w	DAC_A3_Setup
-		offsetBankTableEntry.w	DAC_A4_Setup
-		offsetBankTableEntry.w	DAC_A5_Setup
-		offsetBankTableEntry.w	DAC_A6_Setup
-		offsetBankTableEntry.w	DAC_A7_Setup
-		offsetBankTableEntry.w	DAC_A8_Setup
-		offsetBankTableEntry.w	DAC_A9_Setup
-		offsetBankTableEntry.w	DAC_AA_Setup
-		offsetBankTableEntry.w	DAC_AB_Setup
-		offsetBankTableEntry.w	DAC_AC_Setup
-		offsetBankTableEntry.w	DAC_AD_Setup
-		offsetBankTableEntry.w	DAC_AE_Setup
-		offsetBankTableEntry.w	DAC_AF_Setup
-		
-		offsetBankTableEntry.w	DAC_B0_Setup
-		offsetBankTableEntry.w	DAC_B1_Setup
-		offsetBankTableEntry.w	DAC_B2_Setup
-		offsetBankTableEntry.w	DAC_B3_Setup
-		offsetBankTableEntry.w	DAC_B4_Setup
-		offsetBankTableEntry.w	DAC_B5_Setup
-		offsetBankTableEntry.w	DAC_B6_Setup
-		offsetBankTableEntry.w	DAC_B7_Setup
-		offsetBankTableEntry.w	DAC_B8_B9_Setup
-		offsetBankTableEntry.w	DAC_B8_B9_Setup
-		offsetBankTableEntry.w	DAC_BA_Setup
-		offsetBankTableEntry.w	DAC_BB_Setup
-		offsetBankTableEntry.w	DAC_BC_Setup
-		offsetBankTableEntry.w	DAC_BD_Setup
-		offsetBankTableEntry.w	DAC_BE_Setup
-		offsetBankTableEntry.w	DAC_BF_Setup
-
-		offsetBankTableEntry.w	DAC_C0_Setup
-		offsetBankTableEntry.w	DAC_C1_Setup
-		offsetBankTableEntry.w	DAC_C2_Setup
-		offsetBankTableEntry.w	DAC_C3_Setup
-		offsetBankTableEntry.w	DAC_C4_Setup
-	endif
-	if (use_s2_samples<>0)
-		offsetBankTableEntry.w	DAC_C5_Setup
-		offsetBankTableEntry.w	DAC_C6_Setup
-		offsetBankTableEntry.w	DAC_C7_Setup
-		offsetBankTableEntry.w	DAC_C8_Setup
-		offsetBankTableEntry.w	DAC_C9_Setup
-		offsetBankTableEntry.w	DAC_CA_Setup
-		offsetBankTableEntry.w	DAC_CB_Setup
-		offsetBankTableEntry.w	DAC_CC_Setup
-		offsetBankTableEntry.w	DAC_CD_Setup
-		offsetBankTableEntry.w	DAC_CE_Setup
-		offsetBankTableEntry.w	DAC_CF_Setup
-
-		offsetBankTableEntry.w	DAC_D0_Setup
-		offsetBankTableEntry.w	DAC_D1_Setup
-		offsetBankTableEntry.w	DAC_D2_Setup
-		offsetBankTableEntry.w	DAC_D3_Setup
-		offsetBankTableEntry.w	DAC_D4_Setup
-		offsetBankTableEntry.w	DAC_D5_Setup
-	endif
-	if (use_s3d_samples<>0)
-		offsetBankTableEntry.w	DAC_D6_Setup
-		offsetBankTableEntry.w	DAC_D7_Setup
-	endif
-	if (use_s3_samples<>0)
-		offsetBankTableEntry.w	DAC_D8_Setup
-		offsetBankTableEntry.w	DAC_D9_Setup
-	endif
-
-	if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-DAC_81_Setup:			DAC_Setup $04,DAC_81_Data
-DAC_82_Setup:			DAC_Setup $0E,DAC_82_83_84_85_Data
-DAC_83_Setup:			DAC_Setup $14,DAC_82_83_84_85_Data
-DAC_84_Setup:			DAC_Setup $1A,DAC_82_83_84_85_Data
-DAC_85_Setup:			DAC_Setup $20,DAC_82_83_84_85_Data
-DAC_86_Setup:			DAC_Setup $04,DAC_86_Data
-DAC_87_Setup:			DAC_Setup $04,DAC_87_Data
-DAC_88_Setup:			DAC_Setup $06,DAC_88_Data
-DAC_89_Setup:			DAC_Setup $0A,DAC_89_Data
-DAC_8A_Setup:			DAC_Setup $14,DAC_8A_8B_Data
-DAC_8B_Setup:			DAC_Setup $1B,DAC_8A_8B_Data
-DAC_8C_Setup:			DAC_Setup $08,DAC_8C_Data
-DAC_8D_Setup:			DAC_Setup $0B,DAC_8D_8E_Data
-DAC_8E_Setup:			DAC_Setup $11,DAC_8D_8E_Data
-DAC_8F_Setup:			DAC_Setup $08,DAC_8F_Data
-DAC_90_Setup:			DAC_Setup $03,DAC_90_91_92_93_Data
-DAC_91_Setup:			DAC_Setup $07,DAC_90_91_92_93_Data
-DAC_92_Setup:			DAC_Setup $0A,DAC_90_91_92_93_Data
-DAC_93_Setup:			DAC_Setup $0E,DAC_90_91_92_93_Data
-DAC_94_Setup:			DAC_Setup $06,DAC_94_95_96_97_Data
-DAC_95_Setup:			DAC_Setup $0A,DAC_94_95_96_97_Data
-DAC_96_Setup:			DAC_Setup $0D,DAC_94_95_96_97_Data
-DAC_97_Setup:			DAC_Setup $12,DAC_94_95_96_97_Data
-DAC_98_Setup:			DAC_Setup $0B,DAC_98_99_9A_Data
-DAC_99_Setup:			DAC_Setup $13,DAC_98_99_9A_Data
-DAC_9A_Setup:			DAC_Setup $16,DAC_98_99_9A_Data
-DAC_9B_Setup:			DAC_Setup $0C,DAC_9B_Data
-	endif
-	if (use_s3_samples<>0)||(use_sk_samples<>0)
-DAC_A2_Setup:			DAC_Setup $0A,DAC_A2_Data
-DAC_A3_Setup:			DAC_Setup $18,DAC_A3_Data
-DAC_A4_Setup:			DAC_Setup $18,DAC_A4_Data
-DAC_A5_Setup:			DAC_Setup $0C,DAC_A5_Data
-DAC_A6_Setup:			DAC_Setup $09,DAC_A6_Data
-DAC_A7_Setup:			DAC_Setup $18,DAC_A7_Data
-DAC_A8_Setup:			DAC_Setup $18,DAC_A8_Data
-DAC_A9_Setup:			DAC_Setup $0C,DAC_A9_Data
-DAC_AA_Setup:			DAC_Setup $0A,DAC_AA_Data
-DAC_AB_Setup:			DAC_Setup $0D,DAC_AB_Data
-DAC_AC_Setup:			DAC_Setup $06,DAC_AC_Data
-DAC_AD_Setup:			DAC_Setup $10,DAC_AD_AE_Data
-DAC_AE_Setup:			DAC_Setup $18,DAC_AD_AE_Data
-DAC_AF_Setup:			DAC_Setup $09,DAC_AF_B0_Data
-DAC_B0_Setup:			DAC_Setup $12,DAC_AF_B0_Data
-DAC_B1_Setup:			DAC_Setup $18,DAC_B1_Data
-DAC_B2_Setup:			DAC_Setup $16,DAC_B2_B3_Data
-DAC_B3_Setup:			DAC_Setup $20,DAC_B2_B3_Data
-DAC_B4_Setup:			DAC_Setup $0C,DAC_B4_C1_C2_C3_C4_Data
-DAC_B5_Setup:			DAC_Setup $0C,DAC_B5_Data
-DAC_B6_Setup:			DAC_Setup $0C,DAC_B6_Data
-DAC_B7_Setup:			DAC_Setup $18,DAC_B7_Data
-DAC_B8_B9_Setup:		DAC_Setup $0C,DAC_B8_B9_Data
-DAC_BA_Setup:			DAC_Setup $18,DAC_BA_Data
-DAC_BB_Setup:			DAC_Setup $18,DAC_BB_Data
-DAC_BC_Setup:			DAC_Setup $18,DAC_BC_Data
-DAC_BD_Setup:			DAC_Setup $0C,DAC_BD_Data
-DAC_BE_Setup:			DAC_Setup $0C,DAC_BE_Data
-DAC_BF_Setup:			DAC_Setup $1C,DAC_BF_Data
-DAC_C0_Setup:			DAC_Setup $0B,DAC_C0_Data
-DAC_C1_Setup:			DAC_Setup $0F,DAC_B4_C1_C2_C3_C4_Data
-DAC_C2_Setup:			DAC_Setup $11,DAC_B4_C1_C2_C3_C4_Data
-DAC_C3_Setup:			DAC_Setup $12,DAC_B4_C1_C2_C3_C4_Data
-DAC_C4_Setup:			DAC_Setup $0B,DAC_B4_C1_C2_C3_C4_Data
-	endif
-	if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-DAC_9C_Setup:			DAC_Setup $0A,DAC_9C_Data
-DAC_9D_Setup:			DAC_Setup $18,DAC_9D_Data
-DAC_9E_Setup:			DAC_Setup $18,DAC_9E_Data
-	endif
-	if (use_s3_samples<>0)||(use_sk_samples<>0)
-DAC_9F_Setup:			DAC_Setup $0C,DAC_9F_Data
-DAC_A0_Setup:			DAC_Setup $0C,DAC_A0_Data
-DAC_A1_Setup:			DAC_Setup $0A,DAC_A1_Data
-	endif
-	if (use_s2_samples<>0)
-DAC_C5_Setup:			DAC_Setup $17,DAC_C5_Data
-DAC_C6_Setup:			DAC_Setup $01,DAC_C6_Data
-DAC_C7_Setup:			DAC_Setup $06,DAC_C7_Data
-DAC_C8_Setup:			DAC_Setup $08,DAC_C8_Data
-DAC_C9_Setup:			DAC_Setup $1B,DAC_C9_CC_CD_CE_CF_Data
-DAC_CA_Setup:			DAC_Setup $0A,DAC_CA_D0_D1_D2_Data
-DAC_CB_Setup:			DAC_Setup $1B,DAC_CB_D3_D4_D5_Data
-DAC_CC_Setup:			DAC_Setup $12,DAC_C9_CC_CD_CE_CF_Data
-DAC_CD_Setup:			DAC_Setup $15,DAC_C9_CC_CD_CE_CF_Data
-DAC_CE_Setup:			DAC_Setup $1C,DAC_C9_CC_CD_CE_CF_Data
-DAC_CF_Setup:			DAC_Setup $1D,DAC_C9_CC_CD_CE_CF_Data
-DAC_D0_Setup:			DAC_Setup $02,DAC_CA_D0_D1_D2_Data
-DAC_D1_Setup:			DAC_Setup $05,DAC_CA_D0_D1_D2_Data
-DAC_D2_Setup:			DAC_Setup $08,DAC_CA_D0_D1_D2_Data
-DAC_D3_Setup:			DAC_Setup $08,DAC_CB_D3_D4_D5_Data
-DAC_D4_Setup:			DAC_Setup $0B,DAC_CB_D3_D4_D5_Data
-DAC_D5_Setup:			DAC_Setup $12,DAC_CB_D3_D4_D5_Data
-	endif
-	if (use_s3d_samples<>0)
-DAC_D6_Setup:			DAC_Setup $01,DAC_D6_Data
-DAC_D7_Setup:			DAC_Setup $12,DAC_D7_Data
-	endif
-	if (use_s3_samples<>0)
-DAC_D8_Setup:			DAC_Setup $16,DAC_D8_D9_Data
-DAC_D9_Setup:			DAC_Setup $20,DAC_D8_D9_Data
-	endif
-	endm
-
-; ---------------------------------------------------------------------------
-; ===========================================================================
-; DAC Banks
-; ===========================================================================
-
-	if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-; ---------------------------------------------------------------------------
-; DAC Bank 1
-; ---------------------------------------------------------------------------
-DacBank1:			startBank
-	DAC_Master_Table
-
-DAC_86_Data:			DACBINCLUDE "Sound/DAC/86.bin"
-DAC_81_Data:			DACBINCLUDE "Sound/DAC/81.bin"
-DAC_82_83_84_85_Data:	DACBINCLUDE "Sound/DAC/82-85.bin"
-DAC_94_95_96_97_Data:	DACBINCLUDE "Sound/DAC/94-97.bin"
-DAC_90_91_92_93_Data:	DACBINCLUDE "Sound/DAC/90-93.bin"
-DAC_88_Data:			DACBINCLUDE "Sound/DAC/88.bin"
-DAC_8A_8B_Data:			DACBINCLUDE "Sound/DAC/8A-8B.bin"
-DAC_8C_Data:			DACBINCLUDE "Sound/DAC/8C.bin"
-DAC_8D_8E_Data:			DACBINCLUDE "Sound/DAC/8D-8E.bin"
-DAC_87_Data:			DACBINCLUDE "Sound/DAC/87.bin"
-DAC_8F_Data:			DACBINCLUDE "Sound/DAC/8F.bin"
-DAC_89_Data:			DACBINCLUDE "Sound/DAC/89.bin"
-DAC_98_99_9A_Data:		DACBINCLUDE "Sound/DAC/98-9A.bin"
-DAC_9B_Data:			DACBINCLUDE "Sound/DAC/9B.bin"
-	endif
-
-	if (use_s3_samples<>0)||(use_sk_samples<>0)
-DAC_B2_B3_Data:			DACBINCLUDE "Sound/DAC/B2-B3.bin"
-
-	if (use_s3_samples<>0)
-DAC_D8_D9_Data:			DACBINCLUDE "Sound/DAC/D8-D9.bin"
-	endif
-
-	finishBank
-
-; ---------------------------------------------------------------------------
-; Dac Bank 2
-; ---------------------------------------------------------------------------
-DacBank2:			startBank
-	DAC_Master_Table
-	endif
-
-	if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-DAC_9C_Data:			DACBINCLUDE "Sound/DAC/9C.bin"
-DAC_9D_Data:			DACBINCLUDE "Sound/DAC/9D.bin"
-DAC_9E_Data:			DACBINCLUDE "Sound/DAC/9E.bin"
-	endif
-
-	if (use_s3_samples<>0)||(use_sk_samples<>0)
-DAC_9F_Data:			DACBINCLUDE "Sound/DAC/9F.bin"
-DAC_A0_Data:			DACBINCLUDE "Sound/DAC/A0.bin"
-DAC_A1_Data:			DACBINCLUDE "Sound/DAC/A1.bin"
-DAC_A2_Data:			DACBINCLUDE "Sound/DAC/A2.bin"
-DAC_A3_Data:			DACBINCLUDE "Sound/DAC/A3.bin"
-DAC_A4_Data:			DACBINCLUDE "Sound/DAC/A4.bin"
-DAC_A5_Data:			DACBINCLUDE "Sound/DAC/A5.bin"
-DAC_A6_Data:			DACBINCLUDE "Sound/DAC/A6.bin"
-DAC_A7_Data:			DACBINCLUDE "Sound/DAC/A7.bin"
-DAC_A8_Data:			DACBINCLUDE "Sound/DAC/A8.bin"
-DAC_A9_Data:			DACBINCLUDE "Sound/DAC/A9.bin"
-DAC_AA_Data:			DACBINCLUDE "Sound/DAC/AA.bin"
-
-	finishBank
-
-; ---------------------------------------------------------------------------
-; Dac Bank 3
-; ---------------------------------------------------------------------------
-DacBank3:			startBank
-	DAC_Master_Table
-
-DAC_AB_Data:			DACBINCLUDE "Sound/DAC/AB.bin"
-DAC_AC_Data:			DACBINCLUDE "Sound/DAC/AC.bin"
-DAC_AD_AE_Data:			DACBINCLUDE "Sound/DAC/AD-AE.bin"
-DAC_AF_B0_Data:			DACBINCLUDE "Sound/DAC/AF-B0.bin"
-DAC_B1_Data:			DACBINCLUDE "Sound/DAC/B1.bin"
-DAC_B4_C1_C2_C3_C4_Data:DACBINCLUDE "Sound/DAC/B4C1-C4.bin"
-DAC_B5_Data:			DACBINCLUDE "Sound/DAC/B5.bin"
-DAC_B6_Data:			DACBINCLUDE "Sound/DAC/B6.bin"
-DAC_B7_Data:			DACBINCLUDE "Sound/DAC/B7.bin"
-DAC_B8_B9_Data:			DACBINCLUDE "Sound/DAC/B8-B9.bin"
-DAC_BA_Data:			DACBINCLUDE "Sound/DAC/BA.bin"
-DAC_BB_Data:			DACBINCLUDE "Sound/DAC/BB.bin"
-DAC_BC_Data:			DACBINCLUDE "Sound/DAC/BC.bin"
-DAC_BD_Data:			DACBINCLUDE "Sound/DAC/BD.bin"
-DAC_BE_Data:			DACBINCLUDE "Sound/DAC/BE.bin"
-DAC_BF_Data:			DACBINCLUDE "Sound/DAC/BF.bin"
-DAC_C0_Data:			DACBINCLUDE "Sound/DAC/C0.bin"
-
-	finishBank
-	endif
-
-	if (use_s2_samples<>0)||(use_s3d_samples<>0)
-; ---------------------------------------------------------------------------
-; Dac Bank 4
-; ---------------------------------------------------------------------------
-DacBank4:			startBank
-	DAC_Master_Table
-	if (use_s2_samples<>0)
-DAC_C5_Data:			DACBINCLUDE "Sound/DAC/C5.bin"
-DAC_C6_Data:			DACBINCLUDE "Sound/DAC/C6.bin"
-DAC_C7_Data:			DACBINCLUDE "Sound/DAC/C7.bin"
-DAC_C8_Data:			DACBINCLUDE "Sound/DAC/C8.bin"
-DAC_C9_CC_CD_CE_CF_Data:DACBINCLUDE "Sound/DAC/C9CC-CF.bin"
-DAC_CA_D0_D1_D2_Data:	DACBINCLUDE "Sound/DAC/CAD0-D2.bin"
-DAC_CB_D3_D4_D5_Data:	DACBINCLUDE "Sound/DAC/CBD3-D5.bin"
-	endif
-
-	if (use_s3d_samples<>0)
-DAC_D6_Data:			DACBINCLUDE "Sound/DAC/D6.bin"
-DAC_D7_Data:			DACBINCLUDE "Sound/DAC/D7.bin"
-	endif
-
-	finishBank
-	endif
 
 ; ---------------------------------------------------------------------------
 	include "Sound/_smps2asm_inc.asm"
@@ -4936,10 +4347,5 @@ Music_33:			include "Sound/SK/Music/Credits.asm"
 	
 	if MOMPASS=2
 		message	"Please update the following data in Constants.asm"
-		message "zPalFlag:		equ	$A0\{zPalFlag}"
-		message "zTempoSpeedup:		equ	$A0\{zTempoSpeedup}"
-		message "zMusicNumber:		equ	$A0\{zMusicNumber}"
-		message "zSFXNumber0:		equ	$A0\{zSFXNumber0}"
-		message "zSFXNumber1:		equ	$A0\{zSFXNumber1}"
-		message "zPauseFlag:		equ	$A0\{zPauseFlag}"		
+		message "SMPS_BASE:		equ	$A0\{zPalFlag}"		
 	endif
