@@ -90,22 +90,7 @@ locret_146BE:
 ; ===========================================================================
 
 loc_146C0:
-
-	if QuarterloopFix=1	;Mercury Quarterloop Fix
-		move.b	obVelX(a0),d0
-		bpl.s	@next1
-		neg.b	d0
-	@next1:
-		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		bcs.s	@next2
-		move.b	#$E,d0
-	@next2:
-		cmp.b	d0,d1
-	else
 		cmpi.w	#$E,d1
-	endc	;end Quarterloop Fix
-	
 		bgt.s	loc_146CC
 
 loc_146C6:
@@ -117,7 +102,7 @@ loc_146CC:
 		tst.b	$38(a0)
 		bne.s	loc_146C6
 		bset	#1,obStatus(a0)
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
+		bclr	#5,obStatus(a0)
 		move.b	#1,obNextAni(a0)
 		rts	
 ; ===========================================================================
@@ -186,20 +171,6 @@ Sonic_Angle:				; XREF: Sonic_AnglePos; et al
 loc_1475E:
 		btst	#0,d2
 		bne.s	loc_1476A
-		
-	if QuarterloopFix=1	;Mercury Quarterloop Fix
-		tst.b	obOnWheel(a0)
-		bne.s	@onwheel
-		move.b	d2,d0
-		sub.b	obAngle(a0),d0
-		bpl.s	@next
-		neg.b	d0
-	@next:
-		cmpi.b	#$20,d0
-		bcc.s	loc_1476A
-	@onwheel:
-	endc	;end Quarterloop Fix
-	
 		move.b	d2,obAngle(a0)
 		rts	
 ; ===========================================================================
@@ -264,22 +235,7 @@ locret_147F0:
 ; ===========================================================================
 
 loc_147F2:
-
-	if QuarterloopFix=1	;Mercury Quarterloop Fix
-		move.b	obVelY(a0),d0
-		bpl.s	@next1
-		neg.b	d0
-	@next1:
-		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		bcs.s	@next2
-		move.b	#$E,d0
-	@next2:
-		cmp.b	d0,d1
-	else
 		cmpi.w	#$E,d1
-	endc	;end Quarterloop Fix
-	
 		bgt.s	loc_147FE
 
 loc_147F8:
@@ -291,7 +247,7 @@ loc_147FE:
 		tst.b	$38(a0)
 		bne.s	loc_147F8
 		bset	#1,obStatus(a0)
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
+		bclr	#5,obStatus(a0)
 		move.b	#1,obNextAni(a0)
 		rts	
 ; End of function Sonic_WalkVertR
@@ -349,22 +305,7 @@ locret_14892:
 ; ===========================================================================
 
 loc_14894:
-
-	if QuarterloopFix=1	;Mercury Quarterloop Fix
-		move.b	obVelX(a0),d0
-		bpl.s	@next1
-		neg.b	d0
-	@next1:	
-		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		bcs.s	@next2
-		move.b	#$E,d0
-	@next2:
-		cmp.b	d0,d1
-	else
 		cmpi.w	#$E,d1
-	endc	;end Quarterloop Fix
-	
 		bgt.s	loc_148A0
 
 loc_1489A:
@@ -376,7 +317,7 @@ loc_148A0:
 		tst.b	$38(a0)
 		bne.s	loc_1489A
 		bset	#1,obStatus(a0)
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
+		bclr	#5,obStatus(a0)
 		move.b	#1,obNextAni(a0)
 		rts	
 ; End of function Sonic_WalkCeiling
@@ -434,22 +375,7 @@ locret_14934:
 ; ===========================================================================
 
 loc_14936:
-
-	if QuarterloopFix=1	;Mercury Quarterloop Fix
-		move.b	obVelY(a0),d0
-		bpl.s	@next1
-		neg.b	d0
-	@next1:
-		addq.b	#4,d0
-		cmpi.b	#$E,d0
-		bcs.s	@next2
-		move.b	#$E,d0
-	@next2:
-		cmp.b	d0,d1
-	else
 		cmpi.w	#$E,d1
-	endc	;end Quarterloop Fix
-	
 		bgt.s	loc_14942
 
 loc_1493C:
@@ -461,7 +387,7 @@ loc_14942:
 		tst.b	$38(a0)
 		bne.s	loc_1493C
 		bset	#1,obStatus(a0)
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
+		bclr	#5,obStatus(a0)
 		move.b	#1,obNextAni(a0)
 		rts	
 ; End of function Sonic_WalkVertL

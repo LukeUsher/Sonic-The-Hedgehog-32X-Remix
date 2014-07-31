@@ -48,7 +48,7 @@ loc_18D68:
 		addq.b	#2,obRoutine(a0)
 
 Obj7B_Fall:	; Routine 2
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		movea.l	$3C(a0),a1
 		lea	(word_19018).l,a2
 		moveq	#0,d0
@@ -230,19 +230,19 @@ loc_18EC0:
 loc_18F38:
 		tst.w	obVelY(a0)
 		bpl.s	loc_18F5C
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		move.w	$34(a0),d0
 		subi.w	#$2F,d0
 		cmp.w	obY(a0),d0
 		bgt.s	loc_18F58
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 
 loc_18F58:
 		bra.w	loc_18E7A
 ; ===========================================================================
 
 loc_18F5C:
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		movea.l	$3C(a0),a1
 		lea	(word_19018).l,a2
 		moveq	#0,d0
@@ -350,7 +350,7 @@ Obj7B_FragSpeed:dc.w -$100, -$340	; horizontal, vertical
 ; ===========================================================================
 
 Obj7B_MoveFrag:	; Routine $A
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		move.w	obX(a0),$30(a0)
 		move.w	obY(a0),$34(a0)
 		addi.w	#$18,obVelY(a0)

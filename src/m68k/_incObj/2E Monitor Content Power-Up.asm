@@ -34,7 +34,7 @@ Pow_Main:	; Routine 0
 Pow_Move:	; Routine 2
 		tst.w	obVelY(a0)	; is object moving?
 		bpl.w	Pow_Checks	; if not, branch
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)	; reduce object	speed
 		rts	
 ; ===========================================================================
@@ -55,15 +55,8 @@ Pow_ChkSonic:
 		bne.s	Pow_ChkShoes
 
 	ExtraLife:
-	
-	;Mercury Lives Over/Underflow Fix
-		cmpi.b	#$63,(v_lives).w	; are lives at max?
-		beq.s	@playbgm
-		addq.b	#1,(v_lives).w	; add 1 to number of lives
+		addq.b	#1,(v_lives).w	; add 1 to the number of lives you have
 		addq.b	#1,(f_lifecount).w ; update the lives counter
-	@playbgm:
-	;end Lives Over/Underflow Fix
-	
 		music	bgm_ExtraLife,1	; play extra life music
 ; ===========================================================================
 
@@ -72,22 +65,11 @@ Pow_ChkShoes:
 		bne.s	Pow_ChkShield
 
 		move.b	#1,(v_shoes).w	; speed up the BG music
-		move.w	#$4B0,(v_player+obShoes).w	; time limit for the power-up	;Mercury Constants
+		move.w	#$4B0,(v_player+$34).w	; time limit for the power-up
 		move.w	#$C00,(v_sonspeedmax).w ; change Sonic's top speed
 		move.w	#$18,(v_sonspeedacc).w	; change Sonic's acceleration
 		move.w	#$80,(v_sonspeeddec).w	; change Sonic's deceleration
-		
-	;Mercury Speed Shoes Work Underwater
-		btst	#staWater,(v_player+obStatus).w	; is Sonic underwater?	;Mercury Constants
-		beq.s	@isdry		; if not, branch
-		move.w	#$600,(v_sonspeedmax).w ; change Sonic's top speed
-		move.w	#$C,(v_sonspeedacc).w	; change Sonic's acceleration
-		move.w	#$40,(v_sonspeeddec).w	; change Sonic's deceleration
-	@isdry:
-	;end Speed Shoes Work Underwater
-		
-		move.w	#8,d0
-		jmp	(SetTempo).l	; Speed	up the music
+		music	bgm_Speedup,1		; Speed	up the music
 ; ===========================================================================
 
 Pow_ChkShield:
@@ -115,10 +97,11 @@ Pow_ChkInvinc:
 		move.b	#4,(v_objspace+$2C0+obAnim).w
 		tst.b	(f_lockscreen).w ; is boss mode on?
 		bne.s	Pow_NoMusic	; if yes, branch
-
-		cmpi.w	#$C,(v_air).w
-		bls.s	Pow_NoMusic
-
+		if Revision=0
+		else
+			cmpi.w	#$C,(v_air).w
+			bls.s	Pow_NoMusic
+		endc
 		music	bgm_Invincible,1 ; play invincibility music
 ; ===========================================================================
 

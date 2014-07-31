@@ -63,7 +63,7 @@ Msl_FromBuzz:	; Routine 4
 		bne.s	@explode
 		move.b	#$87,obColType(a0)
 		move.b	#1,obAnim(a0)
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		lea	(Ani_Missile).l,a1
 		bsr.w	AnimateSprite
 		bsr.w	DisplaySprite
@@ -88,7 +88,7 @@ Msl_Delete:	; Routine 6
 Msl_FromNewt:	; Routine 8
 		tst.b	obRender(a0)
 		bpl.s	Msl_Delete
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 
 Msl_Animate2:				; XREF: Msl_Main
 		lea	(Ani_Missile).l,a1

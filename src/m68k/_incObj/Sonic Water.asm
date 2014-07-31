@@ -6,7 +6,7 @@
 
 
 Sonic_Water:				; XREF: loc_12C7E
-		cmpi.b	#id_LZ,(v_zone).w	; is level LZ?
+		cmpi.b	#1,(v_zone).w	; is level LZ?
 		beq.s	@islabyrinth	; if yes, branch
 
 	@exit:
@@ -17,7 +17,7 @@ Sonic_Water:				; XREF: loc_12C7E
 		move.w	(v_waterpos1).w,d0
 		cmp.w	obY(a0),d0	; is Sonic above the water?
 		bge.s	@abovewater	; if yes, branch
-		bset	#staWater,obStatus(a0)	;Mercury Constants
+		bset	#6,obStatus(a0)
 		bne.s	@exit
 		bsr.w	ResumeMusic
 		move.b	#$A,(v_objspace+$340).w ; load bubbles object from Sonic's mouth
@@ -25,15 +25,6 @@ Sonic_Water:				; XREF: loc_12C7E
 		move.w	#$300,(v_sonspeedmax).w ; change Sonic's top speed
 		move.w	#6,(v_sonspeedacc).w ; change Sonic's acceleration
 		move.w	#$40,(v_sonspeeddec).w ; change Sonic's deceleration
-		
-	;Mercury Speed Shoes Work Underwater
-		tst.b	(v_shoes).w	; does Sonic have Speed Shoes?
-		beq.s	@noshoesbelow	; if not, branch
-		move.w	#$600,(v_sonspeedmax).w ; change Sonic's top speed
-		move.w	#$C,(v_sonspeedacc).w ; change Sonic's acceleration
-	@noshoesbelow:
-	;end Speed Shoes Work Underwater
-		
 		asr	obVelX(a0)
 		asr	obVelY(a0)
 		asr	obVelY(a0)	; slow Sonic
@@ -43,21 +34,12 @@ Sonic_Water:				; XREF: loc_12C7E
 ; ===========================================================================
 
 @abovewater:
-		bclr	#staWater,obStatus(a0)	;Mercury Constants
+		bclr	#6,obStatus(a0)
 		beq.s	@exit
 		bsr.w	ResumeMusic
 		move.w	#$600,(v_sonspeedmax).w ; restore Sonic's speed
 		move.w	#$C,(v_sonspeedacc).w ; restore Sonic's acceleration
 		move.w	#$80,(v_sonspeeddec).w ; restore Sonic's deceleration
-		
-	;Mercury Speed Shoes Work Underwater
-		tst.b	(v_shoes).w	; does Sonic have Speed Shoes?
-		beq.s	@noshoesabove	; if not, branch
-		move.w	#$C00,(v_sonspeedmax).w ; change Sonic's top speed
-		move.w	#$18,(v_sonspeedacc).w ; change Sonic's acceleration
-	@noshoesabove:
-	;end Speed Shoes Work Underwater
-		
 		asl	obVelY(a0)
 		beq.w	@exit
 		move.b	#id_Splash,(v_objspace+$300).w ; load splash object

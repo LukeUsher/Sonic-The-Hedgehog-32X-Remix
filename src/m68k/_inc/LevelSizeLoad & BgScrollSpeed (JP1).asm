@@ -83,18 +83,6 @@ LevSz_SonicPos:
 
 SetScreen:
 	LevSz_SkipStartPos:
-	
-	if SpinDashCameraLag=1 ;Mercury Spin Dash Camera Lag
-		clr.b	(v_cameralag).w
-		clr.w	(v_trackpos).w		; reset Sonic's position tracking index
-		lea	(v_tracksonic).w,a2	; load the tracking array into a2
-		moveq	#63,d2			; begin a 64-step loop
-	@looppoint:
-		move.w	d1,(a2)+		; fill in X
-		move.w	d0,(a2)+		; fill in Y
-		dbf	d2,@looppoint		; loop
-	endc	;end Spin Dash Camera Lag
-	
 		subi.w	#160,d1		; is Sonic more than 160px from left edge?
 		bcc.s	SetScr_WithinLeft ; if yes, branch
 		moveq	#0,d1
@@ -127,10 +115,9 @@ SetScreen:
 		rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Sonic	start location array
+; Sonic start location array
 ; ---------------------------------------------------------------------------
-StartLocArray:	incbin	"misc\Start Location Array - Levels.bin"
-		even
+StartLocArray:	include	"_inc\Start Location Array - Levels.asm"
 
 ; ---------------------------------------------------------------------------
 ; Which	256x256	tiles contain loops or roll-tunnels

@@ -1,11 +1,6 @@
 ; ---------------------------------------------------------------------------
 ; Object 5E - seesaws (SLZ)
 ; ---------------------------------------------------------------------------
-see_origX:	= $30		; original x-axis position
-see_origY:	= $34		; original y-axis position
-see_speed:	= $38		; speed of collision
-see_frame:	= $3A		; 
-see_parent:	= $3C		; RAM address of parent object
 
 Seesaw:					; XREF: Obj_Index
 		moveq	#0,d0
@@ -29,6 +24,12 @@ See_Index:	dc.w See_Main-See_Index
 		dc.w See_Spikeball-See_Index
 		dc.w See_MoveSpike-See_Index
 		dc.w See_SpikeFall-See_Index
+
+see_origX:	= $30		; original x-axis position
+see_origY:	= $34		; original y-axis position
+see_speed:	= $38		; speed of collision
+see_frame:	= $3A		; 
+see_parent:	= $3C		; RAM address of parent object
 ; ===========================================================================
 
 See_Main:	; Routine 0
@@ -202,19 +203,19 @@ loc_1185C:
 See_SpikeFall:	; Routine $A
 		tst.w	obVelY(a0)	; is spikeball falling down?
 		bpl.s	loc_1189A	; if yes, branch
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		move.w	see_origY(a0),d0
 		subi.w	#$2F,d0
 		cmp.w	obY(a0),d0
 		bgt.s	locret_11898
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 
 locret_11898:
 		rts	
 ; ===========================================================================
 
 loc_1189A:				; XREF: See_SpikeFall
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		movea.l	see_parent(a0),a1
 		lea	(See_Speeds).l,a2
 		moveq	#0,d0

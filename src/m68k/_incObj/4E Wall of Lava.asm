@@ -95,7 +95,7 @@ LWall_Solid:	; Routine 2
 		bsr.w	AnimateSprite
 		cmpi.b	#4,(v_player+obRoutine).w
 		bcc.s	@rangechk
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 
 	@rangechk:
 		bsr.w	DisplaySprite

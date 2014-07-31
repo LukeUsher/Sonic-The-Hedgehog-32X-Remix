@@ -61,8 +61,8 @@ loc_1670E:
 		move.w	#$800,obInertia(a1)
 		move.w	#0,obVelX(a1)
 		move.w	#0,obVelY(a1)
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
+		bclr	#5,obStatus(a0)
+		bclr	#5,obStatus(a1)
 		bset	#1,obStatus(a1)
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)

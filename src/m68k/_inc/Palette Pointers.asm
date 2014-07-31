@@ -12,7 +12,6 @@ PalPointers:
 ; palette address, RAM address, colours
 
 ptr_Pal_SegaBG:		palp	Pal_SegaBG,$FB00,$40		; 0 - Sega logo
-
 ptr_Pal_Title:		palp	Pal_Title,$FB00,$40		; 1 - title screen
 ptr_Pal_LevelSel:	palp	Pal_LevelSel,$FB00,$40		; 2 - level select
 ptr_Pal_Sonic:		palp	Pal_Sonic,$FB00,$10		; 3 - Sonic

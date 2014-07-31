@@ -19,8 +19,8 @@ CSon_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.w	#$A0,obX(a0)
 		move.w	#$C0,obY(a0)
-		move.l	#$DEADBEEF,obMap(a0)		; Set sprite ID (32X)
-		move.b	#1,obGfx(a0)
+		move.l	#Map_Sonic,obMap(a0)
+		move.w	#$780,obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#id_Float3,obAnim(a0) ; use "floating" animation
@@ -38,9 +38,9 @@ CSon_ChkLand:	; Routine 2
 		bra.s	CSon_Animate
 
 CSon_ShowFall:
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		jsr	Sonic_Animate
-		;jmp	Sonic_LoadGfx
+		jmp	Sonic_LoadGfx
 ; ===========================================================================
 
 CSon_Animate:	; Routine 4
@@ -51,8 +51,8 @@ CSon_Animate:	; Routine 4
 
 CSon_GetUp:
 		addq.b	#2,obRoutine(a0)
-		;move.l	#Map_Sonic,obMap(a0)
-		;move.w	#$780,obGfx(a0)
+		move.l	#Map_Sonic,obMap(a0)
+		move.w	#$780,obGfx(a0)
 		move.b	#id_Float4,obAnim(a0) ; use "getting up" animation
 		clr.w	obInertia(a0)
 		subq.w	#8,obY(a0)
@@ -69,6 +69,6 @@ CSon_AddInertia:
 		addi.w	#$20,obInertia(a0) ; increase inertia
 
 CSon_ShowRun:
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		jsr	Sonic_Animate
-		;jmp	Sonic_LoadGfx
+		jmp	Sonic_LoadGfx

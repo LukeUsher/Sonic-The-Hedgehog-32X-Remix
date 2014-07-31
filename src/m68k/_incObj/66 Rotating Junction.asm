@@ -60,7 +60,7 @@ Jun_Action:	; Routine 2
 		addq.w	#1,d3
 		move.w	obX(a0),d4
 		bsr.w	SolidObject
-		btst	#staPush,obStatus(a0)	; is Sonic pushing the disc?	;Mercury Constants
+		btst	#5,obStatus(a0)	; is Sonic pushing the disc?
 		beq.w	Jun_Display	; if not, branch
 
 		lea	(v_player).w,a1
@@ -81,8 +81,8 @@ Jun_Action:	; Routine 2
 		move.w	#$800,obInertia(a1)
 		move.w	#0,obVelX(a1)
 		move.w	#0,obVelY(a1)
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
+		bclr	#5,obStatus(a0)
+		bclr	#5,obStatus(a1)
 		bset	#1,obStatus(a1)
 		move.w	obX(a1),d2
 		move.w	obY(a1),d3

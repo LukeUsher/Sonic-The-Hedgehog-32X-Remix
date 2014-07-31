@@ -67,14 +67,6 @@ Newt_Action:	; Routine 2
 @type00:				; XREF: @index
 		cmpi.b	#4,obFrame(a0)	; has "appearing" animation finished?
 		bcc.s	@fall		; is yes, branch
-		
-	if (NewtronBehaviourTweak&1) ;Mercury Newtron Behaviour Tweak
-		cmpi.b	#2,obFrame(a0)
-		bcs.s	@next
-		move.b	#$C,obColType(a0)
-	@next:
-	endc	;end Newtron Behaviour Tweak
-		
 		bset	#0,obStatus(a0)
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
@@ -91,7 +83,7 @@ Newt_Action:	; Routine 2
 		move.b	#$C,obColType(a0)
 
 	@loc_DE42:
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		bsr.w	ObjFloorDist
 		tst.w	d1		; has newtron hit the floor?
 		bpl.s	@keepfalling	; if not, branch
@@ -116,7 +108,7 @@ Newt_Action:	; Routine 2
 ; ===========================================================================
 
 @matchfloor:				; XREF: @index
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		bsr.w	ObjFloorDist
 		cmpi.w	#-8,d1
 		blt.s	@nextroutine
@@ -132,7 +124,7 @@ Newt_Action:	; Routine 2
 ; ===========================================================================
 
 @speed:					; XREF: @index
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		rts	
 ; ===========================================================================
 

@@ -14,7 +14,7 @@ Sonic_RollSpeed:			; XREF: Obj01_MdRoll
 		asr.w	#2,d4
 		tst.b	(f_jumponly).w
 		bne.w	loc_131CC
-		tst.w	obLRLock(a0)	;Mercury Constants
+		tst.w	$3E(a0)
 		bne.s	@notright
 		btst	#bitL,(v_jpadhold2).w ; is left being pressed?
 		beq.s	@notleft	; if not, branch
@@ -49,26 +49,13 @@ loc_131A6:
 loc_131AA:
 		tst.w	obInertia(a0)	; is Sonic moving?
 		bne.s	loc_131CC	; if yes, branch
-		bclr	#staSpin,obStatus(a0)	;Mercury Constants
+		bclr	#2,obStatus(a0)
 		move.b	#$13,obHeight(a0)
 		move.b	#9,obWidth(a0)
 		move.b	#id_Wait,obAnim(a0) ; use "standing" animation
 		subq.w	#5,obY(a0)
 
 loc_131CC:
-
-	;Mercury Screen Scroll While Rolling Fix
-		cmp.w	#$60,(v_lookshift).w
-		beq.s	@cont2
-		bcc.s	@cont1
-		addq.w	#4,(v_lookshift).w
-
-	@cont1:
-		subq.w	#2,(v_lookshift).w
-
-	@cont2:
-	;end Screen Scroll While Rolling Fix
-
 		move.b	obAngle(a0),d0
 		jsr	(CalcSine).l
 		muls.w	obInertia(a0),d0
@@ -100,7 +87,7 @@ Sonic_RollLeft:				; XREF: Sonic_RollSpeed
 		bpl.s	loc_13218
 
 loc_1320A:
-		bset	#staFacing,obStatus(a0)	;Mercury Constants
+		bset	#0,obStatus(a0)
 		move.b	#id_Roll,obAnim(a0) ; use "rolling" animation
 		rts	
 ; ===========================================================================
@@ -108,12 +95,7 @@ loc_1320A:
 loc_13218:
 		sub.w	d4,d0
 		bcc.s	loc_13220
-		
-	if RollingTurnAroundFix=1	;Mercury Rolling Turn Around Fix
-		move.w	#0,d0
-	else
 		move.w	#-$80,d0
-	endc	;end Rolling Turn Around Fix
 
 loc_13220:
 		move.w	d0,obInertia(a0)
@@ -127,7 +109,7 @@ loc_13220:
 Sonic_RollRight:			; XREF: Sonic_RollSpeed
 		move.w	obInertia(a0),d0
 		bmi.s	loc_1323A
-		bclr	#staFacing,obStatus(a0)	;Mercury Constants
+		bclr	#0,obStatus(a0)
 		move.b	#id_Roll,obAnim(a0) ; use "rolling" animation
 		rts	
 ; ===========================================================================
@@ -135,13 +117,7 @@ Sonic_RollRight:			; XREF: Sonic_RollSpeed
 loc_1323A:
 		add.w	d4,d0
 		bcc.s	loc_13242
-		
-	if RollingTurnAroundFix=1	;Mercury Rolling Turn Around Fix
-		move.w	#0,d0
-	else
 		move.w	#$80,d0
-	endc	;end Rolling Turn Around Fix
-		
 
 loc_13242:
 		move.w	d0,obInertia(a0)

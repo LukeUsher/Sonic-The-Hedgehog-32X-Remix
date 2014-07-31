@@ -74,8 +74,10 @@ Over_ChgMode:				; XREF: Over_Wait
 ; ===========================================================================
 
 Over_ResetLvl:				; XREF: Over_ChgMode
-
-		clr.l	(v_lamp_time).w
+		if Revision=0
+		else
+			clr.l	(v_lamp_time).w
+		endc
 		move.w	#1,(f_restart).w ; restart level
 
 Over_Display:				; XREF: Over_ChgMode

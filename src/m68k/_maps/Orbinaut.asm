@@ -8,13 +8,7 @@ Map_Orb:	dc.w @normal-Map_Orb
 @normal:	dc.b 1
 		dc.b $F4, $A, 0, 0, $F4
 @medium:	dc.b 1
-
-	if SLZOrbinautBehaviourMod=1	;Mercury SLZ Orbinaut Behaviour Mod
-		dc.b $F4, $A, 0, 9, $F4
-	else
 		dc.b $F4, $A, $20, 9, $F4
-	endc	;end SLZ Orbinaut Behaviour Mod
-
 @angry:		dc.b 1
 		dc.b $F4, $A, 0, $12, $F4
 @spikeball:	dc.b 1

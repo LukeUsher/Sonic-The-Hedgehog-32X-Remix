@@ -26,11 +26,6 @@ Sonic_Floor:				; XREF: Obj01_MdJump; Obj01_MdJump2
 		sub.w	d1,obX(a0)
 		move.w	#0,obVelX(a0)
 
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.b	#btnL,d1
-		bsr.w	WallJump
-	endc	;end Wall Jump
-		
 loc_135F0:
 		bsr.w	sub_14EB4
 		tst.w	d1
@@ -38,11 +33,6 @@ loc_135F0:
 		add.w	d1,obX(a0)
 		move.w	#0,obVelX(a0)
 
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.b	#btnR,d1
-		bsr.w	WallJump
-	endc	;end Wall Jump
-		
 loc_13602:
 		bsr.w	Sonic_HitFloor
 		move.b	d1,($FFFFFFEF).w
@@ -59,7 +49,6 @@ loc_13602:
 loc_1361E:
 		add.w	d1,obY(a0)
 		move.b	d3,obAngle(a0)
-
 		bsr.w	Sonic_ResetOnFloor
 		move.b	#id_Walk,obAnim(a0)
 		move.b	d3,d0
@@ -143,22 +132,12 @@ loc_136E2:
 		sub.w	d1,obX(a0)
 		move.w	#0,obVelX(a0)
 
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.b	#btnL,d1
-		bsr.w	WallJump
-	endc	;end Wall Jump
-
 loc_136F4:
 		bsr.w	sub_14EB4
 		tst.w	d1
 		bpl.s	loc_13706
 		add.w	d1,obX(a0)
 		move.w	#0,obVelX(a0)
-
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.b	#btnR,d1
-		bsr.w	WallJump
-	endc	;end Wall Jump
 
 loc_13706:
 		bsr.w	Sonic_DontRunOnWalls
@@ -224,28 +203,3 @@ loc_13772:
 locret_1379E:
 		rts	
 ; End of function Sonic_Floor
-
-
-	if WallJumpActive=1	;Mercury Wall Jump
-WallJump:
-		tst.b	obJumping(a0)	;Mercury Constants
-		beq.s	@return
-		tst.b	obVelY(a0)
-		bmi.s	@return
-		move.b	(v_jpadhold2).w,d0	; get jpad
-		andi.b	#(btnL|btnR),d0	; keep just L and R state
-		beq.s	@return			; fail if neither are pressed
-		cmpi.b	#(btnL|btnR),d0	; fail if both are pressed
-		beq.s	@return
-		and.b	d1,d0			; keep only L or R depending on d1
-		beq.s	@return			; fail if not pressed
-		move.b	d0,(obWallJump+1)(a0)	; remember them
-		move.w	#0,obVelY(a0)
-		move.b	#$18,obWallJump(a0)	;Mercury Constants
-		clr.b	obJumping(a0)
-		move.b	#id_WallJump,obAnim(a0)
-		
-	@return:
-		rts
-	endc	;end Wall Jump
-

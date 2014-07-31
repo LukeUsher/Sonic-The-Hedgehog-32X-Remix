@@ -22,7 +22,7 @@ TSon_Main:	; Routine 0
 		move.w	#$2300,obGfx(a0)
 		move.b	#1,obPriority(a0)
 		move.b	#29,obDelayAni(a0) ; set time delay to 0.5 seconds
-		lea	(An_TSon).l,a1
+		lea	(Ani_TSon).l,a1
 		bsr.w	AnimateSprite
 
 TSon_Delay:	;Routine 2
@@ -48,10 +48,8 @@ TSon_Move:	; Routine 4
 ; ===========================================================================
 
 TSon_Animate:	; Routine 6
-		lea	(An_TSon).l,a1
+		lea	(Ani_TSon).l,a1
 		bsr.w	AnimateSprite
-		
-	@display:	;Mercury Custom Demo Delay
 		bra.w	DisplaySprite
-; ===========================================================================
+
 		rts	

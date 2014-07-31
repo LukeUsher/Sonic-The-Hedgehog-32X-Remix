@@ -193,4 +193,4 @@ loc_16480:
 		bsr.w	LCon_ChangeDir
 
 loc_16484:
-		jmp	ObjectMove
+		jmp	SpeedToPos

@@ -21,10 +21,7 @@ FindNearestTile:			; XREF: FindFloor; et al
 		lsr.w	#8,d1
 		andi.w	#$7F,d1
 		add.w	d1,d0		; combine
-
-
-		moveq	#0,d1
-
+		moveq	#-1,d1
 		lea	(v_lvllayout).w,a1
 		move.b	(a1,d0.w),d1	; get 256x256 tile number
 		beq.s	@blanktile	; branch if 0
@@ -42,9 +39,6 @@ FindNearestTile:			; XREF: FindFloor; et al
 		add.w	d0,d1
 
 @blanktile:
-
-		add.l	(v_256x256).l,d1
-
 		movea.l	d1,a1
 		rts	
 ; ===========================================================================
@@ -69,9 +63,6 @@ FindNearestTile:			; XREF: FindFloor; et al
 		lsr.w	#3,d0
 		andi.w	#$1E,d0
 		add.w	d0,d1
-		
-		add.l	(v_256x256).l,d1
-
 		movea.l	d1,a1
 		rts	
 ; End of function FindNearestTile

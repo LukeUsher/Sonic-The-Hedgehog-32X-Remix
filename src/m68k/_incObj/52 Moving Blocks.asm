@@ -153,7 +153,7 @@ MBlock_05_End:
 ; ===========================================================================
 
 MBlock_Type06:				; XREF: MBlock_TypeIndex
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)	; make the platform fall
 		bsr.w	ObjFloorDist
 		tst.w	d1		; has platform hit the floor?

@@ -203,7 +203,7 @@ loc_12552:
 		bsr.w	LCon_ChangeDir
 
 loc_1256A:
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		rts	
 ; End of function sub_12502
 

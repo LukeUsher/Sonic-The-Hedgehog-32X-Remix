@@ -98,7 +98,7 @@ loc_8402:
 		tst.b	timedelay(a0)
 		bne.s	locret_843A
 		bclr	#3,obStatus(a1)
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
+		bclr	#5,obStatus(a1)
 		move.b	#1,obNextAni(a1)
 
 loc_842E:
@@ -110,7 +110,7 @@ locret_843A:
 ; ===========================================================================
 
 CFlo_TimeZero:
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		bsr.w	DisplaySprite
 		tst.b	obRender(a0)
 		bpl.s	CFlo_Delete

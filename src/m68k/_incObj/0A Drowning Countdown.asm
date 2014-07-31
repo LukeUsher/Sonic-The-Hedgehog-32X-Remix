@@ -86,7 +86,7 @@ Drown_ChkWater:	; Routine 4
 		add.w	origX(a0),d0
 		move.w	d0,obX(a0)
 		bsr.s	Drown_ShowNumber
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		tst.b	obRender(a0)
 		bpl.s	@delete
 		jmp	DisplaySprite
@@ -152,6 +152,16 @@ Drown_ShowNumber:			; XREF: @wobble; Drown_Display
 		rts	
 ; ===========================================================================
 Drown_WobbleData:
+		if Revision=0
+		dc.b 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2
+		dc.b 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
+		dc.b 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2
+		dc.b 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0
+		dc.b 0, -1, -1, -1, -1, -1, -2, -2, -2, -2, -2, -3, -3, -3, -3, -3
+		dc.b -3, -3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4
+		dc.b -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3
+		dc.b -3, -3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1
+		else
 		dc.b 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2
 		dc.b 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
 		dc.b 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2
@@ -168,6 +178,7 @@ Drown_WobbleData:
 		dc.b -3, -3, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4
 		dc.b -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -3
 		dc.b -3, -3, -3, -3, -3, -3, -2, -2, -2, -2, -2, -1, -1, -1, -1, -1
+		endc
 ; ===========================================================================
 
 Drown_Countdown:; Routine $A
@@ -196,7 +207,7 @@ Drown_Countdown:; Routine $A
 		bhi.s	@reduceair	; if air is above 12, branch
 
 		bne.s	@skipmusic	; if air is less than 12, branch
-		music	bgm_Drowning
+		music	bgm_Drowning	; play countdown music
 
 	@skipmusic:
 		subq.b	#1,$32(a0)
@@ -223,13 +234,8 @@ Drown_Countdown:; Routine $A
 		move.l	a0,-(sp)
 		lea	(v_player).w,a0
 		bsr.w	Sonic_ResetOnFloor
-		move.b	#id_Drown,obAnim(a0)	; use Sonic's drowning animation
-
-	if SpinDashActive=1	;Mercury Spin Dash
-		bclr	#staSpinDash,obStatus2(a0)	; clear Spin Dash flag
-	endc	;end Spin Dash
-		
-		bset	#staAir,obStatus(a0)	;Mercury Constants
+		move.b	#$17,obAnim(a0)	; use Sonic's drowning animation
+		bset	#1,obStatus(a0)
 		bset	#7,obGfx(a0)
 		move.w	#0,obVelY(a0)
 		move.w	#0,obVelX(a0)
@@ -249,7 +255,7 @@ Drown_Countdown:; Routine $A
 	@loc_13F94:
 		move.l	a0,-(sp)
 		lea	(v_player).w,a0
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		addi.w	#$10,obVelY(a0)
 		movea.l	(sp)+,a0
 		bra.s	@nochange

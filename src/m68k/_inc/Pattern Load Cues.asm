@@ -24,7 +24,7 @@ ptr_PLC_SBZ2:		dc.w PLC_SBZ2-ArtLoadCues
 ptr_PLC_TitleCard:	dc.w PLC_TitleCard-ArtLoadCues
 ptr_PLC_Boss:		dc.w PLC_Boss-ArtLoadCues
 ptr_PLC_Signpost:	dc.w PLC_Signpost-ArtLoadCues
-ptr_PLC_Warp:		dc.w 0
+ptr_PLC_Warp:		dc.w PLC_Warp-ArtLoadCues
 ptr_PLC_SpecialStage:	dc.w PLC_SpecialStage-ArtLoadCues
 PLC_Animals:
 ptr_PLC_GHZAnimals:	dc.w PLC_GHZAnimals-ArtLoadCues
@@ -40,10 +40,6 @@ ptr_PLC_TryAgain:	dc.w PLC_TryAgain-ArtLoadCues
 ptr_PLC_EggmanSBZ2:	dc.w PLC_EggmanSBZ2-ArtLoadCues
 ptr_PLC_FZBoss:		dc.w PLC_FZBoss-ArtLoadCues
 
-	if TimeLimitInSpecialStage=1	;Mercury Time Limit In Special Stage
-ptr_PLC_TimeOverSS:		dc.w PLC_TimeOverSS-ArtLoadCues
-	endc	;end Time Limit In Special Stage
-
 plcm:	macro gfx,vram
 	dc.l gfx
 	dc.w vram
@@ -53,13 +49,7 @@ plcm:	macro gfx,vram
 ; Pattern load cues - standard block 1
 ; ---------------------------------------------------------------------------
 PLC_Main:	dc.w ((PLC_Mainend-PLC_Main-2)/6)-1
-
-	if MoveLamppostVRAM=1	;Mercury Move Lamppost VRAM
-		plcm	Nem_Lamp, $D800		; lamppost
-	else
 		plcm	Nem_Lamp, $F400		; lamppost
-	endc	;end Move Lamppost VRAM
-		
 		plcm	Nem_Hud, $D940		; HUD
 		plcm	Nem_Lives, $FA80	; lives	counter
 		plcm	Nem_Ring, $F640 	; rings
@@ -124,12 +114,7 @@ PLC_LZ:		dc.w ((PLC_LZ2-PLC_LZ-2)/6)-1
 		plcm	Nem_Bubbles, $6900	; bubbles and numbers
 		plcm	Nem_LzBlock3, $7780	; block
 		plcm	Nem_LzDoor1, $7880	; vertical door
-		
-	;Mercury SBZ3 Button PLC Fix
-		;plcm	Nem_Harpoon, $7980	; harpoon	
-		plcm	Nem_LzSwitch, $A1E0	; switch
-	;end SBZ3 Button PLC Fix
-	
+		plcm	Nem_Harpoon, $7980	; harpoon
 		plcm	Nem_Burrobot, $94C0	; burrobot enemy
 
 PLC_LZ2:	dc.w ((PLC_LZ2end-PLC_LZ2-2)/6)-1
@@ -137,15 +122,13 @@ PLC_LZ2:	dc.w ((PLC_LZ2end-PLC_LZ2-2)/6)-1
 		plcm	Nem_LzDoor2, $7CC0	; large	horizontal door
 		plcm	Nem_LzWheel, $7EC0	; wheel
 		plcm	Nem_Gargoyle, $5D20	; gargoyle head
+		if Revision=0
+		plcm	Nem_LzSonic, $8800	; Sonic	holding	his breath
+		else
+		endc
 		plcm	Nem_LzPlatfm, $89E0	; rising platform
 		plcm	Nem_Orbinaut, $8CE0	; orbinaut enemy
 		plcm	Nem_Jaws, $90C0		; jaws enemy
-		
-	;Mercury SBZ3 Button PLC Fix
-		plcm	Nem_Harpoon, $7980	; harpoon	
-		;plcm	Nem_LzSwitch, $A1E0	; switch
-	;end SBZ3 Button PLC Fix
-		
 		plcm	Nem_LzSwitch, $A1E0	; switch
 		plcm	Nem_Cork, $A000		; cork block
 		plcm	Nem_Spikes, $A360	; spikes
@@ -210,7 +193,7 @@ PLC_SYZ2:	dc.w ((PLC_SYZ2end-PLC_SYZ2-2)/6)-1
 		plcm	Nem_Bumper, $7000	; bumper
 		plcm	Nem_SyzSpike1, $72C0	; large	spikeball
 		plcm	Nem_SyzSpike2, $7740	; small	spikeball
-		;plcm	Nem_Cater, $9FE0	; caterkiller enemy	;Mercury Roller Art Fix
+		plcm	Nem_Cater, $9FE0	; caterkiller enemy
 		plcm	Nem_LzSwitch, $A1E0	; switch
 		plcm	Nem_Spikes, $A360	; spikes
 		plcm	Nem_HSpring, $A460	; horizontal spring
@@ -273,19 +256,23 @@ PLC_Signpost:	dc.w ((PLC_Signpostend-PLC_Signpost-2)/6)-1
 		plcm	Nem_Bonus, $96C0	; hidden bonus points
 		plcm	Nem_BigFlash, $8C40	; giant	ring flash effect
 	PLC_Signpostend:
-
+; ---------------------------------------------------------------------------
+; Pattern load cues - beta special stage warp effect
+; ---------------------------------------------------------------------------
+PLC_Warp:
+		if Revision=0
+		dc.w ((PLC_Warpend-PLC_Warp-2)/6)-1
+		plcm	Nem_Warp, $A820
+		else
+		endc
+	PLC_Warpend:
 ; ---------------------------------------------------------------------------
 ; Pattern load cues - special stage
 ; ---------------------------------------------------------------------------
 PLC_SpecialStage:	dc.w ((PLC_SpeStageend-PLC_SpecialStage-2)/6)-1
 		plcm	Nem_SSBgCloud, 0	; bubble and cloud background
 		plcm	Nem_SSBgFish, $A20	; bird and fish	background
-	if DynamicSpecialStageWalls=1	;Mercury Dynamic Special Stage Walls
-		plcm	Nem_Hud, $3F20		; HUD
-		plcm	Nem_Lives, $45E0	; lives
-	else
 		plcm	Nem_SSWalls, $2840	; walls
-	endc	;end Dynamic Special Stage Walls
 		plcm	Nem_Bumper, $4760	; bumper
 		plcm	Nem_SSGOAL, $4A20	; GOAL block
 		plcm	Nem_SSUpDown, $4C60	; UP and DOWN blocks
@@ -363,6 +350,10 @@ PLC_Ending:	dc.w ((PLC_Endingend-PLC_Ending-2)/6)-1
 		plcm	Nem_EndFlower, $7400	; flowers
 		plcm	Nem_EndEm, $78A0	; emeralds
 		plcm	Nem_EndSonic, $7C20	; Sonic
+		if Revision=0
+		plcm	Nem_EndEggman, $A480	; Eggman's death ((unused)
+		else
+		endc
 		plcm	Nem_Rabbit, $AA60	; rabbit
 		plcm	Nem_Chicken, $ACA0	; chicken
 		plcm	Nem_BlackBird, $AE60	; blackbird
@@ -384,7 +375,6 @@ PLC_TryAgain:	dc.w ((PLC_TryAgainend-PLC_TryAgain-2)/6)-1
 ; Pattern load cues - Eggman on SBZ 2
 ; ---------------------------------------------------------------------------
 PLC_EggmanSBZ2:	dc.w ((PLC_EggmanSBZ2end-PLC_EggmanSBZ2-2)/6)-1
-
 		plcm	Nem_SbzBlock, $A300	; block
 		plcm	Nem_Sbz2Eggman, $8000	; Eggman
 		plcm	Nem_LzSwitch, $9400	; switch
@@ -399,17 +389,6 @@ PLC_FZBoss:	dc.w ((PLC_FZBossend-PLC_FZBoss-2)/6)-1
 		plcm	Nem_Sbz2Eggman, $8E00	; Eggman without ship
 		plcm	Nem_Exhaust, $A540	; exhaust flame
 	PLC_FZBossend:
-
-	if TimeLimitInSpecialStage=1	;Mercury Time Limit In Special Stage
-; ---------------------------------------------------------------------------
-; Pattern load cues - Time Over in Special Stage
-; ---------------------------------------------------------------------------
-PLC_TimeOverSS:	dc.w ((PLC_TimeOverSSend-PLC_TimeOverSS-2)/6)-1
-		plcm	Nem_GameOver, $F200	; game/time over
-	PLC_TimeOverSSend:
-plcid_TimeOverSS:		equ (ptr_PLC_TimeOverSS-ArtLoadCues)/2
-	endc	;end Time Limit In Special Stage
-
 		even
 
 ; ---------------------------------------------------------------------------

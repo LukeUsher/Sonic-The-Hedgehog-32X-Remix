@@ -64,7 +64,7 @@ Mon_Solid:	; Routine 2
 ; ===========================================================================
 
 @fall:		; 2nd Routine 4
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		jsr	ObjFloorDist
 		tst.w	d1
 		bpl.w	Mon_Animate
@@ -114,20 +114,19 @@ loc_A236:
 loc_A246:
 		btst	#1,obStatus(a1)
 		bne.s	loc_A26A
-		bset	#staPush,obStatus(a1)	;Mercury Constants
-		bset	#staPush,obStatus(a0)	;Mercury Constants
+		bset	#5,obStatus(a1)
+		bset	#5,obStatus(a0)
 		bra.s	Mon_Animate
 ; ===========================================================================
 
 loc_A25C:
-		btst	#staPush,obStatus(a0)	;Mercury Constants
+		btst	#5,obStatus(a0)
 		beq.s	Mon_Animate
-		
-		;move.w	#id_Run,obAnim(a1)	;Mercury Walking In Air Fix
+		move.w	#1,obAnim(a1)
 
 loc_A26A:
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
+		bclr	#5,obStatus(a0)
+		bclr	#5,obStatus(a1)
 
 Mon_Animate:	; Routine 6
 		lea	(Ani_Monitor).l,a1

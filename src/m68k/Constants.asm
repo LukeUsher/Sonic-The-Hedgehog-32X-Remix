@@ -3,6 +3,7 @@
 ; ---------------------------------------------------------------------------
 
 ; SMPS Control Registers
+Size_of_SegaPCM:		equ $6978
 SMPS_BASE:		equ $A01AB6
 zPalFlag:		equ SMPS_BASE
 zTempoSpeedup:		equ zPalFlag+1
@@ -56,7 +57,6 @@ z80_dac3_pitch:		equ $A000EA
 z80_dac_status:		equ $A01FFD
 z80_dac_sample:		equ $A01FFF
 z80_ram_end:		equ $A02000	; end of non-reserved Z80 RAM
-
 z80_version:		equ $A10001
 z80_port_1_data:	equ $A10002
 z80_port_1_control:	equ $A10008
@@ -64,27 +64,32 @@ z80_port_2_control:	equ $A1000A
 z80_expansion_control:	equ $A1000C
 z80_bus_request:	equ $A11100
 z80_reset:		equ $A11200
+ym2612_a0: 		equ $A04000
+ym2612_d0: 		equ $A04001
+ym2612_a1: 		equ $A04002
+ym2612_d1: 		equ $A04003
+
 security_addr:		equ $A14000
 
+; Sound driver constants
+zTrackSz:	equ $30
+
 ; VRAM data
-vram_fg:		equ $C000	; foreground namespace
-vram_bg:		equ $E000	; background namespace
-vram_sonic:		equ $F000	; Sonic graphics
-vram_sprites:		equ $F800	; sprite table
-vram_hscroll:		equ $FC00	; horizontal scroll table
+vram_fg:	equ $C000	; foreground namespace
+vram_bg:	equ $E000	; background namespace
+vram_sonic:	equ $F000	; Sonic graphics
+vram_sprites:	equ $F800	; sprite table
+vram_hscroll:	equ $FC00	; horizontal scroll table
 
 ; Game modes
-id_Sega:		equ ptr_GM_Sega-GameModeArray		; $00
-id_Title:		equ ptr_GM_Title-GameModeArray		; $04
-id_Demo:		equ ptr_GM_Demo-GameModeArray		; $08
-id_Level:		equ ptr_GM_Level-GameModeArray		; $0C
-id_Special:		equ ptr_GM_Special-GameModeArray	; $10
-id_Continue:		equ ptr_GM_Cont-GameModeArray		; $14
-id_Ending:		equ ptr_GM_Ending-GameModeArray		; $18
-id_Credits:		equ ptr_GM_Credits-GameModeArray	; $1C
-id_LevelSelect:		equ ptr_GM_LevelSelect-GameModeArray	; $20
-id_Options:		equ ptr_GM_Options-GameModeArray 	; $24
-id_SaveScreen:		equ ptr_GM_SaveScreen-GameModeArray 	; $28
+id_Sega:	equ ptr_GM_Sega-GameModeArray	; $00
+id_Title:	equ ptr_GM_Title-GameModeArray	; $04
+id_Demo:	equ ptr_GM_Demo-GameModeArray	; $08
+id_Level:	equ ptr_GM_Level-GameModeArray	; $0C
+id_Special:	equ ptr_GM_Special-GameModeArray; $10
+id_Continue:	equ ptr_GM_Cont-GameModeArray	; $14
+id_Ending:	equ ptr_GM_Ending-GameModeArray	; $18
+id_Credits:	equ ptr_GM_Credits-GameModeArray; $1C
 
 ; Levels
 id_GHZ:		equ 0
@@ -155,23 +160,32 @@ ob2ndRout:	equ $25	; secondary routine number
 obAngle:	equ $26	; angle
 obSubtype:	equ $28	; object subtype
 obSolid:	equ ob2ndRout ; solid status flag
-obWallJump:	equ $2C	; Wall Jump flag
-			; $2D reserved, as well
-obInvuln:	equ $30	; Invulnerable (blinking) timer
-			; $31 reserved as well
-obInvinc:	equ $32	; Invincibility timer
-			; $33 reserved as well
-obShoes:	equ $34	; Speed Shoes timer
-			; $35 reserved as well		
-obFrontAngle:	equ $36
-obRearAngle:	equ $37	
-obOnWheel:	equ $38	; on convex wheel flag
-obStatus2:	equ $39	; status for abilities such as Spin Dash
-obRevSpeed:	equ $3A	; rev speed for Spin Dash
-obRestartTimer:	equ $3A ; level restart timer
-obJumping:	equ $3C	; jumping flag
-obPlatformID:	equ $3D	; ost slot of the object Sonic's on top of
-obLRLock:	equ $3E	; flag for preventing left and right input
+
+; Object variables (Sonic 2 disassembly nomenclature)
+render_flags:	equ 1	; bitfield for x/y flip, display mode
+art_tile:	equ 2	; palette line & VRAM setting (2 bytes)
+mappings:	equ 4	; mappings address (4 bytes)
+x_pos:		equ 8	; x-axis position (2-4 bytes)
+y_pos:		equ $C	; y-axis position (2-4 bytes)
+x_vel:		equ $10	; x-axis velocity (2 bytes)
+y_vel:		equ $12	; y-axis velocity (2 bytes)
+y_radius:	equ $16	; height/2
+x_radius:	equ $17	; width/2
+priority:	equ $18	; sprite stack priority -- 0 is front
+width_pixels:	equ $19	; action width
+mapping_frame:	equ $1A	; current frame displayed
+anim_frame:	equ $1B	; current frame in animation script
+anim:		equ $1C	; current animation
+next_anim:	equ $1D	; next animation
+anim_frame_duration: equ $1E ; time to next frame
+collision_flags: equ $20 ; collision response type
+collision_property: equ $21 ; collision extra property
+status:		equ $22	; orientation or mode
+respawn_index:	equ $23	; respawn list index number
+routine:	equ $24	; routine number
+routine_secondary: equ $25 ; secondary routine number
+angle:		equ $26	; angle
+subtype:	equ $28	; object subtype
 
 ; Animation flags
 afEnd:		equ $FF	; return to beginning of animation
@@ -182,78 +196,89 @@ afReset:	equ $FB	; reset animation and 2nd object routine counter
 af2ndRoutine:	equ $FA	; increment 2nd routine counter
 
 ; Background music
-bgm_GHZ:	equ $01
-bgm_LZ:		equ $02
-bgm_MZ:		equ $03
-bgm_SLZ:	equ $04
-bgm_SYZ:	equ $05
-bgm_SBZ:	equ $06
-bgm_Invincible:	equ $07
-bgm_ExtraLife:	equ $08
-bgm_SS:		equ $09
-bgm_Title:	equ $0A
-bgm_Ending:	equ $0B
-bgm_Boss:	equ $0C
-bgm_FZ:		equ $0D
-bgm_GotThrough:	equ $0E
-bgm_GameOver:	equ $0F
-bgm_Continue:	equ $10
-bgm_Credits:	equ $11
-bgm_Drowning:	equ $12
-bgm_Emerald:	equ $13
-bgm_Fade:	equ $E1
-bgm_Stop:	equ $E1
+bgm__First	equ $81
+bgm_GHZ:	equ ((ptr_mus81-MusicIndex)/4)+bgm__First
+bgm_LZ:		equ ((ptr_mus82-MusicIndex)/4)+bgm__First
+bgm_MZ:		equ ((ptr_mus83-MusicIndex)/4)+bgm__First
+bgm_SLZ:	equ ((ptr_mus84-MusicIndex)/4)+bgm__First
+bgm_SYZ:	equ ((ptr_mus85-MusicIndex)/4)+bgm__First
+bgm_SBZ:	equ ((ptr_mus86-MusicIndex)/4)+bgm__First
+bgm_Invincible:	equ ((ptr_mus87-MusicIndex)/4)+bgm__First
+bgm_ExtraLife:	equ ((ptr_mus88-MusicIndex)/4)+bgm__First
+bgm_SS:		equ ((ptr_mus89-MusicIndex)/4)+bgm__First
+bgm_Title:	equ ((ptr_mus8A-MusicIndex)/4)+bgm__First
+bgm_Ending:	equ ((ptr_mus8B-MusicIndex)/4)+bgm__First
+bgm_Boss:	equ ((ptr_mus8C-MusicIndex)/4)+bgm__First
+bgm_FZ:		equ ((ptr_mus8D-MusicIndex)/4)+bgm__First
+bgm_GotThrough:	equ ((ptr_mus8E-MusicIndex)/4)+bgm__First
+bgm_GameOver:	equ ((ptr_mus8F-MusicIndex)/4)+bgm__First
+bgm_Continue:	equ ((ptr_mus90-MusicIndex)/4)+bgm__First
+bgm_Credits:	equ ((ptr_mus91-MusicIndex)/4)+bgm__First
+bgm_Drowning:	equ ((ptr_mus92-MusicIndex)/4)+bgm__First
+bgm_Emerald:	equ ((ptr_mus93-MusicIndex)/4)+bgm__First
+bgm__Last:	equ ((ptr_musend-MusicIndex-4)/4)+bgm__First
 
 ; Sound effects
-sfx_Jump:	equ $62
-sfx_Lamppost:	equ $63
-sfx_A2:		equ $A2
-sfx_Death:	equ $35
-sfx_Skid:	equ $36
-sfx_A5:		equ $A5
-sfx_HitSpikes:	equ $37
-sfx_Push:	equ $69
-sfx_SSGoal:	equ $6A
-sfx_SSItem:	equ $6B
-sfx_Splash:	equ $6C
-sfx_AB:		equ $AB
-sfx_HitBoss:	equ $6E
-sfx_Bubble:	equ $38
-sfx_Fireball:	equ $70
-sfx_Shield:	equ $71
-sfx_Saw:	equ $D8
-sfx_Electric:	equ $79
-sfx_Drown:	equ $3B
-sfx_Flamethrower:equ $48
-sfx_Bumper:	equ $AA
-sfx_Ring:	equ $33
-sfx_SpikesMove:	equ $52
-sfx_Rumbling:	equ $6F
-sfx_B8:		equ $B8
-sfx_Collapse:	equ $59
-sfx_SSGlass:	equ $B5
-sfx_Door:	equ $6D
-sfx_Teleport:	equ $73
-sfx_ChainStomp:	equ $5F
-sfx_Roll:	equ $3C
-sfx_Continue:	equ $AC
-sfx_Basaran:	equ $47
-sfx_BreakItem:	equ $3D
-sfx_Warning:	equ $A9
-sfx_GiantRing:	equ $B3
-sfx_Bomb:	equ $B4
-sfx_Cash:	equ $B0
-sfx_RingLoss:	equ $B9
-sfx_ChainRise:	equ $D2
-sfx_Burning:	equ $D5
-sfx_Bonus:	equ $8C
-sfx_EnterSS:	equ $AF
-sfx_WallSmash:	equ $59
-sfx_Spring:	equ $B1
-sfx_Switch:	equ $5B
-sfx_RingLeft:	equ $34
-sfx_Signpost:	equ $CF
-sfx_Waterfall:	equ $DB
-sfx_Sega:	equ $FF
-sfx_SpinDash:	equ $AB
-sfx_SpinRelease:equ $B6
+sfx__First	equ $A0
+sfx_Jump:	equ ((ptr_sndA0-SoundIndex)/4)+sfx__First
+sfx_Lamppost:	equ ((ptr_sndA1-SoundIndex)/4)+sfx__First
+sfx_A2:		equ ((ptr_sndA2-SoundIndex)/4)+sfx__First
+sfx_Death:	equ ((ptr_sndA3-SoundIndex)/4)+sfx__First
+sfx_Skid:	equ ((ptr_sndA4-SoundIndex)/4)+sfx__First
+sfx_A5:		equ ((ptr_sndA5-SoundIndex)/4)+sfx__First
+sfx_HitSpikes:	equ ((ptr_sndA6-SoundIndex)/4)+sfx__First
+sfx_Push:	equ ((ptr_sndA7-SoundIndex)/4)+sfx__First
+sfx_SSGoal:	equ ((ptr_sndA8-SoundIndex)/4)+sfx__First
+sfx_SSItem:	equ ((ptr_sndA9-SoundIndex)/4)+sfx__First
+sfx_Splash:	equ ((ptr_sndAA-SoundIndex)/4)+sfx__First
+sfx_AB:		equ ((ptr_sndAB-SoundIndex)/4)+sfx__First
+sfx_HitBoss:	equ ((ptr_sndAC-SoundIndex)/4)+sfx__First
+sfx_Bubble:	equ ((ptr_sndAD-SoundIndex)/4)+sfx__First
+sfx_Fireball:	equ ((ptr_sndAE-SoundIndex)/4)+sfx__First
+sfx_Shield:	equ ((ptr_sndAF-SoundIndex)/4)+sfx__First
+sfx_Saw:	equ ((ptr_sndB0-SoundIndex)/4)+sfx__First
+sfx_Electric:	equ ((ptr_sndB1-SoundIndex)/4)+sfx__First
+sfx_Drown:	equ ((ptr_sndB2-SoundIndex)/4)+sfx__First
+sfx_Flamethrower:equ ((ptr_sndB3-SoundIndex)/4)+sfx__First
+sfx_Bumper:	equ ((ptr_sndB4-SoundIndex)/4)+sfx__First
+sfx_Ring:	equ ((ptr_sndB5-SoundIndex)/4)+sfx__First
+sfx_SpikesMove:	equ ((ptr_sndB6-SoundIndex)/4)+sfx__First
+sfx_Rumbling:	equ ((ptr_sndB7-SoundIndex)/4)+sfx__First
+sfx_B8:		equ ((ptr_sndB8-SoundIndex)/4)+sfx__First
+sfx_Collapse:	equ ((ptr_sndB9-SoundIndex)/4)+sfx__First
+sfx_SSGlass:	equ ((ptr_sndBA-SoundIndex)/4)+sfx__First
+sfx_Door:	equ ((ptr_sndBB-SoundIndex)/4)+sfx__First
+sfx_Teleport:	equ ((ptr_sndBC-SoundIndex)/4)+sfx__First
+sfx_ChainStomp:	equ ((ptr_sndBD-SoundIndex)/4)+sfx__First
+sfx_Roll:	equ ((ptr_sndBE-SoundIndex)/4)+sfx__First
+sfx_Continue:	equ ((ptr_sndBF-SoundIndex)/4)+sfx__First
+sfx_Basaran:	equ ((ptr_sndC0-SoundIndex)/4)+sfx__First
+sfx_BreakItem:	equ ((ptr_sndC1-SoundIndex)/4)+sfx__First
+sfx_Warning:	equ ((ptr_sndC2-SoundIndex)/4)+sfx__First
+sfx_GiantRing:	equ ((ptr_sndC3-SoundIndex)/4)+sfx__First
+sfx_Bomb:	equ ((ptr_sndC4-SoundIndex)/4)+sfx__First
+sfx_Cash:	equ ((ptr_sndC5-SoundIndex)/4)+sfx__First
+sfx_RingLoss:	equ ((ptr_sndC6-SoundIndex)/4)+sfx__First
+sfx_ChainRise:	equ ((ptr_sndC7-SoundIndex)/4)+sfx__First
+sfx_Burning:	equ ((ptr_sndC8-SoundIndex)/4)+sfx__First
+sfx_Bonus:	equ ((ptr_sndC9-SoundIndex)/4)+sfx__First
+sfx_EnterSS:	equ ((ptr_sndCA-SoundIndex)/4)+sfx__First
+sfx_WallSmash:	equ ((ptr_sndCB-SoundIndex)/4)+sfx__First
+sfx_Spring:	equ ((ptr_sndCC-SoundIndex)/4)+sfx__First
+sfx_Switch:	equ ((ptr_sndCD-SoundIndex)/4)+sfx__First
+sfx_RingLeft:	equ ((ptr_sndCE-SoundIndex)/4)+sfx__First
+sfx_Signpost:	equ ((ptr_sndCF-SoundIndex)/4)+sfx__First
+sfx__Last:	equ ((ptr_sndend-SoundIndex-4)/4)+sfx__First
+
+; Special sound effects
+spec__First	equ $D0
+sfx_Waterfall:	equ ((ptr_sndD0-SpecSoundIndex)/4)+spec__First
+spec__Last:	equ ((ptr_specend-SpecSoundIndex-4)/4)+spec__First
+
+flg__First	equ $E0
+bgm_Fade:	equ ((ptr_flgE0-Sound_ExIndex)/4)+flg__First
+sfx_Sega:	equ ((ptr_flgE1-Sound_ExIndex)/4)+flg__First
+bgm_Speedup:	equ ((ptr_flgE2-Sound_ExIndex)/4)+flg__First
+bgm_Slowdown:	equ ((ptr_flgE3-Sound_ExIndex)/4)+flg__First
+bgm_Stop:	equ ((ptr_flgE4-Sound_ExIndex)/4)+flg__First
+flg__Last:	equ ((ptr_flgend-Sound_ExIndex-4)/4)+flg__First

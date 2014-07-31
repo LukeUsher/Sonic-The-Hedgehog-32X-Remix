@@ -33,15 +33,8 @@ SSR_Main:
 		movea.l	a0,a1
 		lea	(SSR_Config).l,a2
 		moveq	#3,d1
-		
-	if SpecialStagesStillAppearWithAllEmeralds=1	;Mercury Special Stages Still Appear With All Emeralds
-		btst	#7,(v_continues).w
-		beq.s	SSR_Loop	; if no, branch
-	else
 		cmpi.w	#50,(v_rings).w	; do you have 50 or more rings?
 		bcs.s	SSR_Loop	; if no, branch
-	endc	;end Special Stages Still Appear With All Emeralds	
-		
 		addq.w	#1,d1		; if yes, add 1	to d1 (number of sprites)
 
 	SSR_Loop:
@@ -114,27 +107,8 @@ SSR_RingBonus:	; Routine 6
 		move.b	#1,(f_endactbonus).w ; set ring bonus update flag
 		tst.w	(v_ringbonus).w	; is ring bonus	= zero?
 		beq.s	loc_C8C4	; if yes, branch
-		
-	if SpeedUpScoreTally=1	;Mercury Speed Up Score Tally
-		move.b	#10,d1	; set score decrement to 10
-		move.b	(v_jpadhold1).w,d0
-		andi.b	#btnABC,d0	; is A, B or C pressed?
-		beq.w	@dontspeedup	; if not, branch
-		move.b	#100,d1	; increase score decrement to 100
-		
-	@dontspeedup:
-		moveq	#0,d0
-		cmp.w	(v_ringbonus).w,d1	; compare ring bonus to score decrement
-		blt.s	@skip	; if it's greater or equal, branch
-		move.w	(v_ringbonus).w,d1	; else, set the decrement to the remaining bonus
-	@skip:
-		add.w	d1,d0		; add decrement to score
-		sub.w	d1,(v_ringbonus).w ; subtract decrement from ring bonus
-	else
 		subi.w	#10,(v_ringbonus).w ; subtract 10 from ring bonus
 		moveq	#10,d0		; add 10 to score
-	endc	;end Speed Up Score Tally
-		
 		jsr	AddPoints
 		move.b	(v_vbla_byte).w,d0
 		andi.b	#3,d0
@@ -146,16 +120,8 @@ loc_C8C4:
 		sfx	sfx_Cash	; play "ker-ching" sound
 		addq.b	#2,obRoutine(a0)
 		move.w	#180,obTimeFrame(a0) ; set time delay to 3 seconds
-		
-	if SpecialStagesStillAppearWithAllEmeralds=1	;Mercury Special Stages Still Appear With All Emeralds
-		btst	#7,(v_continues).w
-		beq.s	locret_C8EA	; if not, branch
-		bclr	#7,(v_continues).w
-	else
 		cmpi.w	#50,(v_rings).w	; do you have at least 50 rings?
 		bcs.s	locret_C8EA	; if not, branch
-	endc	;end Special Stages Still Appear With All Emeralds	
-
 		move.w	#60,obTimeFrame(a0) ; set time delay to 1 second
 		addq.b	#4,obRoutine(a0) ; goto "SSR_Continue" routine
 

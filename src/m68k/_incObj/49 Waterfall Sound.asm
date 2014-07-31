@@ -19,8 +19,8 @@ WSnd_Main:	; Routine 0
 WSnd_PlaySnd:	; Routine 2
 		move.b	(v_vbla_byte).w,d0 ; get low byte of VBlank counter
 		andi.b	#$3F,d0
-		;bne.s	WSnd_ChkDel
-		;sfx	sfx_Waterfall	; play waterfall sound
+		bne.s	WSnd_ChkDel
+		sfx	sfx_Waterfall	; play waterfall sound
 
 	WSnd_ChkDel:
 		out_of_range	DeleteObject

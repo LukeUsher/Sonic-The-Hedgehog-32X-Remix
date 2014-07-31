@@ -65,10 +65,11 @@ MDemo_On:				; XREF: MoveSonicInDemo
 		move.b	(a1),d0
 		lea	(v_jpadhold1).w,a0
 		move.b	d0,d1
-		
-		move.b	-2(a0),d2
-	;end Demo Playback Fix
-	
+		if Revision=0
+		move.b	(a0),d2
+		else
+			moveq	#0,d2
+		endc
 		eor.b	d2,d0
 		move.b	d1,(a0)+
 		and.b	d1,d0

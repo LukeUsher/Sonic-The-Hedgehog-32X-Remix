@@ -21,12 +21,8 @@ GRing_Main:	; Routine 0
 		move.b	#$40,obActWid(a0)
 		tst.b	obRender(a0)
 		bpl.s	GRing_Animate
-		
-	if SpecialStagesStillAppearWithAllEmeralds=0	;Mercury Special Stages Still Appear With All Emeralds
 		cmpi.b	#6,(v_emeralds).w ; do you have 6 emeralds?
 		beq.w	GRing_Delete	; if yes, branch
-	endc	;end Special Stages Still Appear With All Emeralds
-		
 		cmpi.w	#50,(v_rings).w	; do you have at least 50 rings?
 		bcc.s	GRing_Okay	; if yes, branch
 		rts	
@@ -36,10 +32,7 @@ GRing_Okay:
 		addq.b	#2,obRoutine(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#$52,obColType(a0)
-
-	if GiantRingArtLoadsWithEndSign=0	;Mercury Giant Ring Art Loads With End Sign
-		move.w	#$C40,(v_gfxbigring).w	;set big ring gfx to load
-	endc	;end Giant Ring Art Loads With End Sign
+		move.w	#$C40,(v_gfxbigring).w
 
 GRing_Animate:	; Routine 2
 		move.b	(v_ani1_frame).w,obFrame(a0)

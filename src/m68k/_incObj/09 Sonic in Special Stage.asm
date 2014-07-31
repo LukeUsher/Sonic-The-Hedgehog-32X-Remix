@@ -22,12 +22,11 @@ Obj09_Index:	dc.w Obj09_Main-Obj09_Index
 ; ===========================================================================
 
 Obj09_Main:	; Routine 0
-		;move.b	#1, ob32X(a0)			; Set 32X render flag
 		addq.b	#2,obRoutine(a0)
 		move.b	#$E,obHeight(a0)
 		move.b	#7,obWidth(a0)
-		move.l	#$DEADBEEF,obMap(a0)		; Set sprite ID (32X)
-		move.b	#1,obGfx(a0)
+		move.l	#Map_Sonic,obMap(a0)
+		move.w	#$780,obGfx(a0)
 		move.b	#4,obRender(a0)
 		move.b	#0,obPriority(a0)
 		move.b	#id_Roll,obAnim(a0)
@@ -48,7 +47,7 @@ Obj09_NoDebug:
 		andi.w	#2,d0
 		move.w	Obj09_Modes(pc,d0.w),d1
 		jsr	Obj09_Modes(pc,d1.w)
-		;jsr	Sonic_LoadGfx
+		jsr	Sonic_LoadGfx
 		jmp	DisplaySprite
 ; ===========================================================================
 Obj09_Modes:	dc.w Obj09_OnWall-Obj09_Modes
@@ -56,11 +55,6 @@ Obj09_Modes:	dc.w Obj09_OnWall-Obj09_Modes
 ; ===========================================================================
 
 Obj09_OnWall:				; XREF: Obj09_Modes
-
-	if SpecialStageJumpFix=1	;Mercury Special Stage Jump Fix
-		bclr	#7,obStatus(a0)	; clear "Sonic has jumped" flag
-	endc	;end Special Stage Jump Fix
-	
 		bsr.w	Obj09_Jump
 		bsr.w	Obj09_Move
 		bsr.w	Obj09_Fall
@@ -68,20 +62,14 @@ Obj09_OnWall:				; XREF: Obj09_Modes
 ; ===========================================================================
 
 Obj09_InAir:				; XREF: Obj09_Modes
-
-	if SpecialStageJumpFix=1	;Mercury Special Stage Jump Fix
-		bsr.w	Obj09_JumpHeight
-	else
 		bsr.w	nullsub_2
-	endc	;end Special Stage Jump Fix
-
 		bsr.w	Obj09_Move
 		bsr.w	Obj09_Fall
 
 Obj09_Display:				; XREF: Obj09_OnWall
 		bsr.w	Obj09_ChkItems
 		bsr.w	Obj09_ChkItems2
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		bsr.w	SS_FixCamera
 		move.w	(v_ssangle).w,d0
 		add.w	(v_ssrotate).w,d0
@@ -234,57 +222,16 @@ Obj09_Jump:				; XREF: Obj09_OnWall
 		asr.l	#8,d0
 		move.w	d0,obVelY(a0)
 		bset	#1,obStatus(a0)
-		
-	if SpecialStageJumpFix=1	;Mercury Special Stage Jump Fix
-		bset	#7,obStatus(a0)	; set "Sonic has jumped" flag
-	endc	;end Special Stage Jump Fix
-	
 		sfx	sfx_Jump	; play jumping sound
 
 Obj09_NoJump:
 		rts	
 ; End of function Obj09_Jump
 
-; ---------------------------------------------------------------------------
-; Subroutine to limit Sonic's upward vertical speed
-; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-	if SpecialStageJumpFix=1	;Mercury Special Stage Jump Fix
-Obj09_JumpHeight:				; XREF: Obj09_InAir
-		move.b	(v_jpadhold2).w,d0	; is the jump button up?
-		andi.b	#btnABC,d0
-		bne.s	locret_1BBB4		; if not, branch to return
-		btst	#7,obStatus(a0)		; did Sonic jump or is he just falling or hit by a bumper?
-		beq.s	locret_1BBB4		; if not, branch to return
-		move.b	(v_ssangle).w,d0	; get SS angle
-		andi.b	#$FC,d0
-		neg.b	d0
-		subi.b	#$40,d0
-		jsr (CalcSine).l			; calculate sine and cosine (d1 = cos, d0 = sin)
-		move.w	obVelY(a0),d2		; get Y speed
-		muls.w	d2,d0				; multiply Y speed by sin
-		asr.l	#8,d0				; find the new Y speed
-		move.w	obVelX(a0),d2		; get X speed
-		muls.w	d2,d1				; multiply X speed by cos
-		asr.l	#8,d1				; find the new X speed
-		add.w	d0,d1				; combine the two speeds
-		cmpi.w	#$400,d1			; compare the combined speed with the jump release speed
-		ble.s	locret_1BBB4		; if it's less, branch to return
-		move.b	(v_ssangle).w,d0
-		andi.b	#$FC,d0
-		neg.b	d0
-		subi.b	#$40,d0
-		jsr	(CalcSine).l
-		muls.w	#$400,d1
-		asr.l	#8,d1
-		move.w	d1,obVelX(a0)
-		muls.w	#$400,d0
-		asr.l	#8,d0
-		move.w	d0,obVelY(a0)		; set the speed to the jump release speed
-		bclr	#7,obStatus(a0)		; clear "Sonic has jumped" flag
-	else
+
 nullsub_2:				; XREF: Obj09_InAir
 		rts	
 ; End of function nullsub_2
@@ -300,11 +247,9 @@ nullsub_2:				; XREF: Obj09_InAir
 		andi.b	#btnABC,d0
 		bne.s	locret_1BBB4
 		move.w	d1,obVelY(a0)
-	endc	;end Special Stage Jump Fix
-		
-locret_1BBB4:
-		rts
 
+locret_1BBB4:
+		rts	
 ; ---------------------------------------------------------------------------
 ; Subroutine to	fix the	camera on Sonic's position (special stage)
 ; ---------------------------------------------------------------------------
@@ -353,7 +298,7 @@ loc_1BC12:
 		add.w	(v_ssrotate).w,d0
 		move.w	d0,(v_ssangle).w
 		jsr	Sonic_Animate
-		;jsr	Sonic_LoadGfx
+		jsr	Sonic_LoadGfx
 		bsr.w	SS_FixCamera
 		jmp	DisplaySprite
 ; ===========================================================================
@@ -365,7 +310,7 @@ Obj09_Exit2:				; XREF: Obj09_Index
 
 loc_1BC40:
 		jsr	Sonic_Animate
-		;jsr	Sonic_LoadGfx
+		jsr	Sonic_LoadGfx
 		bsr.w	SS_FixCamera
 		jmp	DisplaySprite
 
@@ -435,7 +380,7 @@ loc_1BCD4:
 
 
 sub_1BCE8:				; XREF: Obj09_Move; Obj09_Fall
-		lea	(v_256x256).l,a1
+		lea	($FF0000).l,a1
 		moveq	#0,d4
 		swap	d2
 		move.w	d2,d4
@@ -494,7 +439,7 @@ loc_1BD46:
 
 
 Obj09_ChkItems:				; XREF: Obj09_Display
-		lea	(v_256x256).l,a1
+		lea	($FF0000).l,a1
 		moveq	#0,d4
 		move.w	obY(a0),d4
 		addi.w	#$50,d4
@@ -529,13 +474,7 @@ Obj09_GetCont:
 		bset	#0,(v_lifecount).w
 		bne.s	Obj09_NoCont
 		addq.b	#1,(v_continues).w ; add 1 to number of continues
-		
-	if SpecialStagesStillAppearWithAllEmeralds=1	;Mercury Special Stages Still Appear With All Emeralds
-		bset	#7,(v_continues).w	; set "got continue" flag bit
-	endc	;end Special Stages Still Appear With All Emeralds	
-	
-		move.w	#sfx_Continue,d0
-		jsr	(PlaySound).l	; play extra continue sound
+		music	sfx_Continue	; play extra continue sound
 
 Obj09_NoCont:
 		moveq	#0,d4
@@ -551,32 +490,11 @@ Obj09_Chk1Up:
 		move.l	a1,4(a2)
 
 Obj09_Get1Up:
-	
-	if SpecialStagesStillAppearWithAllEmeralds=1	;Mercury Special Stages Still Appear With All Emeralds
-		addq.b	#1,(v_continues).w ; add 1 to number of continues
-		bset	#7,(v_continues).w	; set "got continue" flag bit
-		sfx		sfx_Continue	; play continue music
-	
-	if SpecialStageIndexIncreasesOnlyIfWon=1	;Mercury Special Stage Index Increases Only If Won
-		addq.b	#1,(v_lastspecial).w	; inc SS index
-	endc	;end Special Stage Index Increases Only If Won
-	
-	else
-	
-	;Mercury Lives Over/Underflow Fix
-		cmpi.b	#$63,(v_lives).w	; are lives at max?
-		beq.s	@playbgm
 		addq.b	#1,(v_lives).w	; add 1 to number of lives
 		addq.b	#1,(f_lifecount).w ; update the lives counter
-	@playbgm:
-	;end Lives Over/Underflow Fix
-
 		music	bgm_ExtraLife	; play extra life music
-	endc	;end Special Stages Still Appear With All Emeralds
-
 		moveq	#0,d4
 		rts	
-		
 ; ===========================================================================
 
 Obj09_ChkEmer:
@@ -598,17 +516,9 @@ Obj09_GetEmer:
 		lea	(v_emldlist).w,a2
 		move.b	d4,(a2,d0.w)
 		addq.b	#1,(v_emeralds).w ; add 1 to number of emeralds
-		
-	if SpecialStageIndexIncreasesOnlyIfWon=1	;Mercury Special Stage Index Increases Only If Won
-		addq.b	#1,(v_lastspecial).w	; inc SS index
-	endc	;end Special Stage Index Increases Only If Won
-		
-	if HUDInSpecialStage=1	;Mercury HUD in Special Stage
-		clr.b	(f_timecount).w	; stop the time counter
-	endc	;end HUD in Special Stage
 
 Obj09_NoEmer:
-		sfx		bgm_Emerald
+		sfx	bgm_Emerald ;	play emerald music
 		moveq	#0,d4
 		rts	
 ; ===========================================================================
@@ -700,11 +610,6 @@ Obj09_ChkBumper:
 		asr.l	#8,d0
 		move.w	d0,obVelY(a0)
 		bset	#1,obStatus(a0)
-		
-	if SpecialStageJumpFix=1	;Mercury Special Stage Jump Fix
-		bclr	#7,obStatus(a0)	; clear "Sonic has jumped" flag
-	endc	;end Special Stage Jump Fix
-	
 		bsr.w	SS_RemoveCollectedItem
 		bne.s	Obj09_BumpSnd
 		move.b	#2,(a2)
@@ -720,11 +625,6 @@ Obj09_GOAL:
 		cmpi.b	#$27,d0		; is the item a	"GOAL"?
 		bne.s	Obj09_UPblock
 		addq.b	#2,obRoutine(a0) ; run routine "Obj09_ExitStage"
-		
-	if HUDInSpecialStage=1	;Mercury HUD in Special Stage
-		clr.b	(f_timecount).w	; stop the time counter
-	endc	;end HUD in Special Stage
-		
 		sfx	sfx_SSGoal	; play "GOAL" sound
 		rts	
 ; ===========================================================================

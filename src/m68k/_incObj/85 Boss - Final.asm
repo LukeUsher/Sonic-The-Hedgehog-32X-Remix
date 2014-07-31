@@ -62,9 +62,11 @@ Obj85_LoadBoss:				; XREF: Obj85_Main
 		move.b	(a3)+,obRoutine(a1)
 		move.b	(a3)+,obAnim(a1)
 		move.b	(a3)+,obPriority(a1)
-
-		move.b	(a3)+,obActWid(a1)
-
+		if Revision=0
+		move.b	(a3)+,obWidth(a1)
+		else
+			move.b	(a3)+,obActWid(a1)
+		endc
 		move.b	(a3)+,obHeight(a1)
 		move.b	#4,obRender(a1)
 		bset	#7,obRender(a0)
@@ -189,20 +191,8 @@ loc_19F6A:
 		move.w	d0,(v_player+obVelX).w
 		tst.b	$35(a0)
 		bne.s	loc_19F88
-		
-	;Mercury FZ Boss Hitcount Fix
-		tst.b	obColProp(a0)	;has the boss been defeated?
-		beq.s	loc_19F9C	;if so, don't let it be hit again.
-	;end FZ Boss Hitcount Fix
-	
 		subq.b	#1,obColProp(a0)
-	
-	if FZBossInvulnMod=1	;Mercury FZ Boss Invuln Mod
-		move.b	#FZBossInvulnModTime,$35(a0)
-	else
 		move.b	#$64,$35(a0)
-	endc	;end FZ Boss Invuln Mod
-	
 		sfx	sfx_HitBoss	; play boss damage sound
 
 loc_19F88:
@@ -230,9 +220,11 @@ loc_19FA6:
 ; ===========================================================================
 
 loc_19FBC:
-		moveq	#100,d0
-		bsr	AddPoints
-
+		if Revision=0
+		else
+			moveq	#100,d0
+			bsr.w	AddPoints
+		endc
 		move.b	#6,$34(a0)
 		move.w	#$25C0,obX(a0)
 		move.w	#$53C,obY(a0)
@@ -274,20 +266,24 @@ loc_1A020:
 ; ===========================================================================
 
 loc_1A02A:				; XREF: off_19E80
-
-		move.b	#$30,obActWid(a0)
-
+		if Revision=0
+		move.b	#$30,obWidth(a0)
+		else
+			move.b	#$30,obActWid(a0)
+		endc
 		bset	#0,obStatus(a0)
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		move.b	#6,obFrame(a0)
 		addi.w	#$10,obVelY(a0)
 		cmpi.w	#$59C,obY(a0)
 		bcs.s	loc_1A070
 		move.w	#$59C,obY(a0)
 		addq.b	#2,$34(a0)
-
-		move.b	#$20,obActWid(a0)
-
+		if Revision=0
+		move.b	#$20,obWidth(a0)
+		else
+			move.b	#$20,obActWid(a0)
+		endc
 		move.w	#$100,obVelX(a0)
 		move.w	#-$100,obVelY(a0)
 		addq.b	#2,(v_dle_routine).w
@@ -299,7 +295,7 @@ loc_1A070:
 loc_1A074:				; XREF: off_19E80
 		bset	#0,obStatus(a0)
 		move.b	#4,obAnim(a0)
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		addi.w	#$10,obVelY(a0)
 		cmpi.w	#$5A3,obY(a0)
 		bcs.s	loc_1A09A
@@ -347,7 +343,7 @@ loc_1A110:
 ; ===========================================================================
 
 loc_1A112:				; XREF: off_19E80
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		cmpi.w	#$26E0,obX(a0)
 		bcs.s	loc_1A124
 		clr.w	obVelX(a0)
@@ -397,7 +393,7 @@ loc_1A192:				; XREF: off_19E80
 		move.w	#$400,obGfx(a0)
 		move.b	#0,obAnim(a0)
 		bset	#0,obStatus(a0)
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		cmpi.w	#$544,obY(a0)
 		bcc.s	loc_1A1D0
 		move.w	#$180,obVelX(a0)
@@ -411,7 +407,7 @@ loc_1A1D0:
 
 loc_1A1D4:				; XREF: off_19E80
 		bset	#0,obStatus(a0)
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		tst.w	$30(a0)
 		bne.s	loc_1A1FC
 		tst.b	obColType(a0)

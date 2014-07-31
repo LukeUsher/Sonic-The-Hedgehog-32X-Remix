@@ -16,9 +16,8 @@ PauseGame:				; XREF: Level_MainLoop; et al
 
 Pause_StopGame:
 		move.w	#1,(f_pause).w	; freeze time
-		stopz80
-		move.b	#1,(zPauseFlag).l
-		startz80
+		move.b	#1,(v_snddriver_ram+f_stopmusic).w ; pause music
+
 Pause_Loop:
 		move.b	#$10,(v_vbla_routine).w
 		bsr.w	WaitForVBla
@@ -41,10 +40,8 @@ Pause_ChkStart:
 		btst	#bitStart,(v_jpadpress1).w ; is Start button pressed?
 		beq.s	Pause_Loop	; if not, branch
 
-Pause_EndMusic:	
-		stopz80
-		move.b	#$80,(zPauseFlag).l
-		startz80
+Pause_EndMusic:
+		move.b	#$80,(v_snddriver_ram+f_stopmusic).w
 
 Unpause:
 		move.w	#0,(f_pause).w	; unpause the game
@@ -55,8 +52,6 @@ Pause_DoNothing:
 
 Pause_SlowMo:
 		move.w	#1,(f_pause).w
-		stopZ80
-		move.b	#$80,(zPauseFlag).l
-		startZ80
+		move.b	#$80,(v_snddriver_ram+f_stopmusic).w
 		rts	
 ; End of function PauseGame

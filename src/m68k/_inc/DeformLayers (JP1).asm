@@ -52,12 +52,12 @@ Deform_GHZ:				; XREF: Deform_Index
 		asl.l	#1,d4
 		add.l	d1,d4
 		moveq	#0,d6
-		bsr	ScrollBlock5
+		bsr.w	ScrollBlock5
 		move.w	(v_scrshiftx).w,d4
 		ext.l	d4
 		asl.l	#7,d4
 		moveq	#0,d6
-		bsr	ScrollBlock4
+		bsr.w	ScrollBlock4
 		lea	(v_hscrolltablebuffer).w,a1
 		move.w	(v_screenposy).w,d0
 		andi.w	#$7FF,d0
@@ -153,7 +153,7 @@ Deform_LZ:				; XREF: Deform_Index
 		move.w	($FFFFF73C).w,d5
 		ext.l	d5
 		asl.l	#7,d5
-		bsr	ScrollBlock1
+		bsr.w	ScrollBlock1
 		move.w	($FFFFF70C).w,($FFFFF618).w
 		lea	(Lz_Scroll_Data),a3
 		lea	(Drown_WobbleData),a2
@@ -231,17 +231,17 @@ Deform_MZ:				; XREF: Deform_Index
 		asl.l	#1,d4
 		add.l	d1,d4
 		moveq	#2,d6
-		bsr	ScrollBlock3
+		bsr.w	ScrollBlock3
 		move.w	(v_scrshiftx).w,d4
 		ext.l	d4
 		asl.l	#6,d4
 		moveq	#6,d6
-		bsr	ScrollBlock5
+		bsr.w	ScrollBlock5
 		move.w	(v_scrshiftx).w,d4
 		ext.l	d4
 		asl.l	#7,d4
 		moveq	#4,d6
-		bsr	ScrollBlock4
+		bsr.w	ScrollBlock4
 		move.w	#$200,d0
 		move.w	(v_screenposy).w,d1
 		subi.w	#$1C8,d1
@@ -254,7 +254,7 @@ Deform_MZ:				; XREF: Deform_Index
 loc_6590:
 		move.w	d0,($FFFFF714).w
 		move.w	d0,($FFFFF71C).w
-		bsr	ScrollBlock2
+		bsr.w	ScrollBlock2
 		move.w	($FFFFF70C).w,($FFFFF618).w
 		move.b	(v_bgscroll2).w,d0
 		or.b	(v_bgscroll3).w,d0
@@ -312,7 +312,7 @@ loc_6632:
 		andi.w	#$1F0,d0
 		lsr.w	#3,d0
 		lea	(a2,d0),a2
-		bra	Bg_Scroll_X
+		bra.w	Bg_Scroll_X
 ; End of function Deform_MZ
 
 ; ---------------------------------------------------------------------------
@@ -326,7 +326,7 @@ Deform_SLZ:				; XREF: Deform_Index
 		move.w	($FFFFF73C).w,d5
 		ext.l	d5
 		asl.l	#7,d5
-		bsr	Bg_Scroll_Y
+		bsr.w	Bg_Scroll_Y
 		move.w	($FFFFF70C).w,($FFFFF618).w
 		lea	($FFFFA800).w,a1
 		move.w	(v_screenposx).w,d2
@@ -425,7 +425,7 @@ Deform_SYZ:				; XREF: Deform_Index
 		move.l	d5,d1
 		asl.l	#1,d5
 		add.l	d1,d5
-		bsr	Bg_Scroll_Y
+		bsr.w	Bg_Scroll_Y
 		move.w	($FFFFF70C).w,($FFFFF618).w
 		lea	($FFFFA800).w,a1
 		move.w	(v_screenposx).w,d2
@@ -487,7 +487,7 @@ loc_6798:
 		andi.w	#$1F0,d0
 		lsr.w	#3,d0
 		lea	(a2,d0),a2
-		bra	Bg_Scroll_X
+		bra.w	Bg_Scroll_X
 ; End of function Deform_SYZ
 
 ; ---------------------------------------------------------------------------
@@ -499,17 +499,17 @@ loc_6798:
 
 Deform_SBZ:				; XREF: Deform_Index
 		tst.b	(v_act).w
-		bne	Bg_Scroll_SBz_2
+		bne.w	Bg_Scroll_SBz_2
 		move.w	(v_scrshiftx).w,d4
 		ext.l	d4
 		asl.l	#7,d4
 		moveq	#2,d6
-		bsr	ScrollBlock3
+		bsr.w	ScrollBlock3
 		move.w	(v_scrshiftx).w,d4
 		ext.l	d4
 		asl.l	#6,d4
 		moveq	#6,d6
-		bsr	ScrollBlock5
+		bsr.w	ScrollBlock5
 		move.w	(v_scrshiftx).w,d4
 		ext.l	d4
 		asl.l	#5,d4
@@ -517,12 +517,12 @@ Deform_SBZ:				; XREF: Deform_Index
 		asl.l	#1,d4
 		add.l	d1,d4
 		moveq	#4,d6
-		bsr	ScrollBlock4
+		bsr.w	ScrollBlock4
 		moveq	#0,d4
 		move.w	($FFFFF73C).w,d5
 		ext.l	d5
 		asl.l	#5,d5
-		bsr	loc_6AF8
+		bsr.w	loc_6AF8
 		move.w	($FFFFF70C).w,d0
 		move.w	d0,($FFFFF714).w
 		move.w	d0,($FFFFF71C).w
@@ -578,7 +578,7 @@ loc_6884:
 		andi.w	#$1F0,d0
 		lsr.w	#3,d0
 		lea	(a2,d0),a2
-		bra	Bg_Scroll_X
+		bra.w	Bg_Scroll_X
 ;-------------------------------------------------------------------------------
 Bg_Scroll_SBz_2:;loc_68A2:
 		move.w	(v_scrshiftx).w,d4
@@ -587,7 +587,7 @@ Bg_Scroll_SBz_2:;loc_68A2:
 		move.w	($FFFFF73C).w,d5
 		ext.l	d5
 		asl.l	#5,d5
-		bsr	ScrollBlock1
+		bsr.w	ScrollBlock1
 		move.w	($FFFFF70C).w,($FFFFF618).w
 		lea	(v_hscrolltablebuffer).w,a1
 		move.w	#223,d1
@@ -637,37 +637,8 @@ locret_65B0:
 
 
 MoveScreenHoriz:			; XREF: ScrollHoriz
-
-	if SpinDashCameraLag=1 ;Mercury Spin Dash Camera Lag
-		move.b	(v_cameralag).w,d1
-		beq.s	@cont1
-		tst.w	(v_player+obVelX).w	; is Sonic moving horizontally?
-		bne.s	@cont0
-		clr.b	(v_cameralag).w	; clear lag
-		bra.s	@cont1
-	
-	@cont0:
-		sub.b	#1,d1
-		move.b	d1,(v_cameralag).w
-		lsl.b	#2,d1
-		addq.b	#4,d1
-		move.w	(v_trackpos).w,d0
-		sub.b	d1,d0
-		lea	(v_tracksonic).w,a1
-		move.w	(a1,d0.w),d0
-		and.w	#$3FFF,d0
-		bra.s	@cont2
-
-	@cont1:
-		move.w	(v_player+obX).w,d0
-
-	@cont2:
-		sub.w	(v_screenposx).w,d0 ; Sonic's distance from left edge of screen
-	else
 		move.w	(v_player+obX).w,d0
 		sub.w	(v_screenposx).w,d0 ; Sonic's distance from left edge of screen
-	endc	;end Spin Dash Camera Lag
-		
 		subi.w	#144,d0		; is distance less than 144px?
 		bcs.s	SH_BehindMid	; if yes, branch
 		subi.w	#16,d0		; is distance more than 160px?
@@ -697,15 +668,6 @@ SH_SetScreen:
 ; ===========================================================================
 
 SH_BehindMid:
-
-	if SpinDashCameraLag=1 ;Mercury Spin Dash Camera Lag
-		cmpi.w	#-$10,d0
-		bgt.s	@cont
-		move.w	#-$10,d0	
-
-	@cont:
-	endc	;end Spin Dash Camera Lag
-	
 		add.w	(v_screenposx).w,d0
 		cmp.w	(v_limitleft2).w,d0
 		bgt.s	SH_SetScreen

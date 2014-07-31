@@ -60,7 +60,7 @@ Burro_Action:	; Routine 2
 Burro_Move:				; XREF: @index
 		subq.w	#1,timedelay(a0)
 		bmi.s	loc_AD84
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		bchg	#0,$32(a0)
 		bne.s	loc_AD78
 		move.w	obX(a0),d3
@@ -100,7 +100,7 @@ loc_ADA4:
 ; ===========================================================================
 
 Burro_Jump:				; XREF: @index
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		bmi.s	locret_ADF0
 		move.b	#3,obAnim(a0)

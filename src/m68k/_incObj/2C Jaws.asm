@@ -45,5 +45,5 @@ Jaws_Turn:	; Routine 2
 	@animate:
 		lea	(Ani_Jaws).l,a1
 		bsr.w	AnimateSprite
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		bra.w	RememberState

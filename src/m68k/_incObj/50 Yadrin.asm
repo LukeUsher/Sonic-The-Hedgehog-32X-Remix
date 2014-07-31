@@ -56,7 +56,7 @@ Yad_Main:	; Routine 0
 		move.b	#$11,obHeight(a0)
 		move.b	#8,obWidth(a0)
 		move.b	#$CC,obColType(a0)
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		bsr.w	ObjFloorDist
 		tst.w	d1
 		bpl.s	locret_F89E
@@ -97,7 +97,7 @@ Yad_Move:				; XREF: Yad_Index2
 ; ===========================================================================
 
 Yad_FixToFloor:			; XREF: Yad_Index2
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		bsr.w	ObjFloorDist
 		cmpi.w	#-8,d1
 		blt.s	Yad_Pause

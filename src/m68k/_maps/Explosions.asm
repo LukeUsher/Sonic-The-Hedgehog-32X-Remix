@@ -34,4 +34,3 @@ byte_8F16:	dc.b 1
 byte_8F1C:	dc.b 1
 		dc.b $F0, $F, 0, $50, $F0
 		even
-		

@@ -74,7 +74,7 @@ SEgg_ChkSonic:				; XREF: SEgg_EggIndex
 		move.b	#1,obAnim(a0)
 
 loc_19934:				; XREF: SEgg_EggIndex
-		jmp	ObjectMove
+		jmp	SpeedToPos
 ; ===========================================================================
 
 SEgg_PreLeap:				; XREF: SEgg_EggIndex

@@ -86,7 +86,7 @@ sonicAniFrame:	= $32		; Sonic's current animation number
 		move.b	d2,obFrame(a1)
 
 Smab_Points:	; Routine 4
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$38,obVelY(a0)
 		bsr.w	DisplaySprite
 		tst.b	obRender(a0)

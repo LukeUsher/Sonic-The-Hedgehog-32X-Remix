@@ -41,7 +41,7 @@ Obj74_Action:	; Routine 2
 		move.b	ob2ndRout(a0),d0
 		move.w	Obj74_Index2(pc,d0.w),d0
 		jsr	Obj74_Index2(pc,d0.w)
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		lea	(Ani_Fire).l,a1
 		jsr	AnimateSprite
 		cmpi.w	#$2E8,obY(a0)

@@ -40,7 +40,7 @@ SmashObject:
 		bcc.s	@loc_D268
 		move.l	a0,-(sp)
 		movea.l	a1,a0
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		add.w	d2,obVelY(a0)
 		movea.l	(sp)+,a0
 		bsr.w	DisplaySprite1

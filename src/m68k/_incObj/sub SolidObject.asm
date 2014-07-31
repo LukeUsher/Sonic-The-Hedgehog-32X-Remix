@@ -35,7 +35,7 @@ SolidObject:
 
 	@stand:
 		move.w	d4,d2
-		jsr	MvSonicOnPtfm
+		bsr.w	MvSonicOnPtfm
 		moveq	#0,d4
 		rts	
 ; ===========================================================================
@@ -64,7 +64,7 @@ SolidObject71:				; XREF: Obj71_Solid
 
 	@stand:
 		move.w	d4,d2
-		jsr	MvSonicOnPtfm
+		bsr.w	MvSonicOnPtfm
 		moveq	#0,d4
 		rts	
 ; ===========================================================================
@@ -127,24 +127,6 @@ loc_FAD0:
 		ext.w	d3
 		add.w	d3,d2
 		move.w	obY(a1),d3
-		
-	;Mercury Ducking Size Fix
-	
-	if SpinDashActive=1	;Mercury Spin Dash Enabled
-		cmpi.b	#id_SpinDash,obAnim(a1)
-		beq.s	@short
-	endc	;end Spin Dash Enabled
-	
-		cmpi.b	#id_Duck,obAnim(a1)
-		bne.s	@skip
-		
-	@short:
-		subi.w	#5,d2
-		addi.w	#5,d3
-		
-	@skip:
-	;end Ducking Size Fix
-		
 		sub.w	obY(a0),d3
 		addq.w	#4,d3
 		add.w	d2,d3
@@ -158,9 +140,11 @@ loc_FB0E:
 		tst.b	(f_lockmulti).w	; are controls locked?
 		bmi.w	Solid_Ignore	; if yes, branch
 		cmpi.b	#6,(v_player+obRoutine).w ; is Sonic dying?
-
-		bcc.w	Solid_Debug
-
+		if Revision=0
+		bcc.w	Solid_Ignore	; if yes, branch
+		else
+			bcc.w	Solid_Debug
+		endc
 		tst.w	(v_debuguse).w	; is debug mode being used?
 		bne.w	Solid_Debug	; if yes, branch
 		move.w	d0,d5
@@ -185,34 +169,18 @@ loc_FB0E:
 		cmp.w	d1,d5
 		bhi.w	Solid_TopBottom	; if Sonic hits top or bottom, branch
 		cmpi.w	#4,d1
-
-	if WallJumpActive=1	;Mercury Wall Jump
-		bls.s	Solid_SideAir2
-		moveq	#0,d1
-	else
 		bls.s	Solid_SideAir
-	endc	;end Wall Jump
-
 		tst.w	d0		; where is Sonic?
 		beq.s	Solid_Centre	; if inside the object, branch
 		bmi.s	Solid_Right	; if right of the object, branch
 		tst.w	obVelX(a1)	; is Sonic moving left?
 		bmi.s	Solid_Centre	; if yes, branch
-		
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.b	#btnR,d1
-	endc	;end Wall Jump
-	
 		bra.s	Solid_Left
 ; ===========================================================================
 
 Solid_Right:
 		tst.w	obVelX(a1)	; is Sonic moving right?
 		bpl.s	Solid_Centre	; if yes, branch
-	
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.b	#btnL,d1
-	endc	;end Wall Jump
 
 Solid_Left:
 		move.w	#0,obInertia(a1)
@@ -222,37 +190,26 @@ Solid_Centre:
 		sub.w	d0,obX(a1)	; correct Sonic's position
 		btst	#1,obStatus(a1)	; is Sonic in the air?
 		bne.s	Solid_SideAir	; if yes, branch
-		bset	#staPush,obStatus(a1)	; make Sonic push object	;Mercury Constants
-		bset	#staPush,obStatus(a0)	; make object be pushed	;Mercury Constants
+		bset	#5,obStatus(a1)	; make Sonic push object
+		bset	#5,obStatus(a0)	; make object be pushed
 		moveq	#1,d4		; return side collision
 		rts	
 ; ===========================================================================
 
 Solid_SideAir:
-
-	if WallJumpActive=1	;Mercury Wall Jump
-		move.l	a0,-(sp)
-		movea.l	a1,a0
-		bsr.w	WallJump
-		movea.l	(sp)+,a0
-		
-Solid_SideAir2:
-	endc	;end Wall Jump
-	
-		bsr.s	Solid_NotPushing	
+		bsr.s	Solid_NotPushing
 		moveq	#1,d4		; return side collision
 		rts	
 ; ===========================================================================
 
 Solid_Ignore:
-		btst	#staPush,obStatus(a0)	; is Sonic pushing?	;Mercury Constants
+		btst	#5,obStatus(a0)	; is Sonic pushing?
 		beq.s	Solid_Debug	; if not, branch
-		
-		;move.w	#id_Run,obAnim(a1) ; use running animation	;Mercury Walking In Air Fix
+		move.w	#id_Run,obAnim(a1) ; use running animation
 
 Solid_NotPushing:
-		bclr	#staPush,obStatus(a0)	; clear pushing flag	;Mercury Constants
-		bclr	#staPush,obStatus(a1)	; clear Sonic's pushing flag	;Mercury Constants
+		bclr	#5,obStatus(a0)	; clear pushing flag
+		bclr	#5,obStatus(a1)	; clear Sonic's pushing flag
 
 Solid_Debug:
 		moveq	#0,d4		; return no collision

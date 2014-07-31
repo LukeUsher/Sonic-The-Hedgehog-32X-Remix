@@ -141,7 +141,7 @@ Saw_Action:	; Routine 2
 ; ===========================================================================
 
 @here03:
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		move.w	obX(a0),saw_origX(a0)
 		subq.b	#1,obTimeFrame(a0)
 		bpl.s	@sameframe03
@@ -180,7 +180,7 @@ Saw_Action:	; Routine 2
 ; ===========================================================================
 
 @here04:
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		move.w	obX(a0),saw_origX(a0)
 		subq.b	#1,obTimeFrame(a0)
 		bpl.s	@sameframe04

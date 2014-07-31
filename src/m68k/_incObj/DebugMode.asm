@@ -23,31 +23,12 @@ Debug_Main:	; Routine 0
 		andi.w	#$3FF,($FFFFF70C).w
 		move.b	#0,obFrame(a0)
 		move.b	#id_Walk,obAnim(a0)
-		
-	;Mercury Debug Improvements
-		clr.w	obVelX(a0)
-		clr.w	obVelY(a0)
-		clr.w	obInertia(a0)
-		btst	#staOnObj,obStatus(a0)	; is Sonic standing on an object?	;Mercury Constants
-		beq.s	@setpos			; if not, branch
-		bclr	#staOnObj,obStatus(a0)	; clear Sonic's standing flag	;Mercury Constants
-		moveq	#0,d0
-		move.b	obPlatformID(a0),d0	; get object id	;Mercury Constants
-		clr.b	obPlatformID(a0)	; clear object id	;Mercury Constants
-		lsl.w	#6,d0
-		addi.l	#v_objspace&$FFFFFF,d0
-		movea.l	d0,a2
-		bclr	#staOnObj,obStatus(a2)	; clear object's standing flag	;Mercury Constants
-		clr.b	obSolid(a2)
-	@setpos:
-	;end Debug Improvements
-		
 		cmpi.b	#id_Special,(v_gamemode).w ; is game mode $10 (special stage)?
-		bne.s	@islevel		; if not, branch
+		bne.s	@islevel	; if not, branch
 
-		move.w	#0,(v_ssrotate).w	; stop special stage rotating
-		move.w	#0,(v_ssangle).w 	; make	special	stage "upright"
-		moveq	#6,d0			; use 6th debug	item list
+		move.w	#0,(v_ssrotate).w ; stop special stage rotating
+		move.w	#0,(v_ssangle).w ; make	special	stage "upright"
+		moveq	#6,d0		; use 6th debug	item list
 		bra.s	@selectlist
 ; ===========================================================================
 
@@ -60,9 +41,9 @@ Debug_Main:	; Routine 0
 		add.w	d0,d0
 		adda.w	(a2,d0.w),a2
 		move.w	(a2)+,d6
-		cmp.b	(v_debugitem).w,d6 	; have you gone past the last item?
-		bhi.s	@noreset		; if not, branch
-		move.b	#0,(v_debugitem).w 	; back to start of list
+		cmp.b	(v_debugitem).w,d6 ; have you gone past the last item?
+		bhi.s	@noreset	; if not, branch
+		move.b	#0,(v_debugitem).w ; back to start of list
 
 	@noreset:
 		bsr.w	Debug_ShowItem
@@ -181,11 +162,6 @@ Debug_ChgItem:
 		beq.s	@backtonormal	; if not, branch
 		jsr	FindFreeObj
 		bne.s	@backtonormal
-		
-	;Mercury Debug Improvements
-		move.b	#0,(v_objstate+2).w
-	;end ;Mercury Debug Improvements
-		
 		move.w	obX(a0),obX(a1)
 		move.w	obY(a0),obY(a1)
 		move.b	4(a0),0(a1)	; create object
@@ -204,8 +180,8 @@ Debug_ChgItem:
 		beq.s	@stayindebug	; if not, branch
 		moveq	#0,d0
 		move.w	d0,(v_debuguse).w ; deactivate debug mode
-		;move.l	#Map_Sonic,(v_player+obMap).w
-		;move.w	#$780,(v_player+obGfx).w
+		move.l	#Map_Sonic,(v_player+obMap).w
+		move.w	#$780,(v_player+obGfx).w
 		move.b	d0,(v_player+obAnim).w
 		move.w	d0,obX+2(a0)
 		move.w	d0,obY+2(a0)
@@ -216,8 +192,8 @@ Debug_ChgItem:
 
 		clr.w	(v_ssangle).w
 		move.w	#$40,(v_ssrotate).w ; set new level rotation speed
-		;move.l	#Map_Sonic,(v_player+obMap).w
-		;move.w	#$780,(v_player+obGfx).w
+		move.l	#Map_Sonic,(v_player+obMap).w
+		move.w	#$780,(v_player+obGfx).w
 		move.b	#id_Roll,(v_player+obAnim).w
 		bset	#2,(v_player+obStatus).w
 		bset	#1,(v_player+obStatus).w

@@ -26,7 +26,7 @@ locret_16950:
 Cat_Main:	; Routine 0
 		move.b	#7,obHeight(a0)
 		move.b	#8,obWidth(a0)
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		jsr	ObjFloorDist
 		tst.w	d1
 		bpl.s	locret_16950
@@ -61,9 +61,11 @@ Cat_Main:	; Routine 0
 
 Cat_Loop:
 		jsr	FindNextFreeObj
-
-		bne.w	Cat_ChkGone
-
+		if Revision=0
+		bne.s	@fail
+		else
+			bne.w	Cat_ChkGone
+		endc
 		move.b	#id_Caterkiller,0(a1) ; load body segment object
 		move.b	d6,obRoutine(a1) ; goto Cat_BodySeg1 or Cat_BodySeg2 next
 		addq.b	#2,d6		; alternate between the two
@@ -157,12 +159,15 @@ loc_16AFC:
 loc_16B02:				; XREF: Cat_Index2
 		subq.b	#1,$2A(a0)
 		bmi.s	@loc_16B5E
-	
-		tst.w	obVelX(a0)
-		beq.s	@notmoving
+		if Revision=0
+		move.l	obX(a0),-(sp)
 		move.l	obX(a0),d2
-		move.l	d2,d3
-
+		else
+			tst.w	obVelX(a0)
+			beq.s	@notmoving
+			move.l	obX(a0),d2
+			move.l	d2,d3
+		endc
 		move.w	obVelX(a0),d0
 		btst	#0,obStatus(a0)
 		beq.s	@noflip
@@ -173,17 +178,28 @@ loc_16B02:				; XREF: Cat_Index2
 		asl.l	#8,d0
 		add.l	d0,d2
 		move.l	d2,obX(a0)
-
-		swap.w	d3
-		cmp.w	obX(a0),d3
-		beq.s	@notmoving
+		if Revision=0
 		jsr	ObjFloorDist
-		cmpi.w	#$FFF8,d1
+		move.l	(sp)+,d2
+		cmpi.w	#-8,d1
 		blt.s	@loc_16B70
 		cmpi.w	#$C,d1
 		bge.s	@loc_16B70
 		add.w	d1,obY(a0)
-
+		swap	d2
+		cmp.w	obX(a0),d2
+		beq.s	@notmoving
+		else
+			swap.w	d3
+			cmp.w	obX(a0),d3
+			beq.s	@notmoving
+			jsr	ObjFloorDist
+			cmpi.w	#$FFF8,d1
+			blt.s	@loc_16B70
+			cmpi.w	#$C,d1
+			bge.s	@loc_16B70
+			add.w	d1,obY(a0)
+		endc
 		moveq	#0,d0
 		move.b	cat_parent(a0),d0
 		addq.b	#1,cat_parent(a0)
@@ -197,30 +213,40 @@ loc_16B02:				; XREF: Cat_Index2
 @loc_16B5E:
 		subq.b	#2,ob2ndRout(a0)
 		move.b	#7,$2A(a0)
-
-		clr.w	obVelX(a0)
-		clr.w	obInertia(a0)
-
+		if Revision=0
+		move.w	#0,obVelX(a0)
+		else
+			clr.w	obVelX(a0)
+			clr.w	obInertia(a0)
+		endc
 		rts	
 ; ===========================================================================
 
 @loc_16B70:
-		moveq	#0,d0
-		move.b	cat_parent(a0),d0
-		move.b	#$80,$2C(a0,d0)
-		neg.w	obX+2(a0)
-		beq.s	@loc_1730A
-		btst	#0,obStatus(a0)
-		beq.s	@loc_1730A
-		subq.w	#1,obX(a0)
-		addq.b	#1,cat_parent(a0)
-		moveq	#0,d0
-		move.b	cat_parent(a0),d0
-		clr.b	$2C(a0,d0)
-@loc_1730A:
+		if Revision=0
+		move.l	d2,obX(a0)
 		bchg	#0,obStatus(a0)
 		move.b	obStatus(a0),obRender(a0)
-
+		moveq	#0,d0
+		move.b	cat_parent(a0),d0
+		move.b	#$80,$2C(a0,d0.w)
+		else
+			moveq	#0,d0
+			move.b	cat_parent(a0),d0
+			move.b	#$80,$2C(a0,d0)
+			neg.w	obX+2(a0)
+			beq.s	@loc_1730A
+			btst	#0,obStatus(a0)
+			beq.s	@loc_1730A
+			subq.w	#1,obX(a0)
+			addq.b	#1,cat_parent(a0)
+			moveq	#0,d0
+			move.b	cat_parent(a0),d0
+			clr.b	$2C(a0,d0)
+	@loc_1730A:
+			bchg	#0,obStatus(a0)
+			move.b	obStatus(a0),obRender(a0)
+		endc
 		addq.b	#1,cat_parent(a0)
 		andi.b	#$F,cat_parent(a0)
 		rts	
@@ -252,9 +278,11 @@ Cat_BodySeg1:	; Routine 4, 8
 		beq.w	loc_16C64
 		move.w	obInertia(a1),obInertia(a0)
 		move.w	obVelX(a1),d0
-
-		add.w	obInertia(a0),d0
-
+		if Revision=0
+		add.w	obInertia(a1),d0
+		else
+			add.w	obInertia(a0),d0
+		endc
 		move.w	d0,obVelX(a0)
 		move.l	obX(a0),d2
 		move.l	d2,d3
@@ -276,20 +304,25 @@ loc_16C0C:
 		move.b	$2C(a1,d0.w),d1
 		cmpi.b	#$80,d1
 		bne.s	loc_16C50
-
-		move.b	d1,$2C(a0,d0)
-		neg.w	obX+2(a0)
-		beq.s	locj_173E4
-		btst	#0,obStatus(a0)
-		beq.s	locj_173E4
-		cmpi.w	#-$C0,obVelX(a0)
-		bne.s	locj_173E4
-		subq.w	#1,obX(a0)
-		addq.b	#1,cat_parent(a0)
-		moveq	#0,d0
-		move.b	cat_parent(a0),d0
-		clr.b	$2C(a0,d0)
-locj_173E4:
+		if Revision=0
+		swap	d3
+		move.l	d3,obX(a0)
+		move.b	d1,$2C(a0,d0.w)
+		else
+			move.b	d1,$2C(a0,d0)
+			neg.w	obX+2(a0)
+			beq.s	locj_173E4
+			btst	#0,obStatus(a0)
+			beq.s	locj_173E4
+			cmpi.w	#-$C0,obVelX(a0)
+			bne.s	locj_173E4
+			subq.w	#1,obX(a0)
+			addq.b	#1,cat_parent(a0)
+			moveq	#0,d0
+			move.b	cat_parent(a0),d0
+			clr.b	$2C(a0,d0)
+	locj_173E4:
+		endc
 		bchg	#0,obStatus(a0)
 		move.b	obStatus(a0),1(a0)
 		addq.b	#1,cat_parent(a0)
@@ -337,15 +370,10 @@ loc_16CAA:
 		move.w	d0,obVelX(a0)
 		move.w	#-$400,obVelY(a0)
 		move.b	#$C,obRoutine(a0)
-		
-	if CaterkillerFix=1	;Mercury Caterkiller Fix
-		move.b	#$98,obColType(a0)
-	endc	;end Caterkiller Fix
-		
 		andi.b	#$F8,obFrame(a0)
 
 loc_16CC0:	; Routine $C
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		tst.w	obVelY(a0)
 		bmi.s	loc_16CE0
 		jsr	ObjFloorDist

@@ -39,12 +39,8 @@ Bump_Hit:	; Routine 2
 		asr.l	#8,d0
 		move.w	d0,obVelY(a1)	; bounce Sonic away
 		bset	#1,obStatus(a1)
-		
-	if SonicCDRollJump=0	;Mercury Sonic CD Roll Jump
-		bclr	#staRollJump,obStatus(a1)	;Mercury Constants
-	endc	;end Sonic CD Roll Jump
-	
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
+		bclr	#4,obStatus(a1)
+		bclr	#5,obStatus(a1)
 		clr.b	$3C(a1)
 		move.b	#1,obAnim(a0)	; use "hit" animation
 		sfx	sfx_Bumper	; play bumper sound

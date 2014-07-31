@@ -87,7 +87,7 @@ Obj76_Display:				; XREF: Obj76_Action
 loc_19762:	; Routine 4
 		tst.b	obRender(a0)
 		bpl.s	Obj76_Delete
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		jmp	DisplaySprite
 ; ===========================================================================
 

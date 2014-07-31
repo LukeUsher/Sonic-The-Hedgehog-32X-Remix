@@ -23,7 +23,7 @@ Hog_Main:	; Routine 0
 		move.b	#4,obPriority(a0)
 		move.b	#5,obColType(a0)
 		move.b	#$C,obActWid(a0)
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		jsr	ObjFloorDist	; find floor
 		tst.w	d1
 		bpl.s	@floornotfound

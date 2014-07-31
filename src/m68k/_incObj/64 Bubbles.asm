@@ -78,11 +78,6 @@ Bub_ChkWater:	; Routine 4
 		beq.s	@display
 		bsr.w	Bub_ChkSonic	; has Sonic touched the	bubble?
 		beq.s	@display	; if not, branch
-		
-	if SpinDashActive=1	;Mercury Spin Dash
-		cmpi.b	#id_Spindash,obAnim(a1)
-		beq.s	@display
-	endc	;end Spin Dash
 
 		bsr.w	ResumeMusic	; cancel countdown music
 		sfx	sfx_Bubble	; play collecting bubble sound
@@ -93,12 +88,8 @@ Bub_ChkWater:	; Routine 4
 		move.b	#id_GetAir,obAnim(a1) ; use bubble-collecting animation
 		move.w	#$23,$3E(a1)
 		move.b	#0,$3C(a1)
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
-	
-	if SonicCDRollJump=0	;Mercury Sonic CD Roll Jump
-		bclr	#staRollJump,obStatus(a1)
-	endc	;end Sonic CD Roll Jump
-	
+		bclr	#5,obStatus(a1)
+		bclr	#4,obStatus(a1)
 		btst	#2,obStatus(a1)
 		beq.w	@burst
 		bclr	#2,obStatus(a1)
@@ -109,7 +100,7 @@ Bub_ChkWater:	; Routine 4
 ; ===========================================================================
 
 @display:
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		tst.b	obRender(a0)
 		bpl.s	@delete
 		jmp	DisplaySprite

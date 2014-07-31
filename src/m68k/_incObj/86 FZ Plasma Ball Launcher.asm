@@ -153,7 +153,7 @@ loc_1A9A6:				; XREF: Obj86_Index2
 loc_1A9C0:				; XREF: Obj86_Index2
 		tst.w	obVelX(a0)
 		beq.s	loc_1A9E6
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		move.w	obX(a0),d0
 		sub.w	$30(a0),d0
 		bcc.s	loc_1A9E6
@@ -181,7 +181,7 @@ locret_1AA1C:
 ; ===========================================================================
 
 loc_1AA1E:				; XREF: Obj86_Index2
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		cmpi.w	#$5E0,obY(a0)
 		bcc.s	loc_1AA34
 		subq.w	#1,obSubtype(a0)

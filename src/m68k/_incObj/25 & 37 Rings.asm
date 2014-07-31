@@ -107,43 +107,6 @@ loc_9C0E:
 		bne.w	DeleteObject
 
 Ring_Animate:	; Routine 2
-
-	if MagneticRings=1	;Mercury Magnetic Rings
-		tst.b	(v_shield).w
-		beq.s	@skip
-		tst.b	obRender(a0)
-		bpl.s	@skip
-		
-		lea (v_player).w,a1
-		
-		move.w	obX(a1),d0	; load Sonic's x-axis position
-		sub.w	obX(a0),d0
-		bpl.s	@a1
-		neg.w	d0
-		
-	@a1:
-		cmpi.w	#$40,d0
-		bhi.s	@skip
-		
-		move.w	obY(a1),d0	; load Sonic's y-axis position
-		sub.w	obY(a0),d0
-		bpl.s	@a2
-		neg.w	d0
-		
-	@a2:
-		cmpi.w	#$40,d0
-		bhi.s	@skip
-		
-		move.b	#$A,obRoutine(a0)
-		lea	(v_objstate).w,a2
-		moveq	#0,d0
-		move.b	obRespawnNo(a0),d0
-		move.b	$34(a0),d1
-		bset	d1,2(a2,d0.w)
-		
-	@skip:
-	endc	;end  Magnetic Rings
-
 		move.b	(v_ani1_frame).w,obFrame(a0) ; set frame
 		bsr.w	DisplaySprite
 		out_of_range.s	Ring_Delete,$32(a0)
@@ -169,61 +132,6 @@ Ring_Sparkle:	; Routine 6
 
 Ring_Delete:	; Routine 8
 		bra.w	DeleteObject
-		
-	if MagneticRings=1	;Mercury Magnetic Rings
-Ring_Attract:	; Routine $A
-		tst.b	(v_shield).w
-		bne.s	@skip
-		move.b	#id_RingLoss,0(a0)
-		move.b	#2,obRoutine(a0)
-		move.b	#-1,(v_ani3_time).w
-		bra.s	@display
-		
-	@skip:
-		move.w	#$30,d1	; horizontal
-		move.w	(v_player+obX).w,d0
-		cmp.w	obX(a0),d0
-		bcc.s	@a1
-		neg.w	d1
-		tst.w	obVelX(a0)
-		bmi.s	@a2
-		add.w	d1,d1
-		add.w	d1,d1
-		bra.s	@a2
-
-	@a1:
-		tst.w	obVelX(a0)
-		bpl.s	@a2
-		add.w	d1,d1
-		add.w	d1,d1
-
-	@a2:
-		add.w	d1,obVelX(a0)
-		move.w	#$30,d1	; vertical
-		move.w	(v_player+obY).w,d0
-		cmp.w	obY(a0),d0
-		bcc.s	@a3
-		neg.w	d1
-		tst.w	obVelY(a0)
-		bmi.s	@a4
-		add.w	d1,d1
-		add.w	d1,d1
-		bra.s	@a4
-
-	@a3:
-		tst.w	obVelY(a0)
-		bpl.s	@a4
-		add.w	d1,d1
-		add.w	d1,d1
-
-	@a4:
-		add.w	d1,obVelY(a0)
-		bsr.w	ObjectMove
-		
-	@display:
-		move.b	(v_ani1_frame).w,obFrame(a0) ; set frame
-		bra.w	DisplaySprite
-	endc	;end  Magnetic Rings
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -242,15 +150,8 @@ CollectRing:				; XREF: Ring_Collect
 		bne.s	@playsnd
 
 	@got100:
-	
-	;Mercury Lives Over/Underflow Fix
-		cmpi.b	#$63,(v_lives).w	; are lives at max?
-		beq.s	@playbgm
-		addq.b	#1,(v_lives).w	; add 1 to number of lives
+		addq.b	#1,(v_lives).w	; add 1 to the number of lives you have
 		addq.b	#1,(f_lifecount).w ; update the lives counter
-	@playbgm:
-	;end Lives Over/Underflow Fix
-	
 		move.w	#bgm_ExtraLife,d0 ; play extra life music
 
 	@playsnd:
@@ -307,9 +208,7 @@ RLoss_Count:	; Routine 0
 		move.b	#3,obPriority(a1)
 		move.b	#$47,obColType(a1)
 		move.b	#8,obActWid(a1)
-		
-		
-		
+		move.b	#-1,(v_ani3_time).w
 		tst.w	d4
 		bmi.s	@loc_9D62
 		move.w	d4,d0
@@ -337,98 +236,34 @@ RLoss_Count:	; Routine 0
 		move.w	#0,(v_rings).w	; reset number of rings to zero
 		move.b	#$80,(f_ringcount).w ; update ring counter
 		move.b	#0,(v_lifecount).w
-		
-		moveq   #-1,d0                  ; Move #-1 to d0
-                move.b  d0,obDelayAni(a0)       ; Move d0 to new timer
-                move.b  d0,(v_ani3_time).w      ; Move d0 to old timer (for animated purposes)
- 		
 		sfx	sfx_RingLoss	; play ring loss sound
 
 RLoss_Bounce:	; Routine 2
 		move.b	(v_ani3_frame).w,obFrame(a0)
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		bmi.s	@chkdel
 		move.b	(v_vbla_byte).w,d0
 		add.b	d7,d0
 		andi.b	#3,d0
 		bne.s	@chkdel
-		
-	if RingsBounceAtZoneBottom=1 ;Mercury Rings Bounce At Zone Bottom
-		move.w	(v_limitbtm2).w,d0
-		addi.w	#$E0,d0
-		cmp.w	obY(a0),d0	; has object moved below level boundary?
-		blt.s	@bounce		; if yes, branch
-	endc	;end Rings Bounce At Zone Bottom
-		
 		jsr	ObjFloorDist
 		tst.w	d1
 		bpl.s	@chkdel
 		add.w	d1,obY(a0)
-		
-	if RingsBounceAtZoneBottom=1 ;Mercury Rings Bounce At Zone Bottom
-	@bounce:
-	endc	;end Rings Bounce At Zone Bottom
-	
 		move.w	obVelY(a0),d0
 		asr.w	#2,d0
 		sub.w	d0,obVelY(a0)
 		neg.w	obVelY(a0)
 
 	@chkdel:
-                subq.b  #1,obDelayAni(a0)       ; Subtract 1
-                beq.w   DeleteObject            ; If 0, delete
-		
-	if RingsBounceAtZoneBottom=0 ;Mercury Rings Bounce At Zone Bottom
+		tst.b	(v_ani3_time).w
+		beq.s	RLoss_Delete
 		move.w	(v_limitbtm2).w,d0
 		addi.w	#$E0,d0
 		cmp.w	obY(a0),d0	; has object moved below level boundary?
 		bcs.s	RLoss_Delete	; if yes, branch
-	endc	;end Rings Bounce At Zone Bottom
-	
-	if MagneticRings=1	;Mercury Magnetic Rings
-		tst.b	(v_shield).w
-		beq.s	@skip
-		tst.b	obRender(a0)
-		bpl.s	@skip
-		
-		lea (v_player).w,a1
-		
-		move.w	obX(a1),d0	; load Sonic's x-axis position
-		sub.w	obX(a0),d0
-		bpl.s	@a1
-		neg.w	d0
-		
-	@a1:
-		cmpi.w	#$A0,d0
-		bhi.s	@skip
-		
-		move.w	obY(a1),d0	; load Sonic's y-axis position
-		sub.w	obY(a0),d0
-		bpl.s	@a2
-		neg.w	d0
-		
-	@a2:
-		cmpi.w	#$A0,d0
-		bhi.s	@skip
-		
-		move.b	#$A,obRoutine(a0)
-		move.b	#id_Rings,0(a0)
-		
-	@skip:
-	endc	;end  Magnetic Rings
-
-	if LostRingsFlash=1	;Mercury Lost Rings Flash
-		move.b	(v_ani3_time).w,d0
-		btst	#0,d0
-		beq.w	DisplaySprite
-		cmpi.b	#LostRingsFlashTime,d0
-		bhi.w	DisplaySprite
-		rts
-	else
 		bra.w	DisplaySprite
-	endc	;end Lost Rings Flash
-	
 ; ===========================================================================
 
 RLoss_Collect:	; Routine 4

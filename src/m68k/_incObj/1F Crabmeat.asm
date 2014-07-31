@@ -34,7 +34,7 @@ Crab_Main:	; Routine 0
 		move.b	#3,obPriority(a0)
 		move.b	#6,obColType(a0)
 		move.b	#$15,obActWid(a0)
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		jsr	ObjFloorDist	; find floor
 		tst.w	d1
 		bpl.s	@floornotfound
@@ -113,7 +113,7 @@ Crab_Action:	; Routine 2
 @walkonfloor:				; XREF: @index
 		subq.w	#1,timedelay(a0)
 		bmi.s	loc_966E
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		bchg	#0,crabmode(a0)
 		bne.s	loc_9654
 		move.w	obX(a0),d3
@@ -206,7 +206,7 @@ Crab_BallMain:	; Routine 6
 Crab_BallMove:	; Routine 8
 		lea	(Ani_Crab).l,a1
 		bsr.w	AnimateSprite
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		bsr.w	DisplaySprite
 		move.w	(v_limitbtm2).w,d0
 		addi.w	#$E0,d0

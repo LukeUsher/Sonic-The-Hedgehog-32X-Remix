@@ -9,12 +9,8 @@ Sonic_JumpDirection:			; XREF: Obj01_MdJump; Obj01_MdJump2
 		move.w	(v_sonspeedmax).w,d6
 		move.w	(v_sonspeedacc).w,d5
 		asl.w	#1,d5
-		
-	if SonicCDRollJump=0	;Mercury Sonic CD Roll Jump
 		btst	#4,obStatus(a0)
 		bne.s	Obj01_ResetScr2
-	endc	;end Sonic CD Roll Jump
-		
 		move.w	obVelX(a0),d0
 		btst	#bitL,(v_jpadhold2).w ; is left being pressed?
 		beq.s	loc_13278	; if not, branch
@@ -24,13 +20,6 @@ Sonic_JumpDirection:			; XREF: Obj01_MdJump; Obj01_MdJump2
 		neg.w	d1
 		cmp.w	d1,d0
 		bgt.s	loc_13278
-		
-	if (DisableSpeedCap&2) ;Mercury Disable Speed Cap
-		add.w d5,d0
-		cmp.w d1,d0
-		ble.s loc_13278
-	endc	;end Disable Speed Cap
-		
 		move.w	d1,d0
 
 loc_13278:
@@ -40,13 +29,6 @@ loc_13278:
 		add.w	d5,d0
 		cmp.w	d6,d0
 		blt.s	Obj01_JumpMove
-		
-	if (DisableSpeedCap&2) ;Mercury Disable Speed Cap
-		sub.w d5,d0
-		cmp.w d6,d0
-		bge.s Obj01_JumpMove
-	endc	;end Disable Speed Cap
-		
 		move.w	d6,d0
 
 Obj01_JumpMove:

@@ -22,13 +22,7 @@ lamp_time:	= $36		; length of time to twirl the lamp
 Lamp_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.l	#Map_Lamp,obMap(a0)
-		
-	if MoveLamppostVRAM=1	;Mercury Move Lamppost VRAM
-		move.w	#($D800/$20),obGfx(a0)
-	else
 		move.w	#$7A0,obGfx(a0)
-	endc	;end Move Lamppost VRAM
-		
 		move.b	#4,obRender(a0)
 		move.b	#8,obActWid(a0)
 		move.b	#5,obPriority(a0)
@@ -94,13 +88,7 @@ Lamp_Blue:	; Routine 2
 		move.w	obY(a0),lamp_origY(a1)
 		subi.w	#$18,lamp_origY(a1)
 		move.l	#Map_Lamp,obMap(a1)
-
-	if MoveLamppostVRAM=1	;Mercury Move Lamppost VRAM
-		move.w	#($D800/$20),obGfx(a1)
-	else
 		move.w	#$7A0,obGfx(a1)
-	endc	;end Move Lamppost VRAM
-		
 		move.b	#4,obRender(a1)
 		move.b	#8,obActWid(a1)
 		move.b	#4,obPriority(a1)

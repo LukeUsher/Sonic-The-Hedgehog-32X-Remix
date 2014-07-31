@@ -14,26 +14,15 @@ ReactToItem:				; XREF: SonicPlayer
 		move.b	obHeight(a0),d5	; load Sonic's height
 		subq.b	#3,d5
 		sub.w	d5,d3
-		
-	;Mercury Ducking Size Fix
-	
-	if SpinDashActive=1	;Mercury Spin Dash Enabled
-		cmpi.b	#id_SpinDash,obAnim(a0)
-		beq.s	@short
-	endc	;end Spin Dash Enabled
-	
-		cmpi.b	#id_Duck,obAnim(a0)
-		bne.s	@notducking
-		
-	@short:
+		cmpi.b	#fr_Duck,obFrame(a0) ; is Sonic ducking?
+		bne.s	@notducking	; if not, branch
 		addi.w	#$C,d3
 		moveq	#$A,d5
-		
+
 	@notducking:
-	;end Ducking Size Fix
 		move.w	#$10,d4
 		add.w	d5,d5
-		lea	(v_lvlobjspace).w,a1 ; set object RAM start address
+		lea	(v_objspace+$800).w,a1 ; set object RAM start address
 		move.w	#$5F,d6
 
 @loop:
@@ -141,11 +130,11 @@ ReactToItem:				; XREF: SonicPlayer
 		andi.b	#$3F,d0
 		cmpi.b	#6,d0		; is collision type $46	?
 		beq.s	React_Monitor	; if yes, branch
-		cmpi.w	#90,obInvuln(a0)	; is Sonic blinking?
-		bcc.w	@return			; if yes, branch
+		cmpi.w	#90,$30(a0)	; is Sonic invincible?
+		bcc.w	@invincible	; if yes, branch
 		addq.b	#2,obRoutine(a1) ; advance the object's routine counter
 
-	@return:
+	@invincible:
 		rts	
 ; ===========================================================================
 
@@ -169,11 +158,6 @@ React_Monitor:
 		cmpi.b	#id_Roll,obAnim(a0) ; is Sonic rolling/jumping?
 		bne.s	@donothing
 		neg.w	obVelY(a0)	; reverse Sonic's y-motion
-		
-	if ReboundMod=1	;Mercury Rebound Mod
-		move.b	#1,obJumping(a0)
-	endc	;end Rebound Mod
-		
 		addq.b	#2,obRoutine(a1) ; advance the monitor's routine counter
 
 	@donothing:
@@ -183,12 +167,6 @@ React_Monitor:
 React_Enemy:
 		tst.b	(v_invinc).w	; is Sonic invincible?
 		bne.s	@donthurtsonic	; if yes, branch
-		
-	if SpinDashActive=1	;Mercury Spin Dash
-		cmpi.b	#id_SpinDash,obAnim(a0)	; is Sonic Spin Dashing?
-		beq.w	@breakenemy	; if yes, branch
-	endc	;end Spin Dash
-		
 		cmpi.b	#id_Roll,obAnim(a0) ; is Sonic rolling/jumping?
 		bne.w	React_ChkHurt	; if not, branch
 
@@ -236,11 +214,6 @@ React_Enemy:
 		cmp.w	obY(a1),d0
 		bcc.s	@bounceup
 		neg.w	obVelY(a0)
-		
-	if ReboundMod=1	;Mercury Rebound Mod
-		move.b	#1,obJumping(a0)
-	endc	;end Rebound Mod
-		
 		rts	
 ; ===========================================================================
 
@@ -257,28 +230,6 @@ React_Enemy:
 ; ===========================================================================
 
 React_Caterkiller:
-
-	if CaterkillerFix=1	;Mercury Caterkiller Fix
-		move.b	#1,d0
-		move.w	obInertia(a0),d1
-		bmi.s	@skip
-		move.b	#0,d0
-		
-	@skip:
-		move.b	obStatus(a1),d1
-		andi.b	#1,d1
-		cmp.b	d0,d1			;are Sonic and the Caterkiller facing the same way?
-		bne.s	@hurt			;if not, move on
-		btst	#staAir,obStatus(a0)	;is Sonic in the air?	;Mercury Constants
-		bne.s	@hurt			;if so, move on
-		btst	#staSpin,obStatus(a0)	;is Sonic spinning?	;Mercury Constants
-		beq.s	@hurt			;if not, move on
-		moveq	#-1,d0			;else, he's rolling on the ground, and shouldn't be hurt
-		rts				
-	
-	@hurt:
-	endc	;end Caterkiller Fix
-
 		bset	#7,obStatus(a1)
 
 React_ChkHurt:
@@ -338,29 +289,14 @@ HurtSonic:
 		neg.w	obVelX(a0)	; if Sonic is right of the object, reverse
 
 	@isleft:
-	
-	if SpinDashActive=1	;Mercury Spin Dash
-		bclr	#staSpinDash,obStatus2(a0)	; clear Spin Dash flag
-	endc	;end Spin Dash
-	
 		move.w	#0,obInertia(a0)
 		move.b	#id_Hurt,obAnim(a0)
-		move.w	#120,obInvinc(a0)	; set temp invincible time to 2 seconds	;Mercury Constants
+		move.w	#120,$30(a0)	; set temp invincible time to 2 seconds
 		move.w	#sfx_Death,d0	; load normal damage sound
 		cmpi.b	#id_Spikes,(a2)	; was damage caused by spikes?
-		
-	if SpikeSFXFix=1	;Mercury Spike SFX Fix
-		beq.s	@setspikesound	; if so, branch
-		cmpi.b	#id_Harpoon,(a2) ; was damage caused by LZ harpoon?
-		bne.s	@sound		; if not, branch
-
-	@setspikesound:
-	else
 		bne.s	@sound		; if not, branch
 		cmpi.b	#id_Harpoon,(a2) ; was damage caused by LZ harpoon?
 		bne.s	@sound		; if not, branch
-	endc	;end Spike SFX Fix
-		
 		move.w	#sfx_HitSpikes,d0 ; load spikes damage sound
 
 	@sound:
@@ -381,27 +317,22 @@ HurtSonic:
 
 
 KillSonic:
-		tst.w	(v_debuguse).w		; is debug mode	active?
-		bne.s	@dontdie		; if yes, branch
-		move.w	#0,(v_rings).w		; clear rings
-		move.b	#0,(v_invinc).w		; remove invincibility
+		tst.w	(v_debuguse).w	; is debug mode	active?
+		bne.s	@dontdie	; if yes, branch
+		move.b	#0,(v_invinc).w	; remove invincibility
 		move.b	#6,obRoutine(a0)
 		bsr.w	Sonic_ResetOnFloor
-		bset	#staAir,obStatus(a0)	;Mercury Constants
+		bset	#1,obStatus(a0)
 		move.w	#-$700,obVelY(a0)
 		move.w	#0,obVelX(a0)
 		move.w	#0,obInertia(a0)
-		
-	if SpinDashActive=0			;Mercury Spin Dash
 		move.w	obY(a0),$38(a0)
-	endc					;end Spin Dash
-		
 		move.b	#id_Death,obAnim(a0)
 		bset	#7,obGfx(a0)
-		move.w	#sfx_Death,d0		; play normal death sound
-		cmpi.b	#id_Spikes,(a2)		; check	if you were killed by spikes
+		move.w	#sfx_Death,d0	; play normal death sound
+		cmpi.b	#id_Spikes,(a2)	; check	if you were killed by spikes
 		bne.s	@sound
-		move.w	#sfx_HitSpikes,d0 	; play spikes death sound
+		move.w	#sfx_HitSpikes,d0 ; play spikes death sound
 
 	@sound:
 		jsr	(PlaySound_Special).l

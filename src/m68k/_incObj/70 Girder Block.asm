@@ -39,7 +39,7 @@ Gird_Action:	; Routine 2
 		bne.s	@solid
 
 	@beginmove:
-		jsr	ObjectMove
+		jsr	SpeedToPos
 		subq.w	#1,gird_time(a0) ; decrement movement duration
 		bne.s	@solid		; if time remains, branch
 		bsr.w	Gird_ChgMove	; if time is zero, branch

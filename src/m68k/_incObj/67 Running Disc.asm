@@ -90,7 +90,7 @@ loc_155B8:
 		clr.b	obAnim(a1)
 
 loc_155D0:
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
+		bclr	#5,obStatus(a1)
 		move.b	#1,obNextAni(a1)
 		move.b	#1,$38(a1)
 

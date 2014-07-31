@@ -88,7 +88,7 @@ Buzz_Action:	; Routine 2
 @chknearsonic:				; XREF: @index
 		subq.w	#1,timedelay(a0) ; subtract 1 from time delay
 		bmi.s	@chgdirection
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		tst.b	buzzstatus(a0)
 		bne.s	@keepgoing
 		move.w	(v_player+obX).w,d0

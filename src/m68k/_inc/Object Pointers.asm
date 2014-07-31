@@ -2,18 +2,12 @@
 ; Object pointers
 ; ---------------------------------------------------------------------------
 ptr_SonicPlayer:	dc.l SonicPlayer	; $01
-ptr_Obj02:		dc.l ObjectMoveAndFall
-ptr_Obj03:		dc.l ObjectMoveAndFall
-ptr_Obj04:		dc.l ObjectMoveAndFall
-
-	if (SpinDashDustActive|InstaShieldActive)=1	;Mercury Spin Dash Dust, Insta-Shield
-ptr_SonicEffects:	dc.l SonicEffects
-	else
-ptr_Obj05:		dc.l ObjectMoveAndFall
-	endc	;end Spin Dash Dust, Insta-Shield
-
-ptr_Obj06:		dc.l ObjectMoveAndFall
-ptr_Obj07:		dc.l ObjectMoveAndFall
+ptr_Obj02:		dc.l ObjectFall
+ptr_Obj03:		dc.l ObjectFall
+ptr_Obj04:		dc.l ObjectFall
+ptr_Obj05:		dc.l ObjectFall
+ptr_Obj06:		dc.l ObjectFall
+ptr_Obj07:		dc.l ObjectFall
 ptr_Splash:		dc.l Splash		; $08
 ptr_SonicSpecial:	dc.l SonicSpecial
 ptr_DrownCount:		dc.l DrownCount
@@ -149,18 +143,12 @@ ptr_EndEggman:		dc.l EndEggman
 ptr_TryChaos:		dc.l TryChaos
 
 id_SonicPlayer:		equ ((ptr_SonicPlayer-Obj_Index)/4)+1		; $01
-id_Obj02:		equ ((ptr_ObjectMoveAndFall-Obj_Index)/4)+1
-id_Obj03:		equ ((ptr_ObjectMoveAndFall-Obj_Index)/4)+1
-id_Obj04:		equ ((ptr_ObjectMoveAndFall-Obj_Index)/4)+1
-
-	if (SpinDashDustActive|InstaShieldActive)=1	;Mercury Spin Dash Dust, Insta-Shield
-id_SonicEffects:	equ ((ptr_SonicEffects-Obj_Index)/4)+1
-	else
-id_Obj05:		equ ((ptr_ObjectMoveAndFall-Obj_Index)/4)+1
-	endc	;end Spin Dash Dust, Insta-Shield
-
-id_Obj06:		equ ((ptr_ObjectMoveAndFall-Obj_Index)/4)+1
-id_Obj07:		equ ((ptr_ObjectMoveAndFall-Obj_Index)/4)+1
+id_Obj02:		equ ((ptr_Obj02-Obj_Index)/4)+1
+id_Obj03:		equ ((ptr_Obj03-Obj_Index)/4)+1
+id_Obj04:		equ ((ptr_Obj04-Obj_Index)/4)+1
+id_Obj05:		equ ((ptr_Obj05-Obj_Index)/4)+1
+id_Obj06:		equ ((ptr_Obj06-Obj_Index)/4)+1
+id_Obj07:		equ ((ptr_Obj07-Obj_Index)/4)+1
 id_Splash:		equ ((ptr_Splash-Obj_Index)/4)+1		; $08
 id_SonicSpecial:	equ ((ptr_SonicSpecial-Obj_Index)/4)+1
 id_DrownCount:		equ ((ptr_DrownCount-Obj_Index)/4)+1

@@ -129,7 +129,7 @@ loc_911C:
 loc_912A:				; XREF: Anml_Index
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		tst.w	obVelY(a0)
 		bmi.s	loc_9180
 		jsr	ObjFloorDist
@@ -155,7 +155,7 @@ loc_9180:
 ; ===========================================================================
 
 loc_9184:				; XREF: Anml_Index
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
 		bmi.s	loc_91AE
@@ -175,7 +175,7 @@ loc_91AE:
 ; ===========================================================================
 
 loc_91C0:				; XREF: Anml_Index
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
 		bmi.s	loc_91FC
@@ -249,7 +249,7 @@ loc_9280:				; XREF: Anml_Index
 		bpl.s	loc_92B6
 		clr.w	obVelX(a0)
 		clr.w	$32(a0)
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		bsr.w	loc_93C4
 		bsr.w	loc_93EC
@@ -273,7 +273,7 @@ loc_92BA:				; XREF: Anml_Index
 ; ===========================================================================
 
 loc_92D6:				; XREF: Anml_Index
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
 		bmi.s	loc_9310
@@ -299,7 +299,7 @@ loc_9314:				; XREF: Anml_Index
 		bpl.s	loc_932E
 		clr.w	obVelX(a0)
 		clr.w	$32(a0)
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		bsr.w	loc_93C4
 		bsr.w	loc_93EC
 
@@ -310,7 +310,7 @@ loc_932E:
 loc_9332:				; XREF: Anml_Index
 		bsr.w	sub_9404
 		bpl.s	loc_936C
-		bsr.w	ObjectMoveAndFall
+		bsr.w	ObjectFall
 		move.b	#1,obFrame(a0)
 		tst.w	obVelY(a0)
 		bmi.s	loc_936C
@@ -330,7 +330,7 @@ loc_936C:
 loc_9370:				; XREF: Anml_Index
 		bsr.w	sub_9404
 		bpl.s	loc_93C0
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		tst.w	obVelY(a0)
 		bmi.s	loc_93AA

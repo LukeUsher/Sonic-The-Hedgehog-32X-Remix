@@ -42,10 +42,15 @@ Brick_Action:	; Routine 2
 		bsr.w	SolidObject
 
 	@chkdel:
+		if Revision=0
+		bsr.w	DisplaySprite
 		out_of_range	DeleteObject
-		bra.w	DisplaySprite
-
-		; ===========================================================================
+		rts	
+		else
+			out_of_range	DeleteObject
+			bra.w	DisplaySprite
+		endc
+; ===========================================================================
 Brick_TypeIndex:dc.w Brick_Type00-Brick_TypeIndex
 		dc.w Brick_Type01-Brick_TypeIndex
 		dc.w Brick_Type02-Brick_TypeIndex
@@ -84,7 +89,7 @@ loc_E8A8:
 ; ===========================================================================
 
 Brick_Type03:				; XREF: Brick_TypeIndex
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)	; increase falling speed
 		bsr.w	ObjFloorDist
 		tst.w	d1		; has the block	hit the	floor?

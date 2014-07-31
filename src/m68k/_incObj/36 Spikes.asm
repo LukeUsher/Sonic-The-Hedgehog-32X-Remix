@@ -81,12 +81,6 @@ Spik_Upright:				; XREF: Spik_Solid
 Spik_Hurt:				; XREF: Spik_SideWays; Spik_Upright
 		tst.b	(v_invinc).w	; is Sonic invincible?
 		bne.s	Spik_Display	; if yes, branch
-		
-	if SpikeFix=1	;Mercury Spike Fix
-		tst.w	(v_player+obInvuln).w ; +++ is Sonic invulnerable?	;Mercury Constants
-		bne.s	Spik_Display	; +++ if yes, branch
-	endc	;end Spike Fix
-		
 		move.l	a0,-(sp)
 		movea.l	a0,a2
 		lea	(v_player).w,a0

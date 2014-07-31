@@ -105,7 +105,7 @@ LBlk_Action:	; Routine 2
 
 @type02:
 @type06:
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addq.w	#8,obVelY(a0)	; make block fall
 		bsr.w	ObjFloorDist
 		tst.w	d1		; has block hit the floor?
@@ -120,18 +120,8 @@ LBlk_Action:	; Routine 2
 ; ===========================================================================
 
 @type04:
-		bsr.w	ObjectMove
-		
-	if LimitLZBlockRisingSpeed=1	;Mercury Limit LZ Block Rising Speed
-		cmpi.w	#-$200,obVelY(a0)
-		beq.s	@attopspeed
+		bsr.w	SpeedToPos
 		subq.w	#8,obVelY(a0)	; make block rise
-		
-	@attopspeed:
-	else
-		subq.w	#8,obVelY(a0)	; make block rise
-	endc	;end Limit LZ Block Rising Speed
-
 		bsr.w	ObjHitCeiling
 		tst.w	d1		; has block hit the ceiling?
 		bpl.w	@noceiling04	; if not, branch

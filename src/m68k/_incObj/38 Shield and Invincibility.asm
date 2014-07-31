@@ -39,23 +39,6 @@ Shi_Shield:	; Routine 2
 		move.w	(v_player+obX).w,obX(a0)
 		move.w	(v_player+obY).w,obY(a0)
 		move.b	(v_player+obStatus).w,obStatus(a0)
-	
-	;Mercury Shield/Invincibility Positioning Fix
-		move.b	obStatus(a0),d0
-		move.w	#$A,d1
-
-		cmpi.b	#id_Balance,(v_player+obAnim).w
-		bne.s	@noshift
-
-	@shift:
-		sub.w	d1,obX(a0)
-		btst	#staFacing,d0	;Mercury Constants
-		beq.s	@noshift
-		add.w	d1,d1
-		add.w	d1,obX(a0)
-	@noshift:
-	;end Shield/Invincibility Positioning Fix
-		
 		lea	(Ani_Shield).l,a1
 		jsr	AnimateSprite
 		jmp	DisplaySprite
@@ -69,7 +52,7 @@ Shi_Shield:	; Routine 2
 
 Shi_Stars:	; Routine 4
 		tst.b	(v_invinc).w	; does Sonic have invincibility?
-		beq.w	Shi_Start_Delete		; if not, branch
+		beq.s	Shi_Start_Delete		; if not, branch
 		move.w	(v_trackpos).w,d0 ; get index value for tracking data
 		move.b	obAnim(a0),d1
 		subq.b	#1,d1
@@ -109,22 +92,6 @@ Shi_Stars:	; Routine 4
 		move.w	(a1)+,obX(a0)
 		move.w	(a1)+,obY(a0)
 		move.b	(v_player+obStatus).w,obStatus(a0)
-		
-	;Mercury Shield/Invincibility Positioning Fix
-		move.b	obStatus(a0),d0
-		move.w	#$A,d1
-		
-		cmpi.b	#id_Balance,(v_player+obAnim).w
-		bne.s	@noshift	
-	@shift:
-		sub.w	d1,obX(a0)
-		btst	#staFacing,d0	;Mercury Constants
-		beq.s	@noshift
-		add.w	d1,d1
-		add.w	d1,obX(a0)
-	@noshift:
-	;end Shield/Invincibility Positioning Fix
-		
 		lea	(Ani_Shield).l,a1
 		jsr	AnimateSprite
 		jmp	DisplaySprite

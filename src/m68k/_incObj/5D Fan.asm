@@ -73,11 +73,7 @@ Fan_Delay:	; Routine 2
 
 	@movesonic:
 		add.w	d0,obX(a1)	; push Sonic away from the fan
-		
-	if SpinDashCameraLag=1 ;Mercury Spin Dash Camera Lag
-		clr.b	(v_cameralag).w
-	endc	;end Spin Dash Camera Lag
-		
+
 @animate:
 		subq.b	#1,obTimeFrame(a0)
 		bpl.s	@chkdel

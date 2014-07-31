@@ -108,7 +108,7 @@ Spring_LR:	; Routine 8
 		move.b	#8,obRoutine(a0)
 
 loc_DC0C:
-		btst	#staPush,obStatus(a0)	;Mercury Constants
+		btst	#5,obStatus(a0)
 		bne.s	Spring_BounceLR
 		rts	
 ; ===========================================================================
@@ -131,13 +131,8 @@ Spring_BounceLR:
 		move.b	#0,obAnim(a1)	; use running animation
 
 loc_DC56:
-		bclr	#staPush,obStatus(a0)	;Mercury Constants
-		bclr	#staPush,obStatus(a1)	;Mercury Constants
-		
-	if SpinDashCameraLag=1 ;Mercury Spin Dash Camera Lag
-		clr.b	(v_cameralag).w
-	endc	;end Spin Dash Camera Lag
-		
+		bclr	#5,obStatus(a0)
+		bclr	#5,obStatus(a1)
 		sfx	sfx_Spring	; play spring sound
 
 Spring_AniLR:	; Routine $A

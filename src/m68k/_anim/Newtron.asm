@@ -11,12 +11,5 @@ A_Newt_Blank:	dc.b $F, $A, afEnd
 A_Newt_Drop:	dc.b $13, 0, 1,	3, 4, 5, afBack, 1
 A_Newt_Fly1:	dc.b 2,	6, 7, afEnd
 A_Newt_Fly2:	dc.b 2,	8, 9, afEnd
-
-	if (NewtronBehaviourTweak&2) ;Mercury Newtron Behaviour Tweak
-A_Newt_Fires:	dc.b $13, 0, 1,	1, 2, 1, 1, 0, afChange, 0
-	else
 A_Newt_Fires:	dc.b $13, 0, 1,	1, 2, 1, 1, 0, afRoutine
-	endc	;end Newtron Behaviour Tweak
-
 		even
-		

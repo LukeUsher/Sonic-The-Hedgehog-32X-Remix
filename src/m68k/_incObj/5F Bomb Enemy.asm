@@ -69,7 +69,7 @@ Bom_Action:	; Routine 2
 		bsr.w	@chksonic
 		subq.w	#1,bom_time(a0)	; subtract 1 from time delay
 		bmi.s	@stopwalking	; if time expires, branch
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		rts	
 ; ===========================================================================
 
@@ -147,7 +147,7 @@ Bom_Display:	; Routine 4
 loc_11B70:
 		subq.w	#1,bom_time(a0)
 		bmi.s	loc_11B7C
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		rts	
 ; ===========================================================================
 
@@ -182,7 +182,7 @@ loc_11B7C:
 		move.b	#6,obRoutine(a0)
 
 Bom_End:	; Routine 6
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		lea	(Ani_Bomb).l,a1
 		bsr.w	AnimateSprite

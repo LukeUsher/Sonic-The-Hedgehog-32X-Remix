@@ -107,7 +107,7 @@ loc_19C72:	; Routine 8
 loc_19C80:	; Routine $A
 		tst.b	obRender(a0)
 		bpl.w	loc_1982C
-		jsr	ObjectMoveAndFall
+		jsr	ObjectFall
 		jmp	DisplaySprite
 ; ===========================================================================
 

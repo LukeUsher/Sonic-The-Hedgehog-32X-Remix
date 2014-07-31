@@ -50,20 +50,8 @@ Sonic_Display:
 		move.w	#$600,(v_sonspeedmax).w ; restore Sonic's speed
 		move.w	#$C,(v_sonspeedacc).w ; restore Sonic's acceleration
 		move.w	#$80,(v_sonspeeddec).w ; restore Sonic's deceleration
-		
-	;Mercury Speed Shoes Work Underwater
-		btst	#staWater,obStatus(a0)	; is Sonic underwater?	;Mercury Constants
-		beq.s	@isdry		; if not, branch
-		move.w	#$300,(v_sonspeedmax).w ; change Sonic's top speed
-		move.w	#$6,(v_sonspeedacc).w	; change Sonic's acceleration
-		move.w	#$40,(v_sonspeeddec).w	; change Sonic's deceleration
-	@isdry:
-	;end Speed Shoes Work Underwater
-		
 		move.b	#0,(v_shoes).w	; cancel speed shoes
-		move.w	#$0,d0
-		jmp	(SetTempo).l	; run music at normal speed
- 
+		music	bgm_Slowdown,1	; run music at normal speed
 
 	@exit:
 		rts	

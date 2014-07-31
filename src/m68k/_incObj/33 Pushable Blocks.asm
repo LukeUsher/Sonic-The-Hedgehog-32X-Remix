@@ -115,7 +115,7 @@ loc_C046:				; XREF: loc_BF6E
 		move.w	obX(a0),-(sp)
 		cmpi.b	#4,ob2ndRout(a0)
 		bcc.s	loc_C056
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 
 loc_C056:
 		btst	#1,obStatus(a0)
@@ -253,7 +253,7 @@ loc_C1A4:
 loc_C1AA:
 		subq.b	#2,d0
 		bne.s	loc_C1F2
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)
 		jsr	ObjFloorDist
 		tst.w	d1
@@ -276,7 +276,7 @@ locret_C1F0:
 ; ===========================================================================
 
 loc_C1F2:
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		move.w	obX(a0),d0
 		andi.w	#$C,d0
 		bne.w	locret_C2E4

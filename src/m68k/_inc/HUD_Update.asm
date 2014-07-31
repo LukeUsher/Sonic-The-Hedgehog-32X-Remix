@@ -35,38 +35,16 @@ HUD_Update:
 
 	@chktime:
 		tst.b	(f_timecount).w	; does the time	need updating?
-		beq.w	@chklives	; if not, branch
+		beq.s	@chklives	; if not, branch
 		tst.w	(f_pause).w	; is the game paused?
-		bne.w	@chklives	; if yes, branch
+		bne.s	@chklives	; if yes, branch
 		lea	(v_time).w,a1
-		
-	if HUDCentiseconds=1	;Mercury HUD Centiseconds
-		cmpi.l	#$93B63,(a1)+	; is the time 9'59"99?
-		beq.w	TimeOver	; if yes, branch	;Mercury HUD In Special Stage (bsr.s => bsr.w)
-		move.b	(v_centstep).w,d1
-		addi.b	#1,d1
-		cmpi.b	#3,d1
-		bne.s	@skip
-		move.b	#0,d1
-		
-	@skip:
-		move.b	d1,(v_centstep).w
-		cmpi.b	#2,d1
-		beq.s	@skip2
-		addi.b	#1,d1
-		
-	@skip2:
-		add.b	d1,-(a1)
-		cmpi.b	#100,(a1)
-		bcs.s	@DoCent
-	else
-		cmpi.l	#$93B3B,(a1)+	; is the time 9.59?
-		beq.w	TimeOver	; if yes, branch	;Mercury HUD In Special Stage (bsr.s => bsr.w)
-		addq.b	#1,-(a1)
-		cmpi.b	#60,(a1)
-		bcs.s	Hud_ChkLives
-	endc	;end HUD Centiseconds
-	
+		cmpi.l	#(9*$10000)+(59*$100)+59,(a1)+ ; is the time 9:59:59?
+		beq.s	TimeOver	; if yes, branch
+
+		addq.b	#1,-(a1)	; increment 1/60s counter
+		cmpi.b	#60,(a1)	; check if passed 60
+		bcs.s	@chklives
 		move.b	#0,(a1)
 		addq.b	#1,-(a1)	; increment second counter
 		cmpi.b	#60,(a1)	; check if passed 60
@@ -86,14 +64,6 @@ HUD_Update:
 		moveq	#0,d1
 		move.b	(v_timesec).w,d1 ; load	seconds
 		bsr.w	Hud_Secs
-		
-	if HUDCentiseconds=1	;Mercury HUD Centiseconds
-	@DoCent:
-		hudVRAM	$D780	;Mercury Macros
-		moveq	#0,d1
-		move.b	(v_timecent).w,d1 ; load	seconds
-		bsr.w	Hud_Secs
-	endc	;end HUD Centiseconds
 
 	@chklives:
 		tst.b	(f_lifecount).w ; does the lives counter need updating?
@@ -180,22 +150,6 @@ Hud_LoadZero:				; XREF: HUD_Update
 		bra.s	loc_1C83E
 ; End of function Hud_LoadZero
 
-	if HUDCentiseconds=1	;Mercury HUD Centiseconds
-; ---------------------------------------------------------------------------
-; Subroutine to	load " on the	HUD
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Hud_LoadMarks:				; XREF: HUD_Update
-		locVRAM	$D740
-		lea	Hud_TilesMarks(pc),a2
-		move.w	#2,d2
-		bra.s	loc_1C83E
-; End of function Hud_LoadMarks
-	endc	;end HUD Centiseconds
-
 ; ---------------------------------------------------------------------------
 ; Subroutine to	load uncompressed HUD patterns ("E", "0", colon)
 ; ---------------------------------------------------------------------------
@@ -206,11 +160,6 @@ Hud_LoadMarks:				; XREF: HUD_Update
 Hud_Base:				; XREF: GM_Level; SS_EndLoop; GM_Ending
 		lea	($C00000).l,a6
 		bsr.w	Hud_Lives
-		
-	if HUDCentiseconds=1	;Mercury HUD Centiseconds
-		bsr.s	Hud_LoadMarks
-	endc	;end HUD Centiseconds
-		
 		locVRAM	$DC40
 		lea	Hud_TilesBase(pc),a2
 		move.w	#$E,d2
@@ -244,14 +193,7 @@ loc_1C85E:
 ; End of function Hud_Base
 
 ; ===========================================================================
-
-	if HUDCentiseconds=1	;Mercury HUD Centiseconds
-Hud_TilesMarks:	dc.b $1A, 0, 0, 0
-Hud_TilesBase:	dc.b $16, $FF, $FF, $FF, $FF, $FF, $FF,	0, 0, $18, 0, 0
-	else
 Hud_TilesBase:	dc.b $16, $FF, $FF, $FF, $FF, $FF, $FF,	0, 0, $14, 0, 0
-	endc	;end HUD Centiseconds
-
 Hud_TilesZero:	dc.b $FF, $FF, 0, 0
 ; ---------------------------------------------------------------------------
 ; Subroutine to	load debug mode	numbers	patterns
@@ -285,7 +227,7 @@ HudDb_XYLoop:
 		andi.w	#$F,d2
 		cmpi.w	#$A,d2
 		bcs.s	loc_1C8B2
-		addq.w	#4,d2		
+		addq.w	#7,d2
 
 loc_1C8B2:
 		lsl.w	#5,d2
@@ -350,12 +292,8 @@ loc_1C8F4:
 		move.w	#1,d4
 
 loc_1C8FE:
-	
-	if HUDHasLeadingZeroes=0	;Mercury HUD Has Leading Zeroes
 		tst.w	d4
 		beq.s	loc_1C92C
-	endc	;end HUD Has Leading Zeroes
-	
 		lsl.w	#6,d2
 		move.l	d0,4(a6)
 		lea	(a1,d2.w),a3
@@ -383,272 +321,3 @@ loc_1C92C:
 		rts	
 
 ; End of function Hud_Score
-
-
-; ---------------------------------------------------------------------------
-; Subroutine to	load countdown numbers on the continue screen
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ContScrCounter:				; XREF: GM_Continue
-		locVRAM	$DF80
-		lea	($C00000).l,a6
-		lea	(Hud_10).l,a2
-		moveq	#1,d6
-		moveq	#0,d4
-		lea	Art_Hud(pc),a1 ; load numbers patterns
-
-ContScr_Loop:
-		moveq	#0,d2
-		move.l	(a2)+,d3
-
-loc_1C95A:
-		sub.l	d3,d1
-		bcs.s	loc_1C962
-		addq.w	#1,d2
-		bra.s	loc_1C95A
-; ===========================================================================
-
-loc_1C962:
-		add.l	d3,d1
-		lsl.w	#6,d2
-		lea	(a1,d2.w),a3
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		dbf	d6,ContScr_Loop	; repeat 1 more	time
-
-		rts	
-; End of function ContScrCounter
-
-; ===========================================================================
-; ---------------------------------------------------------------------------
-; HUD counter sizes
-; ---------------------------------------------------------------------------
-Hud_100000:	dc.l 100000		; XREF: Hud_Score
-Hud_10000:	dc.l 10000
-Hud_1000:	dc.l 1000		; XREF: Hud_TimeRingBonus
-Hud_100:	dc.l 100		; XREF: Hud_Rings
-Hud_10:		dc.l 10			; XREF: ContScrCounter; Hud_Secs; Hud_Lives
-Hud_1:		dc.l 1			; XREF: Hud_Mins
-
-; ---------------------------------------------------------------------------
-; Subroutine to	load time numbers patterns
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Hud_Mins:				; XREF: Hud_ChkTime
-		lea	(Hud_1).l,a2
-		moveq	#0,d6
-		bra.s	loc_1C9BA
-; End of function Hud_Mins
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Hud_Secs:				; XREF: Hud_ChkTime
-		lea	(Hud_10).l,a2
-		moveq	#1,d6
-
-loc_1C9BA:
-		moveq	#0,d4
-		lea	Art_Hud(pc),a1
-
-Hud_TimeLoop:
-		moveq	#0,d2
-		move.l	(a2)+,d3
-
-loc_1C9C4:
-		sub.l	d3,d1
-		bcs.s	loc_1C9CC
-		addq.w	#1,d2
-		bra.s	loc_1C9C4
-; ===========================================================================
-
-loc_1C9CC:
-		add.l	d3,d1
-		tst.w	d2
-		beq.s	loc_1C9D6
-		move.w	#1,d4
-
-loc_1C9D6:
-		lsl.w	#6,d2
-		move.l	d0,4(a6)
-		lea	(a1,d2.w),a3
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		addi.l	#$400000,d0
-		dbf	d6,Hud_TimeLoop
-
-		rts	
-; End of function Hud_Secs
-
-; ---------------------------------------------------------------------------
-; Subroutine to	load time/ring bonus numbers patterns
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Hud_TimeRingBonus:			; XREF: Hud_ChkBonus
-		lea	(Hud_1000).l,a2
-		moveq	#3,d6
-		moveq	#0,d4
-		lea	Art_Hud(pc),a1
-
-Hud_BonusLoop:
-		moveq	#0,d2
-		move.l	(a2)+,d3
-
-loc_1CA1E:
-		sub.l	d3,d1
-		bcs.s	loc_1CA26
-		addq.w	#1,d2
-		bra.s	loc_1CA1E
-; ===========================================================================
-
-loc_1CA26:
-		add.l	d3,d1
-		tst.w	d2
-		beq.s	loc_1CA30
-		move.w	#1,d4
-
-loc_1CA30:
-		tst.w	d4
-		beq.s	Hud_ClrBonus
-		lsl.w	#6,d2
-		lea	(a1,d2.w),a3
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-
-loc_1CA5A:
-		dbf	d6,Hud_BonusLoop ; repeat 3 more times
-
-		rts	
-; ===========================================================================
-
-Hud_ClrBonus:
-		moveq	#$F,d5
-
-Hud_ClrBonusLoop:
-		move.l	#0,(a6)
-		dbf	d5,Hud_ClrBonusLoop
-
-		bra.s	loc_1CA5A
-; End of function Hud_TimeRingBonus
-
-; ---------------------------------------------------------------------------
-; Subroutine to	load uncompressed lives	counter	patterns
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-Hud_Lives:				; XREF: Hud_ChkLives
-		locVRAMd0	$FBA0	; move.l	#$7BA00003,d0	; set VRAM address ;Mercury Macros
-		moveq	#0,d1
-		move.b	(v_lives).w,d1	; load number of lives
-		lea	(Hud_10).l,a2
-		moveq	#1,d6
-		moveq	#0,d4
-		lea	Art_LivesNums(pc),a1
-
-Hud_LivesLoop:
-		move.l	d0,4(a6)
-		moveq	#0,d2
-		move.l	(a2)+,d3
-
-loc_1CA90:
-		sub.l	d3,d1
-		bcs.s	loc_1CA98
-		addq.w	#1,d2
-		bra.s	loc_1CA90
-; ===========================================================================
-
-loc_1CA98:
-		add.l	d3,d1
-		tst.w	d2
-		beq.s	loc_1CAA2
-		move.w	#1,d4
-
-loc_1CAA2:
-
-	if HUDHasLeadingZeroes=0	;Mercury HUD Has Leading Zeroes
-		tst.w	d4
-		beq.s	Hud_ClrLives
-	endc	;end HUD Has Leading Zeroes
-
-loc_1CAA6:
-		lsl.w	#5,d2
-		lea	(a1,d2.w),a3
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-		move.l	(a3)+,(a6)
-
-loc_1CABC:
-		addi.l	#$400000,d0
-		dbf	d6,Hud_LivesLoop ; repeat 1 more time
-
-		rts	
-; ===========================================================================
-
-Hud_ClrLives:
-		tst.w	d6
-		beq.s	loc_1CAA6
-		moveq	#7,d5
-
-Hud_ClrLivesLoop:
-		move.l	#0,(a6)
-		dbf	d5,Hud_ClrLivesLoop
-		bra.s	loc_1CABC
-; End of function Hud_Lives

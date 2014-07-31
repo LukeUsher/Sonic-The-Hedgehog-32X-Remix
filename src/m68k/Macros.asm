@@ -24,11 +24,6 @@ locVRAM:	macro loc,controlport
 		endc
 		endm
 
-locVRAMd0:	macro loc
-		move.l	#($40000000+((loc&$3FFF)<<16)+((loc&$C000)>>14)),d0
-		endm
-		
-
 ; ---------------------------------------------------------------------------
 ; DMA copy data from 68K (ROM/RAM) to the VRAM
 ; input: source, length, destination

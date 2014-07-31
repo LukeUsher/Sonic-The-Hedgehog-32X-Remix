@@ -62,7 +62,7 @@ Bas_Action:	; Routine 2
 ; ===========================================================================
 
 @dropfly:				; XREF: @index
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		addi.w	#$18,obVelY(a0)	; make basaran fall
 		move.w	#$80,d2
 		bsr.w	@chkdistance
@@ -92,7 +92,7 @@ Bas_Action:	; Routine 2
 		sfx	sfx_Basaran	; play flapping sound every 16th frame
 
 	@nosound:
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		move.w	(v_player+obX).w,d0
 		sub.w	obX(a0),d0
 		bcc.s	@isright	; if Sonic is right of basaran, branch
@@ -112,7 +112,7 @@ Bas_Action:	; Routine 2
 ; ===========================================================================
 
 @flyup:					; XREF: @index
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		subi.w	#$18,obVelY(a0)	; make basaran fly upwards
 		bsr.w	ObjHitCeiling
 		tst.w	d1		; has basaran hit the ceiling?
@@ -152,7 +152,7 @@ Bas_Action:	; Routine 2
 		rts	
 ; ===========================================================================
 ; unused crap
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		bsr.w	DisplaySprite
 		tst.b	obRender(a0)
 		bpl.w	DeleteObject

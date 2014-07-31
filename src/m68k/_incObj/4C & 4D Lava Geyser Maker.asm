@@ -186,7 +186,7 @@ Geyser_Action:	; Routine 2
 		add.w	d0,d0
 		move.w	Geyser_Types(pc,d0.w),d1
 		jsr	Geyser_Types(pc,d1.w)
-		bsr.w	ObjectMove
+		bsr.w	SpeedToPos
 		lea	(Ani_Geyser).l,a1
 		bsr.w	AnimateSprite
 
