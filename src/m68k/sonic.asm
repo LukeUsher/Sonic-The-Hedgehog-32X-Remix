@@ -4,7 +4,8 @@
 ;
 ; Disassembly created by Hivebrain
 ; thanks to drx, Stealth and Esrael L.G. Neto
-
+;
+; 32X port by SoullessSentinel
 ; ===========================================================================
 
 	include	"Variables.asm"
@@ -15,462 +16,245 @@ EnableSRAM:	= 0	; change to 1 to enable SRAM
 BackupSRAM:	= 1
 AddressSRAM:	= 3	; 0 = odd+even; 2 = even only; 3 = odd only
 
-Revision:	= 0	; change to 1 for JP1 revision
+Revision:	= 1	; change to 1 for JP1 revision
 
 ZoneCount:	= 7	; discrete zones are: GHZ, MZ, SYZ, LZ, SLZ, SBZ and Ending
 
 ; ===========================================================================
 
 StartOfRom:
-Vectors:	dc.l $FFFE00, EntryPoint, BusError, AddressError
-		dc.l IllegalInstr, ZeroDivide, ChkInstr, TrapvInstr
-		dc.l PrivilegeViol, Trace, Line1010Emu,	Line1111Emu
-		dc.l ErrorExcept, ErrorExcept, ErrorExcept, ErrorExcept
-		dc.l ErrorExcept, ErrorExcept, ErrorExcept, ErrorExcept
-		dc.l ErrorExcept, ErrorExcept, ErrorExcept, ErrorExcept
-		dc.l ErrorExcept, ErrorTrap, ErrorTrap,	ErrorTrap
-		dc.l HBlank, ErrorTrap, VBlank, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-		dc.l ErrorTrap,	ErrorTrap, ErrorTrap, ErrorTrap
-Console:	dc.b "SEGA MEGA DRIVE " ; Hardware system ID
-Date:		dc.b "(C)SEGA 1991.APR" ; Release date
-Title_Local:	dc.b "SONIC THE               HEDGEHOG                " ; Domestic name
-Title_Int:	dc.b "SONIC THE               HEDGEHOG                " ; International name
-Serial:		if Revision=0
-		dc.b "GM 00001009-00"   ; Serial/version number
-		else
-			dc.b "GM 00004049-01"
-		endc
-Checksum:	dc.w 0
-		dc.b "J               " ; I/O support
-RomStartLoc:	dc.l StartOfRom		; ROM start
-RomEndLoc:	dc.l EndOfRom-1		; ROM end
-RamStartLoc:	dc.l $FF0000		; RAM start
-RamEndLoc:	dc.l $FFFFFF		; RAM end
-SRAMSupport:	if EnableSRAM=1
-		dc.b $52, $41, $A0+(BackupSRAM<<6)+(AddressSRAM<<3), $20
+		dc.l $0000000,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		dc.l ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS,ICD_MARS
+		
+		dc.b "SEGA MEGA DRIVE " 					; Hardware system ID
+		dc.b "(C)SEGA 1991.APR" 					; Release date
+		dc.b "SONIC THE HEDGEHOG 32X REMIX                    "	 	; Domestic name
+		dc.b "SONIC THE HEDGEHOG 32X REMIX                    "	 	; International name
+		dc.b "GM 00004049-01"						; Version
+		dc.w 0								; Checksum
+		dc.b "J               " 					; I/O support
+		dc.l StartOfRom							; ROM start
+		dc.l EndOfRom							; ROM end
+		dc.l $FF0000							; RAM start
+		dc.l $FFFFFF							; RAM end
+		
+		if EnableSRAM=1
+		dc.b $52, $41, $A0+(BackupSRAM<<6)+(AddressSRAM<<3), $20	
 		else
 		dc.l $20202020
 		endc
-		dc.l $20202020		; SRAM start ($200001)
-		dc.l $20202020		; SRAM end ($20xxxx)
-Notes:		dc.b "                                                    "
-Region:		dc.b "JUE             " ; Region
+		dc.l $200001							; SRAM start 	($200001)
+		dc.l $203FFF							; SRAM end 	($203FFF)
+		dc.b "                                                    "	; Notes
+		dc.b "JUE             " 					; Region
+		
+; ---------------------------------------------------------------------------
+; Exception Vectors
+; ---------------------------------------------------------------------------
+		jmp	(Init32X).l		; Reset
+		jmp	(ErrorTrap).l		; Bus Error
+		jmp	(ErrorTrap).l		; Address Error
+		jmp	(ErrorTrap).l		; Illegal Instruction
+		jmp	(ErrorTrap).l		; Divide by Zero
+		jmp	(ErrorTrap).l		; CHK Instruction
+		jmp	(ErrorTrap).l		; TRAPV Instruction
+		jmp	(ErrorTrap).l		; Privilege Violation
+		jmp	(ErrorTrap).l		; Trace
+		jmp	(ErrorTrap).l		; LINE 1010
+		jmp	(ErrorTrap).l		; LINE 1111
+		ds.w	36
+		jmp	(ErrorTrap).l		; Spurious Interrupt
+		jmp	(ErrorTrap).l		; Level 1 Interrupt
+		jmp	(ErrorTrap).l		; Level 2 Interrupt
+		jmp	(ErrorTrap).l		; Level 3 Interrupt
+		jmp	(HBlank).l		; Level 4 Interrupt (HBLANK)
+		jmp	(ErrorTrap).l		; Level 5 Interrupt
+		jmp	(VBlank).l		; Level 6 Interrupt (V-Blank)
+		jmp	(ErrorTrap).l		; Level 7 Interrupt
+		jmp	(ErrorTrap).l		; Trap #0
+		jmp	(ErrorTrap).l		; Trap #1
+		jmp	(ErrorTrap).l		; Trap #2
+		jmp	(ErrorTrap).l		; Trap #3
+		jmp	(ErrorTrap).l		; Trap #4
+		jmp	(ErrorTrap).l		; Trap #5
+		jmp	(ErrorTrap).l		; Trap #6
+		jmp	(ErrorTrap).l		; Trap #7
+		jmp	(ErrorTrap).l		; Trap #8
+		jmp	(ErrorTrap).l		; Trap #9
+		jmp	(ErrorTrap).l		; Trap #10
+		jmp	(ErrorTrap).l		; Trap #11
+		jmp	(ErrorTrap).l		; Trap #12
+		jmp	(ErrorTrap).l		; Trap #13
+		jmp	(ErrorTrap).l		; Trap #14
+		jmp	(ErrorTrap).l		; Trap #15
+		ds.w	$53
+	
+; ---------------------------------------------------------------------------
+; SH2 Setup data
+; ---------------------------------------------------------------------------	
+MarsInitHeader:
+		dc.b	"MARS GAME       "		; Module name
+		dc.l	$00000000			; Version
+	
+		dc.l	SH2_BINARY			; Source address
+		dc.l	$00000000			; Destination address (SH2 memory)
+		dc.l	SH2_END-SH2_BINARY		; Size
+	
+		dc.l	$06000240			; M-SH2 entry point
+		dc.l	$06000244			; S-SH2 entry point
+	
+		dc.l	$06000000			; M-SH2 VBR address
+		dc.l	$06000120			; S-SH2 VBR address
+	
+; ---------------------------------------------------------------------------
+; 32X IPL/Security code
+; ---------------------------------------------------------------------------	
+ICD_MARS:
+		dc.w	$287C,$FFFF,$FFC0,$23FC,$0000,$0000,$00A1,$5128
+		dc.w	$46FC,$2700,$4BF9,$00A1,$0000,$7001,$0CAD,$4D41
+		dc.w	$5253,$30EC,$6600,$03E6,$082D,$0007,$5101,$67F8
+		dc.w	$4AAD,$0008,$6710,$4A6D,$000C,$670A,$082D,$0000
+		dc.w	$5101,$6600,$03B8,$102D,$0001,$0200,$000F,$6706
+		dc.w	$2B78,$055A,$4000,$7200,$2C41,$4E66,$41F9,$0000
+		dc.w	$04D4,$6100,$0152,$6100,$0176,$47F9,$0000,$04E8
+		dc.w	$43F9,$00A0,$0000,$45F9,$00C0,$0011,$3E3C,$0100
+		dc.w	$7000,$3B47,$1100,$3B47,$1200,$012D,$1100,$66FA
+		dc.w	$7425,$12DB,$51CA,$FFFC,$3B40,$1200,$3B40,$1100
+		dc.w	$3B47,$1200,$149B,$149B,$149B,$149B,$41F9,$0000
+		dc.w	$04C0,$43F9,$00FF,$0000,$22D8,$22D8,$22D8,$22D8
+		dc.w	$22D8,$22D8,$22D8,$22D8,$41F9,$00FF,$0000,$4ED0
+		dc.w	$1B7C,$0001,$5101,$41F9,$0000,$06BC,$D1FC,$0088
+		dc.w	$0000,$4ED0,$0404,$303C,$076C,$0000,$0000,$FF00
+		dc.w	$8137,$0002,$0100,$0000,$AF01,$D91F,$1127,$0021
+		dc.w	$2600,$F977,$EDB0,$DDE1,$FDE1,$ED47,$ED4F,$D1E1
+		dc.w	$F108,$D9C1,$D1E1,$F1F9,$F3ED,$5636,$E9E9,$9FBF
+		dc.w	$DFFF,$4D41,$5253,$2049,$6E69,$7469,$616C,$2026
+		dc.w	$2053,$6563,$7572,$6974,$7920,$5072,$6F67,$7261
+		dc.w	$6D20,$2020,$2020,$2020,$2020,$2043,$6172,$7472
+		dc.w	$6964,$6765,$2056,$6572,$7369,$6F6E,$2020,$2020
+		dc.w	$436F,$7079,$7269,$6768,$7420,$5345,$4741,$2045
+		dc.w	$4E54,$4552,$5052,$4953,$4553,$2C4C,$5444,$2E20
+		dc.w	$3139,$3934,$2020,$2020,$2020,$2020,$2020,$2020
+		dc.w	$2020,$2020,$2020,$2020,$2020,$2020,$2020,$2020
+		dc.w	$2020,$2020,$2020,$524F,$4D20,$5665,$7273,$696F
+		dc.w	$6E20,$312E,$3000,$48E7,$C040,$43F9,$00C0,$0004
+		dc.w	$3011,$303C,$8000,$323C,$0100,$3E3C,$0012,$1018
+		dc.w	$3280,$D041,$51CF,$FFF8,$4CDF,$0203,$4E75,$48E7
+		dc.w	$81C0,$41F9,$0000,$063E,$43F9,$00C0,$0004,$3298
+		dc.w	$3298,$3298,$3298,$3298,$3298,$3298,$2298,$3341
+		dc.w	$FFFC,$3011,$0800,$0001,$66F8,$3298,$3298,$7000
+		dc.w	$22BC,$C000,$0000,$7E0F,$3340,$FFFC,$3340,$FFFC
+		dc.w	$3340,$FFFC,$3340,$FFFC,$51CF,$FFEE,$22BC,$4000
+		dc.w	$0010,$7E09,$3340,$FFFC,$3340,$FFFC,$3340,$FFFC
+		dc.w	$3340,$FFFC,$51CF,$FFEE,$4CDF,$0381,$4E75,$8114
+		dc.w	$8F01,$93FF,$94FF,$9500,$9600,$9780,$4000,$0080
+		dc.w	$8104,$8F02,$48E7,$C140,$43F9,$00A1,$5180,$08A9
+		dc.w	$0007,$FF80,$66F8,$3E3C,$00FF,$7000,$7200,$337C
+		dc.w	$00FF,$0004,$3341,$0006,$3340,$0008,$4E71,$0829
+		dc.w	$0001,$000B,$66F8,$0641,$0100,$51CF,$FFE8,$4CDF
+		dc.w	$0283,$4E75,$48E7,$8180,$41F9,$00A1,$5200,$08A8
+		dc.w	$0007,$FF00,$66F8,$3E3C,$001F,$20C0,$20C0,$20C0
+		dc.w	$20C0,$51CF,$FFF6,$4CDF,$0181,$4E75,$41F9,$00FF
+		dc.w	$0000,$3E3C,$07FF,$7000,$20C0,$20C0,$20C0,$20C0
+		dc.w	$20C0,$20C0,$20C0,$20C0,$51CF,$FFEE,$3B7C,$0000
+		dc.w	$1200,$7E0A,$51CF,$FFFE,$43F9,$00A1,$5100,$7000
+		dc.w	$2340,$0020,$2340,$0024,$1B7C,$0003,$5101,$2E79
+		dc.w	$0088,$0000,$0891,$0007,$66FA,$7000,$3340,$0002
+		dc.w	$3340,$0004,$3340,$0006,$2340,$0008,$2340,$000C
+		dc.w	$3340,$0010,$3340,$0030,$3340,$0032,$3340,$0038
+		dc.w	$3340,$0080,$3340,$0082,$08A9,$0000,$008B,$66F8
+		dc.w	$6100,$FF12,$08E9,$0000,$008B,$67F8,$6100,$FF06
+		dc.w	$08A9,$0000,$008B,$6100,$FF3C,$303C,$0040,$2229
+		dc.w	$0020,$0C81,$5351,$4552,$6700,$0092,$303C,$0080
+		dc.w	$2229,$0020,$0C81,$5344,$4552,$6700,$0080,$21FC
+		dc.w	$0088,$02A2,$0070,$303C,$0002,$7200,$122D,$0001
+		dc.w	$1429,$0080,$E14A,$8242,$0801,$000F,$660A,$0801
+		dc.w	$0006,$6700,$0058,$6008,$0801,$0006,$6600,$004E
+		dc.w	$7020,$41F9,$0088,$0000,$3C28,$018E,$4A46,$6700
+		dc.w	$0010,$3429,$0028,$0C42,$0000,$67F6,$B446,$662C
+		dc.w	$7000,$2340,$0028,$2340,$002C,$3E14,$2C7C,$FFFF
+		dc.w	$FFC0,$4CD6,$7FF9,$44FC,$0000,$6014,$43F9,$00A1
+		dc.w	$5100,$3340,$0006,$303C,$8000,$6004,$44FC,$0001
+		jmp	Init32X
+ICD_MARS_END:
 
+	OBJ $880000+ICD_MARS_END
 ; ===========================================================================
 
 ErrorTrap:
-		nop	
-		nop	
 		bra.s	ErrorTrap
 ; ===========================================================================
 
-EntryPoint:
-		tst.l	(z80_port_1_control).l ; test port A & B control registers
-		bne.s	PortA_Ok
-		tst.w	(z80_expansion_control).l ; test port C control register
-	PortA_Ok:
-		bne.s	SkipSetup
+Init32X:
+		lea     MARS_BASE,a0
+		
+@waitformaster
+		move.l  0x0120(a0), d0
+		cmpi.l  #"M_OK", d0 
+		bne.b   @waitformaster
+@waitforslave
+		move.l  0x0124(a0), d0
+		cmpi.l  #"S_OK", d0  
+		bne.b   @waitforslave
 
-		lea	SetupValues(pc),a5
-		movem.w	(a5)+,d5-d7
-		movem.l	(a5)+,a0-a4
-		move.b	-$10FF(a1),d0	; get hardware version (from $A10001)
-		andi.b	#$F,d0
-		beq.s	SkipSecurity
-		move.l	#'SEGA',$2F00(a1) ; move "SEGA" to TMSS register ($A14000)
+		lea     MARS_BASE,a0
+										
+		moveq   #0,d0
+		move.l  d0,0x0120(a0)           ; Tell Master SH2 we can continue
+		move.l  d0,0x0124(a0)           ; Same for Slaves
 
-SkipSecurity:
-		move.w	(a4),d0
-		moveq	#0,d0
-		movea.l	d0,a6
-		move.l	a6,usp		; set usp to 0
+		move.w 	#1, MARS_ROM_BANK		
 
-		moveq	#$17,d1
-VDPInitLoop:
-		move.b	(a5)+,d5	; add $8000 to value
-		move.w	d5,(a4)		; move value to	VDP register
-		add.w	d7,d5		; next register
-		dbf	d1,VDPInitLoop
-		move.l	(a5)+,(a4)
-		move.w	d0,(a3)		; clear	the VRAM
-		move.w	d7,(a1)		; stop the Z80
-		move.w	d7,(a2)		; reset	the Z80
-
-	WaitForZ80:
-		btst	d0,(a1)		; has the Z80 stopped?
-		bne.s	WaitForZ80	; if not, branch
-
-		moveq	#$25,d2
-Z80InitLoop:
-		move.b	(a5)+,(a0)+
-		dbf	d2,Z80InitLoop
-		move.w	d0,(a2)
-		move.w	d0,(a1)		; start	the Z80
-		move.w	d7,(a2)		; reset	the Z80
-
-ClrRAMLoop:
-		move.l	d0,-(a6)
-		dbf	d6,ClrRAMLoop	; clear	the entire RAM
-		move.l	(a5)+,(a4)	; set VDP display mode and increment
-		move.l	(a5)+,(a4)	; set VDP to CRAM write
-
-		moveq	#$1F,d3
-ClrCRAMLoop:
-		move.l	d0,(a3)
-		dbf	d3,ClrCRAMLoop	; clear	the CRAM
-		move.l	(a5)+,(a4)
-
-		moveq	#$13,d4
-ClrVSRAMLoop:
-		move.l	d0,(a3)
-		dbf	d4,ClrVSRAMLoop ; clear the VSRAM
-		moveq	#3,d5
-
-PSGInitLoop:
-		move.b	(a5)+,$11(a3)	; reset	the PSG
-		dbf	d5,PSGInitLoop
-		move.w	d0,(a2)
-		movem.l	(a6),d0-a6	; clear	all registers
-		disable_ints
-
-SkipSetup:
-		bra.s	GameProgram	; begin game
-
-; ===========================================================================
-SetupValues:	dc.w $8000		; VDP register start number
-		dc.w $3FFF		; size of RAM/4
-		dc.w $100		; VDP register diff
-
-		dc.l z80_ram		; start	of Z80 RAM
-		dc.l z80_bus_request	; Z80 bus request
-		dc.l z80_reset		; Z80 reset
-		dc.l vdp_data_port	; VDP data
-		dc.l vdp_control_port	; VDP control
-
-		dc.b 4			; VDP $80 - 8-colour mode
-		dc.b $14		; VDP $81 - Megadrive mode, DMA enable
-		dc.b ($C000>>10)	; VDP $82 - foreground nametable address
-		dc.b ($F000>>10)	; VDP $83 - window nametable address
-		dc.b ($E000>>13)	; VDP $84 - background nametable address
-		dc.b ($D800>>9)		; VDP $85 - sprite table address
-		dc.b 0			; VDP $86 - unused
-		dc.b 0			; VDP $87 - background colour
-		dc.b 0			; VDP $88 - unused
-		dc.b 0			; VDP $89 - unused
-		dc.b 255		; VDP $8A - HBlank register
-		dc.b 0			; VDP $8B - full screen scroll
-		dc.b $81		; VDP $8C - 40 cell display
-		dc.b ($DC00>>10)	; VDP $8D - hscroll table address
-		dc.b 0			; VDP $8E - unused
-		dc.b 1			; VDP $8F - VDP increment
-		dc.b 1			; VDP $90 - 64 cell hscroll size
-		dc.b 0			; VDP $91 - window h position
-		dc.b 0			; VDP $92 - window v position
-		dc.w $FFFF		; VDP $93/94 - DMA length
-		dc.w 0			; VDP $95/96 - DMA source
-		dc.b $80		; VDP $97 - DMA fill VRAM
-		dc.l $40000080		; VRAM address 0
-
-		dc.b $AF		; xor	a
-		dc.b $01, $D9, $1F	; ld	bc,1fd9h
-		dc.b $11, $27, $00	; ld	de,0027h
-		dc.b $21, $26, $00	; ld	hl,0026h
-		dc.b $F9		; ld	sp,hl
-		dc.b $77		; ld	(hl),a
-		dc.b $ED, $B0		; ldir
-		dc.b $DD, $E1		; pop	ix
-		dc.b $FD, $E1		; pop	iy
-		dc.b $ED, $47		; ld	i,a
-		dc.b $ED, $4F		; ld	r,a
-		dc.b $D1		; pop	de
-		dc.b $E1		; pop	hl
-		dc.b $F1		; pop	af
-		dc.b $08		; ex	af,af'
-		dc.b $D9		; exx
-		dc.b $C1		; pop	bc
-		dc.b $D1		; pop	de
-		dc.b $E1		; pop	hl
-		dc.b $F1		; pop	af
-		dc.b $F9		; ld	sp,hl
-		dc.b $F3		; di
-		dc.b $ED, $56		; im1
-		dc.b $36, $E9		; ld	(hl),e9h
-		dc.b $E9		; jp	(hl)
-
-		dc.w $8104		; VDP display mode
-		dc.w $8F02		; VDP increment
-		dc.l $C0000000		; CRAM write mode
-		dc.l $40000010		; VSRAM address 0
-
-		dc.b $9F, $BF, $DF, $FF	; values for PSG channel volumes
-; ===========================================================================
-
-GameProgram:
-		tst.w	(vdp_control_port).l
-		btst	#6,($A1000D).l
-		beq.s	CheckSumCheck
-		cmpi.l	#'init',(v_init).w ; has checksum routine already run?
-		beq.w	GameInit	; if yes, branch
-
-CheckSumCheck:
-		movea.l	#ErrorTrap,a0	; start	checking bytes after the header	($200)
-		movea.l	#RomEndLoc,a1	; stop at end of ROM
-		move.l	(a1),d0
-		moveq	#0,d1
-
-	@loop:
-		add.w	(a0)+,d1
-		cmp.l	a0,d0
-		bhs.s	@loop
-		movea.l	#Checksum,a1	; read the checksum
-		cmp.w	(a1),d1		; compare checksum in header to ROM
-		bne.w	CheckSumError	; if they don't match, branch
-
-	CheckSumOk:
-		lea	($FFFFFE00).w,a6
-		moveq	#0,d7
-		move.w	#$7F,d6
-	@clearRAM:
-		move.l	d7,(a6)+
-		dbf	d6,@clearRAM	; clear RAM ($FE00-$FFFF)
+InitMD:
+		lea	($FFFE00).l,a7		; Set the stack pointer
 
 		move.b	(z80_version).l,d0
 		andi.b	#$C0,d0
-		move.b	d0,(v_megadrive).w ; get region setting
-		move.l	#'init',(v_init).w ; set flag so checksum won't run again
+		move.b	d0,(v_megadrive).w 	; get region setting
 
 GameInit:
-		lea	($FF0000).l,a6
-		moveq	#0,d7
-		move.w	#$3F7F,d6
-	@clearRAM:
-		move.l	d7,(a6)+
-		dbf	d6,@clearRAM	; clear RAM ($0000-$FDFF)
-
 		bsr.w	VDPSetupGame
 		bsr.w	SoundDriverLoad
 		bsr.w	JoypadInit
 		move.b	#id_Sega,(v_gamemode).w ; set Game Mode to Sega Screen
 
 MainGameLoop:
-		move.b	(v_gamemode).w,d0 ; load Game Mode
+		move.b	(v_gamemode).w,d0 	; load Game Mode
 		andi.w	#$1C,d0
 		jsr	GameModeArray(pc,d0.w) ; jump to apt location in ROM
 		bra.s	MainGameLoop
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Main game mode array
+; Main game mode array 
 ; ---------------------------------------------------------------------------
-
 GameModeArray:
 
-ptr_GM_Sega:	bra.w	GM_Sega		; Sega Screen ($00)
-
-ptr_GM_Title:	bra.w	GM_Title	; Title	Screen ($04)
-
-ptr_GM_Demo:	bra.w	GM_Level	; Demo Mode ($08)
-
-ptr_GM_Level:	bra.w	GM_Level	; Normal Level ($0C)
-
-ptr_GM_Special:	bra.w	GM_Special	; Special Stage	($10)
-
-ptr_GM_Cont:	bra.w	GM_Continue	; Continue Screen ($14)
-
-ptr_GM_Ending:	bra.w	GM_Ending	; End of game sequence ($18)
-
-ptr_GM_Credits:	bra.w	GM_Credits	; Credits ($1C)
-
-		rts	
-; ===========================================================================
-
-CheckSumError:
-		bsr.w	VDPSetupGame
-		move.l	#$C0000000,(vdp_control_port).l ; set VDP to CRAM write
-		moveq	#$3F,d7
-
-	@fillred:
-		move.w	#cRed,(vdp_data_port).l ; fill palette with red
-		dbf	d7,@fillred	; repeat $3F more times
-
-	@endlessloop:
-		bra.s	@endlessloop
-; ===========================================================================
-
-BusError:
-		move.b	#2,(v_errortype).w
-		bra.s	loc_43A
-
-AddressError:
-		move.b	#4,(v_errortype).w
-		bra.s	loc_43A
-
-IllegalInstr:
-		move.b	#6,(v_errortype).w
-		addq.l	#2,2(sp)
-		bra.s	loc_462
-
-ZeroDivide:
-		move.b	#8,(v_errortype).w
-		bra.s	loc_462
-
-ChkInstr:
-		move.b	#$A,(v_errortype).w
-		bra.s	loc_462
-
-TrapvInstr:
-		move.b	#$C,(v_errortype).w
-		bra.s	loc_462
-
-PrivilegeViol:
-		move.b	#$E,(v_errortype).w
-		bra.s	loc_462
-
-Trace:
-		move.b	#$10,(v_errortype).w
-		bra.s	loc_462
-
-Line1010Emu:
-		move.b	#$12,(v_errortype).w
-		addq.l	#2,2(sp)
-		bra.s	loc_462
-
-Line1111Emu:
-		move.b	#$14,(v_errortype).w
-		addq.l	#2,2(sp)
-		bra.s	loc_462
-
-ErrorExcept:
-		move.b	#0,(v_errortype).w
-		bra.s	loc_462
-; ===========================================================================
-
-loc_43A:
-		disable_ints
-		addq.w	#2,sp
-		move.l	(sp)+,(v_spbuffer).w
-		addq.w	#2,sp
-		movem.l	d0-a7,(v_regbuffer).w
-		bsr.w	ShowErrorMessage
-		move.l	2(sp),d0
-		bsr.w	ShowErrorValue
-		move.l	(v_spbuffer).w,d0
-		bsr.w	ShowErrorValue
-		bra.s	loc_478
-; ===========================================================================
-
-loc_462:
-		disable_ints
-		movem.l	d0-a7,(v_regbuffer).w
-		bsr.w	ShowErrorMessage
-		move.l	2(sp),d0
-		bsr.w	ShowErrorValue
-
-loc_478:
-		bsr.w	ErrorWaitForC
-		movem.l	(v_regbuffer).w,d0-a7
-		enable_ints
-		rte	
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ShowErrorMessage:
-		lea	(vdp_data_port).l,a6
-		locVRAM	$F800
-		lea	(Art_Text).l,a0
-		move.w	#$27F,d1
-	@loadgfx:
-		move.w	(a0)+,(a6)
-		dbf	d1,@loadgfx
-
-		moveq	#0,d0		; clear	d0
-		move.b	(v_errortype).w,d0 ; load error code
-		move.w	ErrorText(pc,d0.w),d0
-		lea	ErrorText(pc,d0.w),a0
-		locVRAM	(vram_fg+$604)
-		moveq	#$12,d1		; number of characters (minus 1)
-
-	@showchars:
-		moveq	#0,d0
-		move.b	(a0)+,d0
-		addi.w	#$790,d0
-		move.w	d0,(a6)
-		dbf	d1,@showchars	; repeat for number of characters
-		rts	
-; End of function ShowErrorMessage
-
-; ===========================================================================
-ErrorText:	dc.w @exception-ErrorText, @bus-ErrorText
-		dc.w @address-ErrorText, @illinstruct-ErrorText
-		dc.w @zerodivide-ErrorText, @chkinstruct-ErrorText
-		dc.w @trapv-ErrorText, @privilege-ErrorText
-		dc.w @trace-ErrorText, @line1010-ErrorText
-		dc.w @line1111-ErrorText
-@exception:	dc.b "ERROR EXCEPTION    "
-@bus:		dc.b "BUS ERROR          "
-@address:	dc.b "ADDRESS ERROR      "
-@illinstruct:	dc.b "ILLEGAL INSTRUCTION"
-@zerodivide:	dc.b "@ERO DIVIDE        "
-@chkinstruct:	dc.b "CHK INSTRUCTION    "
-@trapv:		dc.b "TRAPV INSTRUCTION  "
-@privilege:	dc.b "PRIVILEGE VIOLATION"
-@trace:		dc.b "TRACE              "
-@line1010:	dc.b "LINE 1010 EMULATOR "
-@line1111:	dc.b "LINE 1111 EMULATOR "
-		even
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ShowErrorValue:
-		move.w	#$7CA,(a6)	; display "$" symbol
-		moveq	#7,d2
-
-	@loop:
-		rol.l	#4,d0
-		bsr.s	@shownumber	; display 8 numbers
-		dbf	d2,@loop
-		rts	
-; End of function ShowErrorValue
-
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-@shownumber:
-		move.w	d0,d1
-		andi.w	#$F,d1
-		cmpi.w	#$A,d1
-		blo.s	@chars0to9
-		addq.w	#7,d1		; add 7 for characters A-F
-
-	@chars0to9:
-		addi.w	#$7C0,d1
-		move.w	d1,(a6)
-		rts	
-; End of function sub_5CA
-
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-ErrorWaitForC:				; XREF: loc_478
-		bsr.w	ReadJoypads
-		cmpi.b	#btnC,(v_jpadpress1).w ; is button C pressed?
-		bne.w	ErrorWaitForC	; if not, branch
-		rts	
-; End of function ErrorWaitForC
-
-; ===========================================================================
-
-Art_Text:	incbin	"artunc\menutext.bin" ; text used in level select and debug mode
+ptr_GM_Sega:	
+		bra.w	GM_Sega		; Sega Screen ($00)
+ptr_GM_Title:	
+		bra.w	GM_Title	; Title	Screen ($04)
+ptr_GM_Demo:	
+		bra.w	GM_Level	; Demo Mode ($08)
+ptr_GM_Level:	
+		bra.w	GM_Level	; Normal Level ($0C)
+ptr_GM_Special:	
+		bra.w	GM_Special	; Special Stage	($10)
+ptr_GM_Cont:	
+		bra.w	GM_Continue	; Continue Screen ($14)
+ptr_GM_Ending:	
+		bra.w	GM_Ending	; End of game sequence ($18)
+ptr_GM_Credits:	
+		bra.w	GM_Credits	; Credits ($1C)
+		rts
+		
+Art_Text:	
+		incbin	"artunc\menutext.bin" ; text used in level select and debug mode
 		even
 
 ; ===========================================================================
@@ -480,6 +264,45 @@ Art_Text:	incbin	"artunc\menutext.bin" ; text used in level select and debug mod
 
 VBlank:					; XREF: Vectors
 		movem.l	d0-a6,-(sp)
+
+; TODO:
+		; FIND A MUCH BETTER WAY TO DO THIS
+		; THIS USES PRECIOUS VBLANK CYCLES!
+		; Lookup table maybe?
+
+VBlank_32X:		
+		cmpi.b	#id_Title,(v_gamemode).w
+		beq.s	@Title		
+		cmpi.b	#id_Continue,(v_gamemode).w
+		beq.s	@Continue				
+		cmpi.b	#id_Sega,(v_gamemode).w
+		beq.s	@Sega
+		cmp.b	#id_Special,(v_gamemode).w
+		beq.s	@Special	
+		
+		move.l	#$600020,(vdp_control_port).l	;program the control port
+		move.w	($c00000).l,d0					;get the colour (3,0)		
+		
+		bra.s	@VBlank_Continue
+@Sega:
+@Continue:
+		move.l	#$20,(vdp_control_port).l		;program the control port
+		move.w	($c00000).l,d0					;get the colour (0,0)		
+		bra.s	@VBlank_Continue
+
+	
+@Title:
+		move.l	#$400020,(vdp_control_port).l		; program the control port
+		move.w	($c00000).l,d0				; get the colour (2,0)
+		bra.s	@VBlank_Continue
+	
+@Special:
+		move.w	#$0400, d0
+			
+@VBlank_Continue:
+		move.w	d0, MARS_SYS_COMM2			; Tell 32X background colour	
+
+VBlank_MD:
 		tst.b	(v_vbla_routine).w
 		beq.s	VBla_00
 		move.w	(vdp_control_port).l,d0
@@ -500,10 +323,8 @@ VBlank:					; XREF: Vectors
 		move.w	VBla_Index(pc,d0.w),d0
 		jsr	VBla_Index(pc,d0.w)
 
-VBla_Music:				; XREF: VBla_00
-		jsr	UpdateMusic
-
 VBla_Exit:				; XREF: VBla_08
+		jsr	IssuePWMRequests
 		addq.l	#1,(v_vbla_count).w
 		movem.l	(sp)+,d0-a6
 		rte	
@@ -521,11 +342,11 @@ VBla_00:				; XREF: VBlank; VBla_Index
 		cmpi.b	#$80+id_Level,(v_gamemode).w
 		beq.s	@islevel
 		cmpi.b	#id_Level,(v_gamemode).w ; is game on a level?
-		bne.w	VBla_Music	; if not, branch
+		bne.w	VBla_Exit	; if not, branch
 
 	@islevel:
 		cmpi.b	#id_LZ,(v_zone).w ; is level LZ ?
-		bne.w	VBla_Music	; if not, branch
+		bne.w	VBla_Exit	; if not, branch
 
 		move.w	(vdp_control_port).l,d0
 		btst	#6,(v_megadrive).w ; is Megadrive PAL?
@@ -537,8 +358,7 @@ VBla_00:				; XREF: VBlank; VBla_Index
 
 	@notPAL:
 		move.w	#1,(f_hbla_pal).w ; set HBlank flag
-		stopZ80
-		waitZ80
+
 		tst.b	(f_wtr_state).w	; is water above top of screen?
 		bne.s	@waterabove 	; if yes, branch
 
@@ -550,8 +370,7 @@ VBla_00:				; XREF: VBlank; VBla_Index
 
 	@waterbelow:
 		move.w	(v_hbla_hreg).w,(a5)
-		startZ80
-		bra.w	VBla_Music
+		bra.w	VBla_Exit
 ; ===========================================================================
 
 VBla_02:				; XREF: VBla_Index
@@ -742,8 +561,6 @@ VBla_16:				; XREF: VBla_Index
 
 
 sub_106E:				; XREF: VBla_02; et al
-		stopZ80
-		waitZ80
 		bsr.w	ReadJoypads
 		tst.b	(f_wtr_state).w ; is water above top of screen?
 		bne.s	@waterabove	; if yes, branch
@@ -756,7 +573,6 @@ sub_106E:				; XREF: VBla_02; et al
 	@waterbelow:
 		writeVRAM	v_spritetablebuffer,$280,vram_sprites
 		writeVRAM	v_hscrolltablebuffer,$380,vram_hscroll
-		startZ80
 		rts	
 ; End of function sub_106E
 
@@ -821,10 +637,53 @@ loc_119E:
 		clr.b	($FFFFF64F).w
 		movem.l	d0-a6,-(sp)
 		bsr.w	Demo_Time
-		jsr	UpdateMusic
 		movem.l	(sp)+,d0-a6
 		rte	
 ; End of function HBlank
+
+IssuePWMRequests:			
+		movem.l	d0-d2/a0,-(sp)
+		stopZ80
+		waitZ80
+		moveq	#0,d0
+		moveq	#0,d1
+		moveq	#0,d2
+		lea	(zShouldIssuePWM).l,a0
+		tst.b	(a0)+
+		beq.s	@exit
+		move.b	(a0)+,d0
+		swap	d0
+		move.b	(a0)+,d1
+		swap	d1
+		move.b	(a0)+,d0
+		lsl.l	#8,d0
+		move.b	(a0)+,d1
+		or.l	d1,d0
+		move.b	(a0)+,d2
+		swap	d2
+		move.b	(a0)+,d1
+		swap	d1
+		move.b	(a0)+,d2
+		lsl.l	#8,d2
+		move.b	(a0)+,d1
+		or.l	d2,d1
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.l	d0,(MARS_SYS_COMM8).l
+		move.l	d1,(MARS_SYS_COMMC).l
+
+@exit:			
+		startZ80
+		movem.l	(sp)+,d0-d2/a0
+		rts
+; End of function IssuePWMRequests
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to	initialise joypads
@@ -1001,9 +860,19 @@ SoundDriverLoad:			; XREF: GameClrRAM; GM_Title
 		nop	
 		stopZ80
 		resetZ80
-		lea	(Kos_Z80).l,a0	; load sound driver
-		lea	(z80_ram).l,a1	; target Z80 RAM
-		bsr.w	KosDec		; decompress
+		
+		lea	(SoundDriver).l,a0	; load sound driver
+		lea	(z80_ram).l,a1		; target Z80 RAM
+		move.w	#$1FFF, d0
+@WriteData		
+		move.b (a0)+, (a1)+
+		dbf	d0, @WriteData
+	
+		btst	#6,(v_megadrive).w	; Is megadrive pal?
+		beq.s	@notPal				; If not, branch
+		move.b	#1,(zPalFlag).l		; set PAL mode flag in Z80 driver
+@notPal
+
 		resetZ80a
 		nop	
 		nop	
@@ -1982,6 +1851,7 @@ Sega_WaitEnd:
 		beq.s	Sega_GotoTitle
 		andi.b	#btnStart,(v_jpadpress1).w ; is Start button pressed?
 		beq.s	Sega_WaitEnd	; if not, branch
+		moveq	#-2,d0
 
 Sega_GotoTitle:
 		move.b	#id_Title,(v_gamemode).w ; go to title screen
@@ -1998,7 +1868,7 @@ GM_Title:				; XREF: GameModeArray
 		bsr.w	ClearPLC
 		bsr.w	PaletteFadeOut
 		disable_ints
-		bsr.w	SoundDriverLoad
+
 		lea	(vdp_control_port).l,a6
 		move.w	#$8004,(a6)	; 8-colour mode
 		move.w	#$8200+(vram_fg>>10),(a6) ; set foreground nametable address
@@ -2067,7 +1937,6 @@ GM_Title:				; XREF: GameModeArray
 		move.b	#0,(v_lastlamp).w ; clear lamppost counter
 		move.w	#0,(v_debuguse).w ; disable debug item placement mode
 		move.w	#0,(f_demo).w	; disable debug mode
-		move.w	#0,($FFFFFFEA).w ; unused variable
 		move.w	#0,(v_zone).w	; set level to GHZ (00)
 		move.w	#0,(v_pcyc_time).w ; disable palette cycling
 		bsr.w	LevelSizeLoad
@@ -2097,7 +1966,7 @@ GM_Title:				; XREF: GameModeArray
 		copyTilemap	$FF0000,$C206,$21,$15
 
 		locVRAM	0
-		lea	(Nem_GHZ_1st).l,a0 ; load GHZ patterns
+		lea	(Nem_Title).l,a0 ; load GHZ patterns
 		bsr.w	NemDec
 		moveq	#palid_Title,d0	; load title screen palette
 		bsr.w	PalLoad1
@@ -2269,9 +2138,9 @@ LevelSelect:
 LevSel_NoCheat:
 		; This is a workaround for a bug, see Sound_ChkValue for more.
 		; Once you've fixed the bugs there, comment these four instructions out
-		cmpi.w	#bgm__Last+1,d0	; is sound $80-$93 being played?
+		cmpi.w	#$94,d0	; is sound $80-$93 being played?
 		blo.s	LevSel_PlaySnd	; if yes, branch
-		cmpi.w	#sfx__First,d0	; is sound $94-$9F being played?
+		cmpi.w	#$A0,d0	; is sound $94-$9F being played?
 		blo.s	LevelSelect	; if yes, branch
 
 LevSel_PlaySnd:
@@ -2475,61 +2344,56 @@ Demo_Levels:	incbin	"misc\Demo Level Order - Intro.bin"
 
 LevSelControls:				; XREF: LevelSelect
 		move.b	(v_jpadpress1).w,d1
-		andi.b	#btnUp+btnDn,d1	; is up/down pressed and held?
-		bne.s	LevSel_UpDown	; if yes, branch
-		subq.w	#1,(v_levseldelay).w ; subtract 1 from time to next move
-		bpl.s	LevSel_SndTest	; if time remains, branch
+		andi.b	#btnUp+btnDn,d1		; is up/down pressed and held?
+		bne.s	LevSel_UpDown		; if yes, branch
+		subq.w	#1,(v_levseldelay).w 	; subtract 1 from time to next move
+		bpl.s	LevSel_SndTest		; if time remains, branch
 
 LevSel_UpDown:
-		move.w	#$B,(v_levseldelay).w ; reset time delay
+		move.w	#$B,(v_levseldelay).w	; reset time delay
 		move.b	(v_jpadhold1).w,d1
-		andi.b	#btnUp+btnDn,d1	; is up/down pressed?
-		beq.s	LevSel_SndTest	; if not, branch
+		andi.b	#btnUp+btnDn,d1		; is up/down pressed?
+		beq.s	LevSel_SndTest		; if not, branch
 		move.w	(v_levselitem).w,d0
-		btst	#bitUp,d1	; is up	pressed?
-		beq.s	LevSel_Down	; if not, branch
-		subq.w	#1,d0		; move up 1 selection
-		bhs.s	LevSel_Down
-		moveq	#$14,d0		; if selection moves below 0, jump to selection	$14
+		btst	#bitUp,d1		; is up	pressed?
+		beq.s	LevSel_Down		; if not, branch
+		subq.w	#1,d0			; move up 1 selection
+		bcc.s	LevSel_Down
+		moveq	#$14,d0			; if selection moves below 0, jump to selection	$14
 
 LevSel_Down:
-		btst	#bitDn,d1	; is down pressed?
-		beq.s	LevSel_Refresh	; if not, branch
-		addq.w	#1,d0		; move down 1 selection
+		btst	#bitDn,d1		; is down pressed?
+		beq.s	LevSel_Refresh		; if not, branch
+		addq.w	#1,d0			; move down 1 selection
 		cmpi.w	#$15,d0
-		blo.s	LevSel_Refresh
-		moveq	#0,d0		; if selection moves above $14,	jump to	selection 0
+		bcs.s	LevSel_Refresh
+		moveq	#0,d0			; if selection moves above $14,	jump to	selection 0
 
 LevSel_Refresh:
-		move.w	d0,(v_levselitem).w ; set new selection
-		bsr.w	LevSelTextLoad	; refresh text
+		move.w	d0,(v_levselitem).w 	; set new selection
+		bsr.w	LevSelTextLoad		; refresh text
 		rts	
 ; ===========================================================================
 
 LevSel_SndTest:				; XREF: LevSelControls
-		cmpi.w	#$14,(v_levselitem).w ; is item $14 selected?
-		bne.s	LevSel_NoMove	; if not, branch
+		cmpi.w	#$14,(v_levselitem).w 	; is item $14 selected?
+		bne.s	LevSel_NoMove		; if not, branch
 		move.b	(v_jpadpress1).w,d1
-		andi.b	#btnR+btnL,d1	; is left/right	pressed?
+		andi.b	#btnR+btnL,d1		; is left/right	pressed?
 		beq.s	LevSel_NoMove	; if not, branch
 		move.w	(v_levselsound).w,d0
-		btst	#bitL,d1	; is left pressed?
-		beq.s	LevSel_Right	; if not, branch
-		subq.w	#1,d0		; subtract 1 from sound	test
-		bhs.s	LevSel_Right
-		moveq	#$4F,d0		; if sound test	moves below 0, set to $4F
-
+		btst	#bitL,d1		; is left pressed?
+		beq.s	LevSel_Right		; if not, branch
+		subq.w	#1,d0			; subtract 1 from sound	test
 LevSel_Right:
-		btst	#bitR,d1	; is right pressed?
-		beq.s	LevSel_Refresh2	; if not, branch
-		addq.w	#1,d0		; add 1	to sound test
-		cmpi.w	#$50,d0
-		blo.s	LevSel_Refresh2
-		moveq	#0,d0		; if sound test	moves above $4F, set to	0
+		btst	#bitR,d1		; is right pressed?
+		beq.s	LevSel_Refresh2		; if not, branch
+		addq.w	#1,d0			; add 1	to sound test
+		cmpi.w	#$FF,d0
 
 LevSel_Refresh2:
-		move.w	d0,(v_levselsound).w ; set sound test number
-		bsr.w	LevSelTextLoad	; refresh text
+		move.w	d0,(v_levselsound).w	; set sound test number
+		bsr.w	LevSelTextLoad		; refresh text
 
 LevSel_NoMove:
 		rts	
@@ -2583,7 +2447,6 @@ LevSelTextLoad:				; XREF: GM_Title
 LevSel_DrawSnd:
 		locVRAM	$EC30		; sound test position on screen
 		move.w	(v_levselsound).w,d0
-		addi.w	#$80,d0
 		move.b	d0,d2
 		lsr.b	#4,d0
 		bsr.w	LevSel_ChgSnd	; draw 1st digit
@@ -3350,7 +3213,7 @@ SS_ToLevel:	cmpi.b	#id_Level,(v_gamemode).w
 
 
 SS_BGLoad:				; XREF: GM_Special
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		lea	(Eni_SSBg1).l,a0 ; load	mappings for the birds and fish
 		move.w	#$4051,d0
 		bsr.w	EniDec
@@ -3375,7 +3238,7 @@ loc_48CE:
 		bne.s	loc_48E2
 		cmpi.w	#6,d7
 		bne.s	loc_48F2
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 
 loc_48E2:
 		movem.l	d0-d4,-(sp)
@@ -3399,16 +3262,16 @@ loc_48F2:
 loc_491C:
 		adda.w	#$80,a2
 		dbf	d7,loc_48BE
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		lea	(Eni_SSBg2).l,a0 ; load	mappings for the clouds
 		move.w	#$4000,d0
 		bsr.w	EniDec
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		move.l	#$40000003,d0
 		moveq	#$3F,d1
 		moveq	#$1F,d2
 		bsr.w	TilemapToVRAM
-		lea	($FF0000).l,a1
+		lea	(v_256x256).l,a1
 		move.l	#$50000003,d0
 		moveq	#$3F,d1
 		moveq	#$3F,d2
@@ -6123,98 +5986,133 @@ BldSpr_ScrPos:	dc.l 0			; blank
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-
-BuildSprites:				; XREF: GM_Title; et al
-		lea	(v_spritetablebuffer).w,a2 ; set address for sprite table
-		moveq	#0,d5
-		lea	(v_spritequeue).w,a4
-		moveq	#7,d7
-
-loc_D66A:
-		tst.w	(a4)
-		beq.w	loc_D72E
-		moveq	#2,d6
-
-loc_D672:
-		movea.w	(a4,d6.w),a0
+BuildSprites:				; XREF: GM_Title; et al	
+		lea	(v_spritetablebuffer).w,a2 	
+		moveq	#0,d5				
+		lea	(v_spritequeue).w,a4		
+		moveq	#7,d7				
+BuildSprites_LevelLoop:
+		tst.w	(a4)				
+		beq.w	BuildSprites_NextLevel		
+		moveq	#2,d6				
+	
+BuildSprites_Loop:
+		movea.w	(a4,d6.w),a0			
 		tst.b	(a0)
-		beq.w	loc_D726
-		bclr	#7,obRender(a0)
-		move.b	obRender(a0),d0
-		move.b	d0,d4
-		andi.w	#$C,d0
-		beq.s	loc_D6DE
-		movea.l	BldSpr_ScrPos(pc,d0.w),a1
+		beq.w	BuildSprites_Next
+		bclr	#7,obRender(a0)			; Clear on-screen bit
+		move.b	obRender(a0),d0			; Load render flag to d0	
+		move.b	d0,d4				; Make a copy in d4
+		andi.w	#$C,d0				; Get co-ordinate bits
+		beq.s	BuildSprites_ScreenSpace	; If ect is in screen space, branch
+		movea.l	BldSpr_ScrPos(pc,d0.w),a1	; Else, get offset from array
 		moveq	#0,d0
-		move.b	obActWid(a0),d0
-		move.w	obX(a0),d3
-		sub.w	(a1),d3
-		move.w	d3,d1
-		add.w	d0,d1
-		bmi.w	loc_D726
-		move.w	d3,d1
-		sub.w	d0,d1
-		cmpi.w	#$140,d1
-		bge.s	loc_D726
-		addi.w	#$80,d3
-		btst	#4,d4
-		beq.s	loc_D6E8
-		moveq	#0,d0
-		move.b	obHeight(a0),d0
-		move.w	obY(a0),d2
-		sub.w	4(a1),d2
+		move.b	obActWid(a0),d0			; Store the objects width in d0
+		move.w	obX(a0),d3			; Store the objects X position in d3
+		sub.w	(a1),d3				; Subtract the screen offset from the objects X position
+		move.w	d3,d1				; Copy the result to d1
+		add.w	d0,d1				; Add the objects width to d1
+		bmi.w	BuildSprites_Next		; If the ect is not on screen, branch 
+		move.w	d3,d1				; Restore d1 to before width was added
+		sub.w	d0,d1				; Subtract the objects width from d1
+		cmpi.w	#320,d1				; Compare with 320 (Screen width)
+		bge.w	BuildSprites_Next		; If off screen, branch
+		addi.w	#$80,d3				
+		btst	#4,d4				; Test render height flag
+		beq.s	BuildSprites_ApproxYCheck	; If set, use approximate Y position
+							; Else, use accurate Y positioning
+		moveq	#0,d0				
+		move.b	obHeight(a0),d0			; Load objects height to d0
+		move.w	obY(a0),d2			; Load objects Y position to d2
+		sub.w	4(a1),d2			
 		move.w	d2,d1
 		add.w	d0,d1
-		bmi.s	loc_D726
+		bmi.w	BuildSprites_Next
 		move.w	d2,d1
 		sub.w	d0,d1
 		cmpi.w	#$E0,d1
-		bge.s	loc_D726
+		bge.w	BuildSprites_Next
 		addi.w	#$80,d2
-		bra.s	loc_D700
+		bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
 
-loc_D6DE:
-		move.w	$A(a0),d2
-		move.w	obX(a0),d3
-		bra.s	loc_D700
+BuildSprites_ScreenSpace:
+		move.w	obScreenY(a0),d2		; Load ect position to d2 (Screen space)
+		move.w	obX(a0),d3			; Load objects X position to d3
+		bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
 
-loc_D6E8:
+BuildSprites_ApproxYCheck:
 		move.w	obY(a0),d2
 		sub.w	obMap(a1),d2
 		addi.w	#$80,d2
 		cmpi.w	#$60,d2
-		blo.s	loc_D726
+		bcs.w	BuildSprites_Next
 		cmpi.w	#$180,d2
-		bhs.s	loc_D726
+		bcc.w	BuildSprites_Next
 
-loc_D700:
-		movea.l	obMap(a0),a1
-		moveq	#0,d1
-		btst	#5,d4
-		bne.s	loc_D71C
-		move.b	obFrame(a0),d1
-		add.b	d1,d1
-		adda.w	(a1,d1.w),a1
-		move.b	(a1)+,d1
-		subq.b	#1,d1
-		bmi.s	loc_D720
+BuildSprites_DrawSprite:
+		cmp.l	#$DEADBEEF, obMap(a0)		; Is the ect a 32X ect?
+		bne.s	BuildSprites_DrawMD		; If not, branch
+							; Read objects X and Y positions
+		move.w	obX(a0),d1			; Store the objects X position in d1
+		move.w	obY(a0),d2			; Store the objects Y position in d2
+			
+		move.b	obRender(a0),d3			; Load render flag to d3	
+		andi.w	#$C,d3				; Get co-ordinate bits
+		beq.s	@ScreenSpace			; If ect is in screen space, branch
+		
+							; Convert objects to screen space co-ordinates
+		sub.w	v_screenposx,d1			; Subtract the screen offset from the objects X position
+		sub.w	v_screenposy,d2			; Subtract the screen offset from the objects Y position		
 
-loc_D71C:
-		bsr.w	sub_D750
+@ScreenSpace:
+		move.b	obHeight(a0),d3			; Store ect height in d0
+		ext.w	d3				; Extend to word
+		sub.w	d3, d2				; Subtract from obY	
+		
 
-loc_D720:
-		bset	#7,obRender(a0)
+		; TODO: Add to RAM buffer to be sent to 32X during VBlank
+@Wait32XReady:
+		cmp.b	#0, MARS_SYS_COMM0		; Check if 32X is busy
 
-loc_D726:
+		; Fill data registers for the command		
+		move.b	obGfx(a0), MARS_SYS_COMM0+1	; Write ect ID
+		move.b	obFrame(a0), MARS_SYS_COMM4	; Write ect Frame
+		move.b	obRender(a0), MARS_SYS_COMM4+1	; Write ect render flag	
+		move.w	d1, MARS_SYS_COMM6		; Write objects X position	
+		move.w	d2, MARS_SYS_COMM8		; Write objects Y position
+		move.b	#1, MARS_SYS_COMM0		; Write 32X Command (Add to Display List)
+		
+		bra.s	BuildSprites_SkipDraw		; Skip DrawMD
+		
+BuildSprites_DrawMD:
+		movea.l	obMap(a0),a1			; Load ect mappings to a1
+		moveq	#0,d1		
+		btst	#5,d4				; Does ect use direct (5-byte) mappings?
+		bne.s	BuildSprites_DrawDirect		; If yes, branch
+		move.b	obFrame(a0),d1			; Read objects frame
+		add.b	d1,d1				; Convert to mappings offset
+		adda.w	(a1,d1.w),a1			; Set a1 to this new offset
+		move.b	(a1)+,d1			; Read a byte from a1
+		subq.b	#1,d1				; Decrement it by #1
+		bmi.s	BuildSprites_SkipDraw		; If negative, do not draw
+
+BuildSprites_DrawDirect:
+		bsr.w	DrawSprite			; Draw the sprite
+		bra	BuildSprites_SkipDraw		
+	
+BuildSprites_SkipDraw:
+		bset	#7,obRender(a0)			; Set the on screen flag
+
+BuildSprites_Next:
 		addq.w	#2,d6
 		subq.w	#2,(a4)
-		bne.w	loc_D672
+		bne.w	BuildSprites_Loop
 
-loc_D72E:
+BuildSprites_NextLevel:
 		lea	$80(a4),a4
-		dbf	d7,loc_D66A
+		dbf	d7,BuildSprites_LevelLoop
 		move.b	d5,(v_spritecount).w
 		cmpi.b	#$50,d5
 		beq.s	loc_D748
@@ -6231,22 +6129,22 @@ loc_D748:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-sub_D750:				; XREF: BuildSprites
-		movea.w	obGfx(a0),a3
-		btst	#0,d4
-		bne.s	loc_D796
-		btst	#1,d4
-		bne.w	loc_D7E4
-; End of function sub_D750
+DrawSprite:				; XREF: BuildSprites
+		movea.w	obGfx(a0),a3	; a3 = ptr to obGfx(a0)
+		btst	#0,d4		; Check if mirrored horizontally
+		bne.s	DrawSprite_FlipX; If yes, branch
+		btst	#1,d4		; Check if mirrored vertically
+		bne.w	DrawSprite_FlipY; If yes, branch
+; End of function DrawSprite
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
 
-sub_D762:				; XREF: sub_D762; SS_ShowLayout
-		cmpi.b	#$50,d5
-		beq.s	locret_D794
-		move.b	(a1)+,d0
+DrawSprite_Normal:				; XREF: DrawSprite_Normal; SS_ShowLayout
+		cmpi.b	#$50,d5			; Is sprite count $50
+		beq.s	locret_D794		; If yes, branch
+		move.b	(a1)+,d0		
 		ext.w	d0
 		add.w	d2,d0
 		move.w	d0,(a2)+
@@ -6267,19 +6165,19 @@ sub_D762:				; XREF: sub_D762; SS_ShowLayout
 
 loc_D78E:
 		move.w	d0,(a2)+
-		dbf	d1,sub_D762
+		dbf	d1,DrawSprite_Normal
 
 locret_D794:
 		rts	
-; End of function sub_D762
+; End of function DrawSprite_Normal
 
 ; ===========================================================================
 
-loc_D796:
-		btst	#1,d4
-		bne.w	loc_D82A
+DrawSprite_FlipX:
+		btst	#1,d4			; Check if vertically flipped
+		bne.w	DrawSprite_FlipXY	; If yes, branch
 
-loc_D79E:
+DrawSprite_FlipXOnly:
 		cmpi.b	#$50,d5
 		beq.s	locret_D7E2
 		move.b	(a1)+,d0
@@ -6310,13 +6208,13 @@ loc_D79E:
 
 loc_D7DC:
 		move.w	d0,(a2)+
-		dbf	d1,loc_D79E
+		dbf	d1,DrawSprite_FlipXOnly
 
 locret_D7E2:
 		rts	
 ; ===========================================================================
 
-loc_D7E4:				; XREF: sub_D750
+DrawSprite_FlipY:				; XREF: DrawSprite
 		cmpi.b	#$50,d5
 		beq.s	locret_D828
 		move.b	(a1)+,d0
@@ -6347,13 +6245,13 @@ loc_D7E4:				; XREF: sub_D750
 
 loc_D822:
 		move.w	d0,(a2)+
-		dbf	d1,loc_D7E4
+		dbf	d1,DrawSprite_FlipY
 
 locret_D828:
 		rts	
 ; ===========================================================================
 
-loc_D82A:
+DrawSprite_FlipXY:
 		cmpi.b	#$50,d5
 		beq.s	locret_D87C
 		move.b	(a1)+,d0
@@ -6390,7 +6288,7 @@ loc_D82A:
 
 loc_D876:
 		move.w	d0,(a2)+
-		dbf	d1,loc_D82A
+		dbf	d1,DrawSprite_FlipXY
 
 locret_D87C:
 		rts	
@@ -6398,7 +6296,7 @@ locret_D87C:
 		include	"_incObj\sub ChkObjectVisible.asm"
 
 ; ---------------------------------------------------------------------------
-; Subroutine to	load a level's objects
+; Subroutine to	load a level's ects
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -6748,7 +6646,7 @@ locret_DA8A:
 ; Object 01 - Sonic
 ; ---------------------------------------------------------------------------
 
-SonicPlayer:				; XREF: Obj_Index
+SonicPlayer:				; XREF: _Index
 		tst.w	(v_debuguse).w	; is debug mode	being used?
 		beq.s	Sonic_Normal	; if not, branch
 		jmp	DebugMode
@@ -7504,7 +7402,7 @@ ObjHitWallLeft:
 
 locret_15098:
 		rts	
-; End of function ObjHitWallLeft
+; End of function HitWallLeft
 
 ; ===========================================================================
 
@@ -7769,7 +7667,7 @@ loc_1B210:
 		move.b	(a1)+,d1
 		subq.b	#1,d1
 		bmi.s	loc_1B268
-		jsr	sub_D762
+		jsr	DrawSprite_Normal
 
 loc_1B268:
 		addq.w	#4,a4
@@ -8075,7 +7973,7 @@ SS_AniEmeraldSparks:			; XREF: SS_AniIndex
 		bne.s	locret_1B60C
 		clr.l	(a0)
 		clr.l	4(a0)
-		move.b	#4,($FFFFD024).w
+		move.b	#4,(v_player+obRoutine).w	; change Sonic's routine to ExitStage
 		sfx	sfx_SSGoal	; play special stage GOAL sound
 
 locret_1B60C:
@@ -8345,19 +8243,33 @@ Art_LivesNums:	incbin	"artunc\Lives Counter Numbers.bin" ; 8x8 pixel numbers on 
 		include	"_inc\LevelHeaders.asm"
 		include	"_inc\Pattern Load Cues.asm"
 
-		align	$100,$FF
-		if Revision=0
-Nem_SegaLogo:	incbin	"artnem\Sega Logo.bin"	; large Sega logo
+		; Sound driver must start at $8A0000
+		align 	$8A0000
+SoundDriver:
+		incbin "..\SMPS\SMPS.bin"
+		OBJEND
+; ---------------------------------------------------------------------------
+; Second half of bank 0, SH-2 access only!
+; ---------------------------------------------------------------------------	
+		align 	$80000		
+		
+; ---------------------------------------------------------------------------
+; SH-2 Binary blob
+; ---------------------------------------------------------------------------
+SH2_Binary:
+		incbin "..\sh2\sh2.bin"
+SH2_END:
+
+; ---------------------------------------------------------------------------
+; Start of Bank 1
+; ---------------------------------------------------------------------------
+		align 	$100000		
+		OBJ 	$900000		
+
+Nem_SegaLogo:	incbin	"artnem\Sega Logo (JP1).bin" ; large Sega logo
 		even
 Eni_SegaLogo:	incbin	"tilemaps\Sega Logo.bin" ; large Sega logo (mappings)
 		even
-		else
-			dcb.b	$400,$FF
-	Nem_SegaLogo:	incbin	"artnem\Sega Logo (JP1).bin" ; large Sega logo
-			even
-	Eni_SegaLogo:	incbin	"tilemaps\Sega Logo (JP1).bin" ; large Sega logo (mappings)
-			even
-		endc
 Eni_Title:	incbin	"tilemaps\Title Screen.bin" ; title screen foreground (mappings)
 		even
 Nem_TitleFg:	incbin	"artnem\Title Screen Foreground.bin"
@@ -8687,6 +8599,13 @@ Nem_Squirrel:	incbin	"artnem\Animal Squirrel.bin"
 ; ---------------------------------------------------------------------------
 ; Compressed graphics - primary patterns and block mappings
 ; ---------------------------------------------------------------------------
+Nem_Title:	incbin	"artnem\8x8 - Title.bin"
+		even
+Blk16_Title:	incbin	"map16\Title.bin"
+		even
+Blk256_Title:	incbin	"map256\Title.bin"
+		even		
+		
 Blk16_GHZ:	incbin	"map16\GHZ.bin"
 		even
 Nem_GHZ_1st:	incbin	"artnem\8x8 - GHZ1.bin"	; GHZ primary patterns
@@ -9092,17 +9011,31 @@ ObjPos_End:	incbin	objpos\ending.bin
 		even
 ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0
 
-		if Revision=0
-		dcb.b $62A,$FF
-		else
-		dcb.b $63C,$FF
-		endc
-		;dcb.b ($10000-(*%$10000))-(EndOfRom-SoundDriver),$FF
+		OBJEND
+; ---------------------------------------------------------------------------
+; Start of Bank 2 [Contains 32X data to be used by the SH-2
+; ---------------------------------------------------------------------------
+		align $100000
+		OBJ $02200000 	; 2MB within 32X ROM
+		
+; ---------------------------------------------------------------------------
+; 32X Colour palettes, must be located at $02200000
+; ---------------------------------------------------------------------------	
+Pal_32X:
+		;incbin "art32X\palette.p32"
+Pal_32X_Wet:
+		;incbin "art32X\palette.p32"
+; ---------------------------------------------------------------------------
+; 32X Art Pointers. must be at $02200400
+; ---------------------------------------------------------------------------			
+ArtPts_32X:
+		dc.l	0
+		dc.l	Art32X_Sonic
+		
+Art32X_Sonic:
+		;incbin "art32X\sonic.a32"
+		even
 
-SoundDriver:	include "s1.sounddriver.asm"
-
-; end of 'ROM'
-EndOfRom:
-
-
+		OBJEND
+EndOfRom: 
 		END

@@ -4,7 +4,8 @@
 
 mSBZp:	macro
 	dc.b \1, \2
-	dc.w \3, \4
+	dc.l \3
+	dc.w \4
 	endm
 
 ; duration in frames, number of colours, palette address, RAM address
