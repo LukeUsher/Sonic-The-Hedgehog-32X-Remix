@@ -1,10 +1,9 @@
 Mus81_GHZ_Header:
 	smpsHeaderStartSong 1
 	smpsHeaderVoice     Mus81_GHZ_Voices
-	smpsHeaderChan      $06, $03
+	smpsHeaderChan      $05, $03
 	smpsHeaderTempo     $01, $03
 
-	smpsHeaderDAC       Mus81_GHZ_DAC
 	smpsHeaderFM        Mus81_GHZ_FM1,	$F4, $12
 	smpsHeaderFM        Mus81_GHZ_FM2,	$00, $0B
 	smpsHeaderFM        Mus81_GHZ_FM3,	$F4, $14
@@ -13,7 +12,11 @@ Mus81_GHZ_Header:
 	smpsHeaderPSG       Mus81_GHZ_PSG1,	$D0, $01, $00, fTone_03
 	smpsHeaderPSG       Mus81_GHZ_PSG2,	$D0, $03, $00, fTone_06
 	smpsHeaderPSG       Mus81_GHZ_PSG3,	$00, $03, $00, fTone_04
-
+	smpsHeaderDAC       Mus81_GHZ_DAC
+	smpsHeaderDAC       Mus81_GHZ_DAC
+	smpsHeaderDAC       Mus81_GHZ_DAC
+	smpsHeaderDAC       Mus81_GHZ_DAC
+	
 ; FM1 Data
 Mus81_GHZ_FM1:
 	smpsSetvoice        $02

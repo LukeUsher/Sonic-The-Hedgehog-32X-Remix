@@ -1,7 +1,7 @@
 ; ---------------------------------------------------------------------------
 ; ===========================================================================
 ; º                                                                         º
-; º	                     Sonic 32X Remix SMPS Driver                        º
+; º	                     Sonic 32X Remix SMPS Driver                    º
 ; º                                                                         º
 ; ===========================================================================
 ;
@@ -69,15 +69,15 @@ zID_SFXPointers 	= 6
 zID_FreqFlutterPointers = 8
 zID_PSGTonePointers 	= 0Ah
 ; ---------------------------------------------------------------------------
-z80_stack				=	2000h
+z80_stack		=	2000h
 ; equates: standard (for Genesis games) addresses in the memory map
-zYM2612_A0				=	4000h
-zYM2612_D0				=	4001h
-zYM2612_A1				=	4002h
-zYM2612_D1				=	4003h
-zBankRegister				=	6000h
-zPSG					=	7F11h
-zROMWindow				=	8000h
+zYM2612_A0		=	4000h
+zYM2612_D0		=	4001h
+zYM2612_A1		=	4002h
+zYM2612_D1		=	4003h
+zBankRegister		=	6000h
+zPSG			=	7F11h
+zROMWindow		=	8000h
 
 
 ; Track data (each song track)
@@ -364,13 +364,22 @@ zInitAudioDriver:
 		ld	(zSongBank), a				; Store it
 		xor	a					; a = 0
 		ld	(zSpindashRev), a			; Reset spindash rev
-		ld	(zDACIndex), a				; Clear current DAC sample index
+		ld	hl, PWMRequestBytes			; Load pointer to PWMRequestBytes
+		ld	b, 8					; Set b = 8
+-
+		ld	(hl), a					; Clear current byte
+		inc	hl					; Increment pointer
+		djnz	-					; b-=1; if b > 0, branch
+		
+		ld	(ShouldIssuePWM), a			; Clear PWM issue flag
 		ld	(PlaySegaPCMFlag), a			; Clear the Sega sound flag
 		ld	(zRingSpeaker), a			; Make rings play on left speaker
 		ld	a, 5					; Set PAL double-update counter to 5
 		ld	(zPalDblUpdCounter), a			; (that is, do not double-update for 5 frames)
-		ei						; Enable interrupts
 -		
+		ei						; Enable interrupts		
+		nop
+		nop
 		jp	-					; Infinite loop
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -490,10 +499,8 @@ zlocCheckFadeIn:
 		cp	0FFh					; Is it 0FFh?
 		call	z, zFadeInToPrevious			; Fade to previous if yes
 		ld	ix, zTracksStart			; ix = track RAM
-		;bit	7, (ix+zTrackPlaybackControl)		; Is FM6/DAC track playing?
-		;call	nz, zUpdateDACTrack			; Branch if yes
 		ld	b, (zTracksEnd-zSongFM1)/zTrackSz	; Number of tracks
-		ld	ix, zSongFM1				; ix = FM1 track RAM
+		call	sub_F3E					; PWM ???
 		jr	+					; Play all tracks
 
 ; =============== S U B	R O U T	I N E =======================================
@@ -539,6 +546,8 @@ zUpdateSFXTracks:
 zUpdateFMorPSGTrack:
 		bit	7, (ix+zTrackVoiceControl)		; Is this a PSG channel?
 		jp	nz, zUpdatePSGTrack			; Branch if yes
+		bit	3, (ix+zTrackVoiceControl)		; Is this a PWM channel?
+		jp	nz, zUpdatePWMTrack			; Branch if yes
 		call	zTrackRunTimer				; Run note timer
 		jr	nz, +					; Branch if note hasn't expired yet
 		call	zGetNextNote				; Get next note for FM track
@@ -1425,10 +1434,10 @@ zPlayMusic:
 		ret
 ; ---------------------------------------------------------------------------
 +
-		ld	a, (zFadeToPrevFlag)			; Get fade-to-prev flag
-		cp	MusID_1UP-1						; Was it triggered by the 1-up song?
-		jp	z, zBGMLoad						; Branch if yes
-		xor	a								; a = 0
+		ld	a, (zFadeToPrevFlag)				; Get fade-to-prev flag
+		cp	MusID_1UP-1					; Was it triggered by the 1-up song?
+		jp	z, zBGMLoad					; Branch if yes
+		xor	a						; a = 0
 		ld	(zMusicNumber), a				; Clear M68K input queue...
 		ld	(zSFXNumber0), a				; ... including SFX slot 0...
 		ld	(zSFXNumber1), a				; ... and SFX slot 1
@@ -1438,23 +1447,23 @@ zPlayMusic:
 		ld	a, (zSongBank)					; Get song bank for extant track...
 		ld	(zSongBankSave), a				; ... and save it
 		ld	a, (zTempoSpeedup)				; Get current tempo speed-up value...
-		ld	(zTempoSpeedupSave), a			; ... and save it
-		xor	a								; a = 0
+		ld	(zTempoSpeedupSave), a				; ... and save it
+		xor	a							; a = 0
 		ld	(zTempoSpeedup), a				; 1-Up should play on normal speed
 		ld	hl, zTracksStart				; hl = pointer to song RAM
-		ld	de, zTracksSaveStart			; de = pointer to RAM area to save the song data to
+		ld	de, zTracksSaveStart				; de = pointer to RAM area to save the song data to
 		ld	bc, zTracksSaveEnd-zTracksSaveStart		; Number of bytes to copy
-		ldir								; while (bc-- > 0) *de++ = *hl++;
-		ld	hl, zTracksSaveStart			; hl = pointer to saved song's RAM area
+		ldir							; while (bc-- > 0) *de++ = *hl++;
+		ld	hl, zTracksSaveStart				; hl = pointer to saved song's RAM area
 		ld	de, zTrackSz					; Spacing between tracks
-		ld	b, (zTracksSaveEnd-zTracksSaveStart)/zTrackSz		; Number of tracks
+		ld	b, (zTracksSaveEnd-zTracksSaveStart)/zTrackSz	; Number of tracks
 
--		ld	a, (hl)							; Get playback control byte for song
-		and	7Fh								; Strip the 'playing' bit
-		set	2, (hl)							; Set bit 2 (SFX overriding)
-		ld	(hl), a							; But then overwrite the whole thing...
-		add	hl, de							; Advance to next track
-		djnz	-							; Loop for all tracks
+-		ld	a, (hl)						; Get playback control byte for song
+		and	7Fh						; Strip the 'playing' bit
+		set	2, (hl)						; Set bit 2 (SFX overriding)
+		ld	(hl), a						; But then overwrite the whole thing...
+		add	hl, de						; Advance to next track
+		djnz	-						; Loop for all tracks
 		
 		ld	a, MusID_1UP-1					; a = 1-up id-1
 		ld	(zFadeToPrevFlag), a			; Set fade-to-prev flag to it
@@ -1502,8 +1511,8 @@ loc_5EB:
 		ld	a, (iy+5)					; Main tempo value
 		ld	(zTempoAccumulator), a				; Set starting accumulator value
 		ld	(zCurrentTempo), a				; Store current song tempo
-		ld	de, 6						; Offset into DAC pointer
-		add	hl, de						; hl = pointer to DAC pointer
+		ld	de, 6						; Offset into FM pointer
+		add	hl, de						; hl = pointer to FM pointer
 		ld	(zSongPosition), hl				; Save it to RAM
 		ld	hl, zFMInitBytes				; Load pointer to init data
 		ld	(zTrackInitPos), hl				; Save it to RAM
@@ -1551,6 +1560,28 @@ loc_5EB:
 		call	zZeroFillTrackRAM				; Init the remainder of the track RAM
 		pop	bc						; Restore bc
 		djnz	-						; Loop for all tracks (stored in b)
+		ld	hl, zPWMInitBytes				; Load pointer to init data
+		ld	(zTrackInitPos), hl				; Save it to RAM
+		ld	de, zSongPWM1					; de = pointer to RAM for song PSG tracks
+		ld	a, (iy+4)					; a = tempo divider	
+		ld	b, 4						; b = number of tracks 
+		
+-		push	bc						; Save bc (gets damaged by ldi instructions)
+		ld	hl, (zTrackInitPos)				; Restore saved position for init bytes
+		ldi							; *de++ = *hl++
+		ldi							; *de++ = *hl++
+		ld	(de), a						; Copy tempo divider
+		inc	de						; Advance pointer
+		ld	(zTrackInitPos), hl				; Save current position in channel assignment bits
+		ld	hl, (zSongPosition)				; Load current position in BGM data
+		ldi							; Write byte
+		ldi							; Write byte
+		ldi							; Write byte
+		ldi							; Write byte
+		ld	(zSongPosition), hl				; Store current potition in BGM data
+		call	zInitFMTrack					; Init the remainder of the track RAM
+		pop	bc						; Restore bc
+		djnz	-						; Loop for all tracks (stored in b)		
 
 ; =============== S U B	R O U T	I N E =======================================
 ; Clears next sound to play.
@@ -1566,16 +1597,23 @@ zClearNextSound:
 ; FM/DAC channel assignment bits
 ; The first byte in every pair (always 80h) is default value for playback control bits.
 ; The second byte in every pair goes as follows:
-; The first is for DAC; then 0, 1, 2 then 4, 5, 6 for the FM channels (the missing 3
+; 0, 1, 2 then 4, 5, 6 for the FM channels (the missing 3
 ; is the gap between part I and part II for YM2612 port writes).
 zFMInitBytes:
-		db   80h,   6, 80h,   0, 80h,   1, 80h,   2, 80h,   4, 80h,   5, 80h,   6
+		db    80h,   0, 80h,   1, 80h,   2, 80h,   4, 80h,   5, 80h,   6
 ;loc_6A3
 ; Default values for PSG tracks
 ; The first byte in every pair (always 80h) is default value for playback control bits.
 ; The second byte in every pair is the default values for PSG tracks.
 zPSGInitBytes:
 		db   80h, 80h, 80h, 0A0h, 80h, 0C0h
+		
+; Default values for PW tracks
+; The first byte in every pair (always 80h) is default value for playback control bits.
+; The second byte in every pair is the default values for PW tracks.
+zPWMInitBytes:
+		db   80h, 18h, 80h, 1Ah, 80h, 1Ch, 80h, 1Eh
+
 ; ---------------------------------------------------------------------------
 ;loc_6A9
 zPlaySound_CheckRing:
@@ -2058,6 +2096,7 @@ zMusicFade:
 		
 		ld	b, 7							; Unused
 		xor	a								; a = 0
+		ld	(ShouldIssuePWM), a			; Clear ShouldIssuePWM flag
 		ld	(zFadeOutTimeout), a			; Set fade timeout to zero... again
 		call	zPSGSilenceAll				; Silence PSG
 		ld	c, 0							; Write a zero...
@@ -3587,21 +3626,90 @@ zRestTrack:
 ;
 ;sub_1075
 zSilencePSGChannel:
-		ld	a, 1Fh							; Set volume to zero on PSG channel
+		ld	a, 1Fh					; Set volume to zero on PSG channel
 		add	a, (ix+zTrackVoiceControl)		; Add in the PSG channel selector
-		or	a								; Is it an actual PSG channel?
-		ret	p								; Branch if not
-		ld	(zPSG), a						; Silence this channel
-		bit	0, (ix+zTrackPlaybackControl)	; Is this a noise channel?
-		ret	z								; Return if not
-		ld	a, 0FFh							; Command to silence PSG3/Noise channel
-		ld	(zPSG), a						; Do it
+		or	a					; Is it an actual PSG channel?
+		ret	p					; Branch if not
+		ld	(zPSG), a				; Silence this channel
+		bit	0, (ix+zTrackPlaybackControl)		; Is this a noise channel?
+		ret	z					; Return if not
+		ld	a, 0FFh					; Command to silence PSG3/Noise channel
+		ld	(zPSG), a				; Do it
 		ret
 ; End of function zSilencePSGChannel
 
+zUpdatePWMTrack:
+		call	zTrackRunTimer				; Advance track duration timer
+		ret	nz					; Branch if note is still going
+		ld	a, 80h 
+		ld	(byte_1C3D), a		
+		ld	e, (ix+zTrackDataPointerLow)		; e = low byte of track data pointer
+		ld	d, (ix+zTrackDataPointerHigh)		; d = high byte of track data pointer
+		res	1, (ix+zTrackPlaybackControl)		; Clear 'do not attack next note' flag
 
+zUpdatePWMTrack_cont:
+		ld	a, (de)					; Get next byte from track
+		inc	de					; Advance pointer
+		ld	hl, loc_F2F				; hl = desired return address
+		cp	FirstCoordFlag				; Is it a coordination flag?
+		jp	nc, zHandleCoordFlag			; Branch if yes
+		or	a					
+		jp	p, loc_F34
+		ld	(ix+zTrackFreqLow), a
+		ld	a, (de)
+		or	a
+		jp	p, loc_F33
+		ld	a, (ix+zTrackSavedDuration)
+		ld	(ix+zTrackDurationTimeout), a
+
+loc_EF6:				
+		ld	hl, PWMRequestBytes
+		ld	a, (ix+zTrackVoiceControl)
+		sub	18h
+		ld	c, a
+		ld	b, 0
+		add	hl, bc
+		ld	a, (ix+zTrackFreqLow)			; Read frequency
+		cp	80h 					; Is it a rest?
+		jp	z, zUpdatePWMTrack_freq			; If not, branch
+		ld	a, (ix+zTrackVolume)			; Read volume
+		ld	(hl), a					; Write volume data
+
+zUpdatePWMTrack_freq:				
+		inc	hl					; Increment data pointer
+		bit	1, (ix+zTrackPlaybackControl)		; Is track playing?
+		jr	nz, +					; If not, branch
+		ld	a, (ix+zTrackFreqLow)			; Read PWM Sample ID
+		sub	81h 					; Convert from $80 base to $00 base
+		jp	m, +					; If < 0, branch
+		ld	(hl), a					; Write frequency data
++				
+		ld	(ix+zTrackDataPointerLow),  e		; Update low byte of track data pointer
+		ld	(ix+zTrackDataPointerHigh), d		; Update high byte of track data pointer
+		ld	a, (ix+zTrackSavedDuration)		; Read saved duration
+		ld	(ix+zTrackDurationTimeout), a		; Write to duration time out
+		xor	a					
+		ld	(byte_1C3D), a
+		ret
 ; ---------------------------------------------------------------------------
 
+loc_F2F:
+		inc	de
+		jp	zUpdatePWMTrack_cont
+; ---------------------------------------------------------------------------
+loc_F33:				
+		inc	de
+
+loc_F34:				
+		call	zComputeNoteDuration
+		ld	(ix+zTrackSavedDuration), a
+		jp	loc_EF6
+
+sub_F3E:				
+		ld	hl, ShouldIssuePWM
+		dec	(hl)
+		ret
+		
 ; ---------------------------------------------------------------------------
 			; db    0
 PSGTone_2D:     db	  0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2
@@ -3951,7 +4059,10 @@ zTempoSpeedup			ds 1
 zMusicNumber			ds 1				; Play_Sound
 zSFXNumber0			ds 1				; Play_Sound_2
 zSFXNumber1			ds 1				; Play_Sound_2
-zPauseFlag			ds 1
+zPauseFlag			ds 1			
+byte_1C3D			ds 1				; Unknown PWM something
+ShouldIssuePWM			ds 1				; Flag to tell if PWM should be issued
+PWMRequestBytes			ds 12				; Actual PWM data
 
 zPalDblUpdCounter		ds 1
 zSoundQueue0			ds 1
@@ -4347,5 +4458,5 @@ Music_33:			include "Sound/SK/Music/Credits.asm"
 	
 	if MOMPASS=2
 		message	"Please update the following data in Constants.asm"
-		message "SMPS_BASE:		equ	$A0\{zPalFlag}"		
+		message "SMPS_BASE:		equ	$A0\{zPalFlag}"	
 	endif

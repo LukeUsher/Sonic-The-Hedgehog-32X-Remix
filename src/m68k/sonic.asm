@@ -327,6 +327,7 @@ VBlank_MD:
 		jsr	VBla_Index(pc,d0.w)
 
 VBla_Exit:				; XREF: VBla_08
+		jsr	IssuePWMRequests
 		addq.l	#1,(v_vbla_count).w
 		movem.l	(sp)+,d0-a6
 		rte	
@@ -662,6 +663,50 @@ loc_119E:
 		movem.l	(sp)+,d0-a6
 		rte	
 ; End of function HBlank
+
+IssuePWMRequests:			
+		movem.l	d0-d2/a0,-(sp)
+		stopZ80
+		waitZ80
+		moveq	#0,d0
+		moveq	#0,d1
+		moveq	#0,d2
+		lea	(zShouldIssuePWM).l,a0
+		tst.b	(a0)+
+		beq.s	@exit
+		move.b	(a0)+,d0
+		swap	d0
+		move.b	(a0)+,d1
+		swap	d1
+		move.b	(a0)+,d0
+		lsl.l	#8,d0
+		move.b	(a0)+,d1
+		or.l	d1,d0
+		move.b	(a0)+,d2
+		swap	d2
+		move.b	(a0)+,d1
+		swap	d1
+		move.b	(a0)+,d2
+		lsl.l	#8,d2
+		move.b	(a0)+,d1
+		or.l	d2,d1
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.b	d2,-(a0)
+		move.l	d0,(MARS_SYS_COMM8).l
+		move.l	d1,(MARS_SYS_COMMC).l
+
+@exit:			
+		startZ80
+		movem.l	(sp)+,d0-d2/a0
+		rts
+; End of function IssuePWMRequests
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to	initialise joypads
@@ -6460,7 +6505,7 @@ Sonic_Main:	; Routine 0
 		addq.b	#2,obRoutine(a0)
 		move.b	#$13,obHeight(a0)
 		move.b	#9,obWidth(a0)
-		move.l	#$DEADBEEF,obMap(a0)		; Set sprite ID (32X)
+		move.l	Map_Sonic,obMap(a0)		; Set sprite ID (32X)
 		move.b	#1,obGfx(a0)
 		move.b	#2,obPriority(a0)
 		move.b	#$18,obActWid(a0)
@@ -8168,7 +8213,9 @@ Nem_JapNames:	incbin	"artnem\Hidden Japanese Credits.bin"
 ; ---------------------------------------------------------------------------
 ; Uncompressed graphics	- Sonic
 ; ---------------------------------------------------------------------------
-	
+Art_Sonic:	incbin	artunc\sonic.bin; Sonic
+		even
+		
 	if InstaShieldActive=1 ;Mercury Insta-Shield
 Art_InstaShield:	incbin	"artunc\(Mercury) InstaShield.bin"
 		even
