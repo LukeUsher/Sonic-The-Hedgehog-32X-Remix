@@ -1466,11 +1466,11 @@ zPlayMusic:
 		djnz	-						; Loop for all tracks
 		
 		ld	a, MusID_1UP-1					; a = 1-up id-1
-		ld	(zFadeToPrevFlag), a			; Set fade-to-prev flag to it
+		ld	(zFadeToPrevFlag), a				; Set fade-to-prev flag to it
 		ld	a, (zCurrentTempo)				; Get current tempo
-		ld	(zCurrentTempoSave), a			; Save it
+		ld	(zCurrentTempoSave), a				; Save it
 		ld	hl, (zVoiceTblPtr)				; Get voice table pointer
-		ld	(zVoiceTblPtrSave), hl			; Save it
+		ld	(zVoiceTblPtrSave), hl				; Save it
 		jp	zBGMLoad
 ; ---------------------------------------------------------------------------
 
