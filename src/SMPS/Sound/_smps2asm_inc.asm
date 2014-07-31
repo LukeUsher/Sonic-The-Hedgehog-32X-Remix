@@ -54,8 +54,9 @@
 	;	enum dLowTimpani=dMidTimpani+1,dVLowTimpani,dMidTom,dLowTom,dFloorTom,dHiClap
 	;	enum dMidClap=dHiClap+1,dLowClap
 	;else;if SonicDriverVer>=3
+		; TODO: Equates for Chaotix Samples
 		if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
-			enum dSnareS3=$81,dHighTom,dMidTomS3,dLowTomS3,dFloorTomS3,dKickS3,dMuffledSnare
+			enum dSnareS3=$97,dHighTom,dMidTomS3,dLowTomS3,dFloorTomS3,dKickS3,dMuffledSnare
 			enum dCrashCymbal=dMuffledSnare+1,dRideCymbal,dLowMetalHit,dMetalHit,dHighMetalHit
 			enum dHigherMetalHit=dHighMetalHit+1,dMidMetalHit,dClapS3,dElectricHighTom
 			enum dElectricMidTom=dElectricHighTom+1,dElectricLowTom,dElectricFloorTom
@@ -81,7 +82,7 @@
 			elseif (use_s3d_samples<>0)
 				enum dKick=dQuickGlassCrash+1
 			else
-				enum dKick=$81
+				enum dKick=$97
 			endif
 			enum dSnare=dKick+1,dClap,dScratch,dTimpani,dHiTom,dVLowClap,dHiTimpani,dMidTimpani
 			enum dLowTimpani=dMidTimpani+1,dVLowTimpani,dMidTom,dLowTom,dFloorTom,dHiClap
