@@ -1,10 +1,9 @@
 Mus8A_Title_Screen_Header:
 	smpsHeaderStartSong 1
 	smpsHeaderVoice     Mus8A_Title_Screen_Voices
-	smpsHeaderChan      $06, $03
+	smpsHeaderChan      $05, $03
 	smpsHeaderTempo     $01, $05
 
-	smpsHeaderDAC       Mus8A_Title_Screen_DAC
 	smpsHeaderFM        Mus8A_Title_Screen_FM1,	$F4, $0C
 	smpsHeaderFM        Mus8A_Title_Screen_FM2,	$F4, $09
 	smpsHeaderFM        Mus8A_Title_Screen_FM3,	$F4, $0D
@@ -13,7 +12,11 @@ Mus8A_Title_Screen_Header:
 	smpsHeaderPSG       Mus8A_Title_Screen_PSG1,	$D0, $03, $00, fTone_05
 	smpsHeaderPSG       Mus8A_Title_Screen_PSG2,	$DC, $06, $00, fTone_05
 	smpsHeaderPSG       Mus8A_Title_Screen_PSG3,	$00, $04, $00, fTone_04
-
+	SmpsHeaderDAC       Mus8A_Title_Screen_DAC, $F4, $0C
+	SmpsHeaderDAC       Mus8A_Title_Screen_DAC, $F4, $0C
+	SmpsHeaderDAC       Mus8A_Title_Screen_DAC, $F4, $0C
+	SmpsHeaderDAC       Mus8A_Title_Screen_DAC, $F4, $0C
+	
 ; FM5 Data
 Mus8A_Title_Screen_FM5:
 	smpsAlterNote       $03
@@ -98,6 +101,8 @@ Mus8A_Title_Screen_DAC:
 	dc.b	dSnare, dSnare, $09, dSnare, $03, dKick, $0C, dSnare, dKick, dSnare, dKick, $06
 	dc.b	dSnare, $12, dSnare, $0C, dKick
 
+Mus8A_Title_Screen_NULL:
+	
 ; PSG1 Data
 Mus8A_Title_Screen_PSG1:
 ; PSG2 Data

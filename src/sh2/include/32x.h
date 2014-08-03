@@ -28,10 +28,10 @@
 #define MARS_SYS_COMM2      (*(volatile unsigned short *)0x20004022)
 #define MARS_SYS_COMM4      (*(volatile unsigned short *)0x20004024) 
 #define MARS_SYS_COMM6      (*(volatile unsigned short *)0x20004026)
-#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028) 
-#define MARS_SYS_COMMA      (*(volatile unsigned short *)0x2000402A) /* Slave SH2 communication */
-#define MARS_SYS_COMMC      (*(volatile unsigned short *)0x2000402C) /* PWM Channels 1&2 */ 
-#define MARS_SYS_COMME      (*(volatile unsigned short *)0x2000402E) /* PWM Channels 3&4 */
+#define MARS_SYS_COMM8      (*(volatile unsigned short *)0x20004028) /* Slave SH2 communication */
+#define MARS_SYS_COMMA      (*(volatile unsigned short *)0x2000402A) 
+#define MARS_SYS_COMMC      (*(volatile unsigned short *)0x2000402C) 
+#define MARS_SYS_COMME      (*(volatile unsigned short *)0x2000402E) 
 
 #define MARS_PWM_CTRL       (*(volatile unsigned short *)0x20004030)
 #define MARS_PWM_CYCLE      (*(volatile unsigned short *)0x20004032)

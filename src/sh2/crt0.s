@@ -477,7 +477,7 @@ slave_start:
 
 	!purge cache, turn it on, and run slave()
         mov.l   _slave_cctl,r0
-        mov     #0x11,r1
+        mov     #0x19,r1
         mov.b   r1,@r0
         mov.l   _slave_go,r0
         jmp     @r0
@@ -638,7 +638,11 @@ slave_pwm:
         nop
         nop
 
-		
+				mov.l	pwm_int, r0
+				jsr   @r0
+				nop
+				
+				
 	! restore registers
         mov.l   @r15+,r7
         mov.l   @r15+,r6
@@ -653,8 +657,11 @@ slave_pwm:
         nop
 
         .align  2
+
 spi_mars_adapter:
         .long   0x20004000
+pwm_int:
+				.long 	0xC0000004
 !-----------------------------------------------------------------------
 ! Slave RESET IRQ handler
 !-----------------------------------------------------------------------

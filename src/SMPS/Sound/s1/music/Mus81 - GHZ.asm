@@ -12,10 +12,10 @@ Mus81_GHZ_Header:
 	smpsHeaderPSG       Mus81_GHZ_PSG1,	$D0, $01, $00, fTone_03
 	smpsHeaderPSG       Mus81_GHZ_PSG2,	$D0, $03, $00, fTone_06
 	smpsHeaderPSG       Mus81_GHZ_PSG3,	$00, $03, $00, fTone_04
-	smpsHeaderDAC       Mus81_GHZ_DAC
-	smpsHeaderDAC       Mus81_GHZ_DAC
-	smpsHeaderDAC       Mus81_GHZ_DAC
-	smpsHeaderDAC       Mus81_GHZ_DAC
+	smpsHeaderDAC       Mus81_GHZ_DAC,	$00, $00
+	smpsHeaderDAC       Mus81_GHZ_DAC,	$00, $00
+	smpsHeaderDAC       Mus81_GHZ_DAC,	$00, $00
+	smpsHeaderDAC       Mus81_GHZ_DAC,	$00, $00
 	
 ; FM1 Data
 Mus81_GHZ_FM1:
@@ -464,6 +464,9 @@ Mus81_GHZ_Loop01:
 	dc.b	dKick, $10, dSnare, $08, dKick, $10, dSnare, $08, $08, $08
 	smpsLoop            $01, $02, Mus81_GHZ_Loop01
 	smpsJump            Mus81_GHZ_Loop01
+
+Mus81_GHZ_NULL:
+	smpsJump            Mus81_GHZ_NULL
 
 Mus81_GHZ_Voices:
 ;	Voice $00

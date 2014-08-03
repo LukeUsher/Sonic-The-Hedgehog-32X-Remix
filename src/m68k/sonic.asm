@@ -9019,23 +9019,116 @@ ObjPos_Null:	dc.b $FF, $FF, 0, 0, 0,	0
 		OBJ $02200000 	; 2MB within 32X ROM
 		
 ; ---------------------------------------------------------------------------
-; 32X Colour palettes, must be located at $02200000
-; ---------------------------------------------------------------------------	
+; Pointers to 32X Data, must be located at $02200000
+; ---------------------------------------------------------------------------			
+Pointers_32XData:
+		dc.l	PWMTable
+		dc.l	PalPtr_32X
+		dc.l	ArtPtr_32X
+
+; ---------------------------------------------------------------------------
+; 32X PWM Table
+; Format: Location of Data (SH-2 memory), Data Length, Loop offset, Sample Rate
+; ---------------------------------------------------------------------------			
+PWMTable:
+		; Chaotix PWM Samples
+		dc.l PWM_81,	PWM_81_END-PWM_81,	0,0x800
+		dc.l PWM_82,	PWM_82_END-PWM_82,	0,0x800
+		dc.l PWM_83,	PWM_83_END-PWM_83,	0,0x800
+		dc.l PWM_84,	PWM_84_END-PWM_84,	0,0x800
+		dc.l PWM_85,	PWM_85_END-PWM_85,	0,0x800
+		dc.l PWM_85,	PWM_85_END-PWM_85,	0,0x659
+		dc.l PWM_85,	PWM_85_END-PWM_85,	0,0x4C2
+		dc.l PWM_88,	PWM_88_END-PWM_88,	0,0x800
+		dc.l PWM_89,	PWM_89_END-PWM_89,	0,0x800
+		dc.l PWM_8A,	PWM_8A_END-PWM_8A,	0,0x800
+		dc.l PWM_8B,	PWM_8B_END-PWM_8B,	0,0x800
+		dc.l PWM_8C,	PWM_8C_END-PWM_8C,	0,0x800
+		dc.l PWM_8D,	PWM_8D_END-PWM_8D,	0,0x800
+		dc.l PWM_8E,	PWM_8E_END-PWM_8E,	0,0x800
+		dc.l PWM_8F,	PWM_8F_END-PWM_8F,	0,0x800
+		dc.l PWM_90,	PWM_90_END-PWM_90,	0,0x800
+		dc.l PWM_90,	PWM_90_END-PWM_90,	0,0x5FE
+		dc.l PWM_92,	PWM_92_END-PWM_92,  0,0x800
+		dc.l PWM_92,	PWM_92_END-PWM_92,	0,0x5FE
+		dc.l PWM_94,	PWM_94_END-PWM_94,	0,0x800
+		dc.l PWM_94,	PWM_94_END-PWM_94,	0,0x5FE
+		dc.l PWM_96,	PWM_96_END-PWM_96,	0,0x800	
+		
+PWM_81:
+		incbin "PWM\Chaotix\DAC_81.bin"
+PWM_81_END:				
+PWM_82:
+		incbin "PWM\Chaotix\DAC_82.bin"
+PWM_82_END:		
+PWM_83:
+		incbin "PWM\Chaotix\DAC_83.bin"
+PWM_83_END:		
+PWM_84:
+		incbin "PWM\Chaotix\DAC_84.bin"
+PWM_84_END:		
+PWM_85:
+		incbin "PWM\Chaotix\DAC_85.bin"
+PWM_85_END:			
+PWM_88:
+		incbin "PWM\Chaotix\DAC_88.bin"
+PWM_88_END:		
+PWM_89:
+		incbin "PWM\Chaotix\DAC_89.bin"
+PWM_89_END:		
+PWM_8A:
+		incbin "PWM\Chaotix\DAC_8A.bin"
+PWM_8A_END:				
+PWM_8B:
+		incbin "PWM\Chaotix\DAC_8B.bin"
+PWM_8B_END:		
+PWM_8C:
+		incbin "PWM\Chaotix\DAC_8C.bin"
+PWM_8C_END:		
+PWM_8D:
+		incbin "PWM\Chaotix\DAC_8D.bin"
+PWM_8D_END:		
+PWM_8E:
+		incbin "PWM\Chaotix\DAC_8E.bin"
+PWM_8E_END:		
+PWM_8F:
+		incbin "PWM\Chaotix\DAC_8F.bin"
+PWM_8F_END:				
+PWM_90:
+		incbin "PWM\Chaotix\DAC_90.bin"
+PWM_90_END:		
+PWM_92:
+		incbin "PWM\Chaotix\DAC_92.bin"
+PWM_92_END:		
+PWM_94:
+		incbin "PWM\Chaotix\DAC_94.bin"
+PWM_94_END:				
+PWM_96:
+		incbin "PWM\Chaotix\DAC_96.bin"
+PWM_96_END:		
+		
+; ---------------------------------------------------------------------------
+; 32X Colour Paletts
+; ---------------------------------------------------------------------------			
+PalPtr_32X:
+		dc.l	Pal_32X
+		dc.l	Pal_32X_Wet
+
 Pal_32X:
 		;incbin "art32X\palette.p32"
 Pal_32X_Wet:
 		;incbin "art32X\palette.p32"
+		
 ; ---------------------------------------------------------------------------
-; 32X Art Pointers. must be at $02200400
+; 32X Art Pointers
 ; ---------------------------------------------------------------------------			
-ArtPts_32X:
-		dc.l	0
+ArtPtr_32X:
 		dc.l	Art32X_Sonic
 		
 Art32X_Sonic:
 		;incbin "art32X\sonic.a32"
 		even
-
+		
 		OBJEND
 EndOfRom: 
 		END

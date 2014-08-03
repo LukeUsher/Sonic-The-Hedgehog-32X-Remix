@@ -10,8 +10,14 @@ cd src
 
 REM Build SH2 Binary
 cd sh2
-make.exe
+cd slave
+del PWMDriver_cache.bin
+del PWMDriver.h
+asmsh /o #+ /q /o psh2 /o w- /p PWMDriver_cache.asm,PWMDriver_cache.bin
+bin2h PWMDriver < PWMDriver_cache.bin > PWMDriver.h
 cd ..
+make.exe
+cd..
 
 cd SMPS
 call build.bat

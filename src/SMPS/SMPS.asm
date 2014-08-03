@@ -4384,7 +4384,7 @@ Sound_DB:	include "Sound/SK/SFX/DB.asm"
 ; Music Bank 1
 ; ---------------------------------------------------------------------------
 Snd_Bank1_Start:	startBank
-Music_01:			include	"Sound/S1/Music/Mus81 - GHZ.asm"
+Music_01:			binclude	"Sound/01 Door Into Summer.skc"
 Music_02:			include	"Sound/S1/Music/Mus82 - LZ.asm"
 Music_03:			include	"Sound/S1/Music/Mus83 - MZ.asm"
 Music_04:			include	"Sound/S1/Music/Mus84 - SLZ.asm"
