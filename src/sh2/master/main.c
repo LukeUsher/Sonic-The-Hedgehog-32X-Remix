@@ -21,8 +21,12 @@
 
 // IMPORTANT TODO:
 // We need to keep track of what pixels have changed, and only update those pixels when clearing the screen.
-// One idea I've had is to store a copy of the framebuffer in main RAM, but this wastes resources.
+// One idea I've had is to store a copy of the frame buffer in main RAM, but this wastes resources.
 // An alternative would be a data structure which contains a list of rectangles that need updating.
+//
+// We also need to remove this hacky approach of receiving sprite data from the Mega Drive processor
+// and implement a proper display list system, where a list of draw commands can be sent in a batch 
+// at Vint to then be processed.
 
 #include "32x.h"
 static uint16_t currentFB = 0;

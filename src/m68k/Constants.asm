@@ -4,7 +4,7 @@
 
 ; SMPS Control Registers
 Size_of_SegaPCM:		equ $6978
-SMPS_BASE:		equ $A01AB6
+SMPS_BASE:		equ $A01B63
 zPalFlag:		equ SMPS_BASE
 zTempoSpeedup:		equ zPalFlag+1
 zMusicNumber:		equ zTempoSpeedup+1			

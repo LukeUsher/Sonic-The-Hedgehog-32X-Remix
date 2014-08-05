@@ -9,7 +9,6 @@
 ; ===========================================================================
 
 		obj $c0000000
-
 ; ---------------------------------------------------------------------------
 		bra	PWMInit
 		nop
@@ -18,21 +17,21 @@
 		nop
 ; ---------------------------------------------------------------------------
 
-PWMInit:				; CODE XREF: ROM:C0000000j
-		mov.l	#$AAAAAAAA, r0
-		mov.l	#PWMIntCounter,	r1
+PWMInit:	
+		mov.l	#$AAAAAAAA, r0				
+		mov.l	#PWMIntCounter,	r1	; Initialise PWM Int Counter
 		mov.l	r0, @r1
-		mov.l	#$20004000, r1
+		mov.l	#$20004000, r1		; Enable PWM Interrupts
 		mov	#1, r0
 		mov.w	r0, @($1C,r1)
 		mov.b	r0, @(1,r1)
-		mov.l	#$20004030, r0
+		mov.l	#$20004030, r0		; Set PWM Settings
 		mov.w	#%100000101, r1
 		mov.w	r1, @r0
-		mov.l	#$20004032, r0
-		mov.w	#1047, r1
+		mov.l	#$20004032, r0		; Set PWM Cycle rate to ~ 22khz
+		mov.w	#1047, r1		
 		mov.w	r1, @r0
-		mov.l	#$20004034, r6
+		mov.l	#$20004034, r6		; Write silence to both PWM Channels
 		mov.l	#$20004036, r7
 		mov	#0, r0
 		mov.w	r0, @r6
@@ -48,7 +47,7 @@ PWMInit:				; CODE XREF: ROM:C0000000j
 		littab
 		ds.l	0
 		
-PWMInt:					; CODE XREF: ROM:C0000004j
+PWMInt:				
 		mov.w	#$FFFFFE10, r1
 		mov.b	@(7,r1), r0
 		xor	#2, r0
@@ -113,33 +112,28 @@ PWMInt:					; CODE XREF: ROM:C0000004j
 		mov.l	@r15+, r5
 		mov.l	@r15+, r4
 
-delayloop:				; CODE XREF: ROM:C00000E2j
+delayloop:				
 		mov.w	@r0, r2
 		cmp/pz	r2
 		bt	enddelay
 		mov	#$18, r2
 
-delayloop2:				; CODE XREF: ROM:C00000E0j
+delayloop2:				
 		dt	r2
 		bf	delayloop2
 		bt	delayloop
 
-enddelay:				; CODE XREF: ROM:C00000DAj
+enddelay:				
 		mov.w	r6, @r0
 		mov.w	r7, @r1
 		mov.l	@r15+, r7
 		mov.l	@r15+, r6
 		mov.l	@r15+, r2
-; START	OF FUNCTION CHUNK FOR PWMChannel_Process
 
-PWMInt_End:				; CODE XREF: ROM:C000006Aj
-					; PWMChannel_Process+7Cj
+PWMInt_End:			
+					
 		rts
 		nop
-; END OF FUNCTION CHUNK	FOR PWMChannel_Process
-
-; =============== S U B	R O U T	I N E =======================================
-
 
 PWMChannel_Process:
 		mov.w	@r1, r2
@@ -179,7 +173,7 @@ PWMChannel_Process:
 		add	#2, r0
 		mov.l	r0, @($18,r14)
 
-MixLastSample:				; CODE XREF: PWMChannel_Process+4j
+MixLastSample:		
 		mov.l	@($28,r14), r0
 		mov.l	@($1C,r14), r1
 		mov.w	#$800, r2
@@ -195,7 +189,7 @@ MixLastSample:				; CODE XREF: PWMChannel_Process+4j
 		rts
 		add	r1, r7
 
-LoadNewSample:				; CODE XREF: PWMChannel_Process+54j
+LoadNewSample:		
 		sub	r2, r0
 		mov.l	r0, @($28,r14)
 		mov.l	@($10,r14), r0
@@ -207,7 +201,7 @@ LoadNewSample:				; CODE XREF: PWMChannel_Process+54j
 		bt	PWMInt_End
 		mov.l	@($C,r14), r0
 
-playsample:				; CODE XREF: PWMChannel_Process+76j
+playsample:		
 		mov.b	@r1+, r2
 		mov.l	r0, @($10,r14)
 		mov.l	r1, @(0,r14)
@@ -240,14 +234,13 @@ playsample:				; CODE XREF: PWMChannel_Process+76j
 		shar	r0
 		rts
 		add	r0, r5
-; End of function PWMChannel_Process
-
-		littab
 		
+		ds.l	0
+		littab
 		ds.l	0
 ; ---------------------------------------------------------------------------
 PWMIntCounter:		dc.l	$AAAAAAAA
-PWMSampleTable:		dc.l	$DEADBEEF     
+PWMSampleTable:		dc.l	$DEADBEEF   		; Pointer to PWM Table in ROM, this is updated to the correct value in cache by main.c before the code is launched.
 PWM1_Settings:		dc.l	       0,	  1,	     0,		0,	   1,	   $10,      $10,	$800,	       0,	  0,	     0
 PWM2_Settings:		dc.l	       0,	  1,	     0,		0,	   1,	   $10,      $10,	$800,	       0,	  0,	     0
 PWM3_Settings:		dc.l	       0,	  1,	     0,		0,	   1,	   $10,      $10,	$800,	       0,	  0,	     0

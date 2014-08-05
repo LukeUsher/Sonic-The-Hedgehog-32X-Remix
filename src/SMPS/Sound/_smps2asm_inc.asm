@@ -29,7 +29,7 @@
 ;		enum fTone_07=fTone_06+1,fTone_08,fTone_09,fTone_0A,fTone_0B,fTone_0C
 ;		enum fTone_0D=fTone_0C+1
 ;	else
-		enum sTone_01=$01,sTone_02,sTone_03,sTone_04,sTone_05,sTone_06
+		enum sTone_01=$01+$0D,sTone_02,sTone_03,sTone_04,sTone_05,sTone_06
 		enum sTone_07=sTone_06+1,sTone_08,sTone_09,sTone_0A,sTone_0B,sTone_0C
 		enum sTone_0D=sTone_0C+1,sTone_0E,sTone_0F,sTone_10,sTone_11,sTone_12
 		enum sTone_13=sTone_12+1,sTone_14,sTone_15,sTone_16,sTone_17,sTone_18
@@ -38,7 +38,7 @@
 		enum sTone_25=sTone_24+1,sTone_26,sTone_27
 		; For conversions:
 		if SonicDriverVer==5
-			enum fTone_01=$28,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
+			enum fTone_01=$28+$0D,fTone_02,fTone_03,fTone_04,fTone_05,fTone_06
 			enum fTone_07=fTone_06+1,fTone_08,fTone_09,fTone_0A,fTone_0B,fTone_0C
 			enum fTone_0D=fTone_0C+1
 		endif

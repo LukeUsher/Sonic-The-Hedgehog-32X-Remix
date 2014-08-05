@@ -334,14 +334,6 @@ zVInt:	rsttarget
 		dec	a					; Decrease PAL double-update timeout counter
 		ld	(zPalDblUpdCounter), a			; Store it
 +
-		;ld	a, (zDACIndex)				; Get index of playing DAC sample
-		;and	7Fh					; Strip 'DAC playing' bit
-		;ld	c, a					; c = a
-		;ld	b, 0					; Sign extend c to bc
-		;ld	hl, DAC_Banks				; Make hl point to DAC bank table
-		;add	hl, bc					; Offset into entry for current sample
-		;ld	a, (hl)					; Get bank index
-		;bankswitch1					; Switch to current DAC sample's bank
 		exx						; Restore bc,de,hl
 		pop	iy					; Restore iy
 		pop	af					; Restore af
@@ -719,11 +711,6 @@ zGetNextNote_cont:
 		ex	af, af'					; Exchange af with af'
 		add	a, d					; One octave up
 		jr	-					; Loop
-; ---------------------------------------------------------------------------
-	if fix_sndbugs=0
-		ex	af, af'					; Exchange af with af' (dead code)
-	endif
-; ---------------------------------------------------------------------------
 +
 		add	a, e							; Add 1 octave back (so note index is positive)
 		ld	hl, zFMFrequencies				; FM first octave frequency lookup table
@@ -746,14 +733,6 @@ zGetNoteDuration:
 		ld	a, (ix+zTrackSavedDuration)		; Get saved duration
 		ld	(ix+zTrackDurationTimeout), a	; Set it as next timeout duration
 		jr	zFinishTrackUpdate
-; ---------------------------------------------------------------------------
-	if fix_sndbugs=0
-		; Unused/dead code:
-		ld	a, (de)
-		inc	de
-		ld	(ix+zTrackUnk11h),a
-		jr	loc_306
-	endif
 ; ---------------------------------------------------------------------------
 ;loc_2E8
 zAlternateSMPS:
@@ -863,11 +842,7 @@ zFMNoteOn:
 		or	(ix+zTrackFreqHigh)				; Is the note frequency zero?
 		ret	z								; Return if yes
 		ld	a, (ix+zTrackPlaybackControl)	; Get playback control byte for track
-	if fix_sndbugs
 		and	14h								; Is either bit 4 ("track at rest") or 2 ("SFX overriding this track") set?
-	else
-		and	6								; Is either bit 1 ("do not attack next note") or 2 ("SFX overriding this track") set?
-	endif
 		ret	nz								; Return if yes
 		ld	a, (ix+zTrackVoiceControl)		; Get voice control byte from track
 		or	0F0h							; We want only the FM channel assignment bits
@@ -927,16 +902,16 @@ zKeyOnOff:
 ;sub_36D
 zDoFMFlutter:
 		ld	a, (ix+zTrackFMFlutter)			; Get FM flutter value
-		or	a								; Is it zero?
-		ret	z								; Return if yes
-		ret	m								; Return if it is actually the custom SSG-EG flag
-		dec	a								; Make a into an index
+		or	a					; Is it zero?
+		ret	z					; Return if yes
+		ret	m					; Return if it is actually the custom SSG-EG flag
+		dec	a					; Make a into an index
 		ld	c, zID_PSGTonePointers			; Value for PSG tone pointer table
-		rst	GetPointerTable					; hl = pointer to PSG flutter table
-		rst	PointerTableOffset				; hl = pointer to PSG flutter for track
-		call	zDoFlutter					; a = new flutter value
-		ld	h, (ix+zTrackTLPtrHigh)			; h = high byte ot TL data pointer
-		ld	l, (ix+zTrackTLPtrLow)			; l = low byte ot TL data pointer
+		rst	GetPointerTable				; hl = pointer to PSG flutter table
+		rst	PointerTableOffset			; hl = pointer to PSG flutter for track
+		call	zDoFlutter				; a = new flutter value
+		ld	h, (ix+zTrackTLPtrHigh)			; h = high byte to TL data pointer
+		ld	l, (ix+zTrackTLPtrLow)			; l = low byte to TL data pointer
 		ld	de, zFMInstrumentTLTable		; de = pointer to FM TL register table
 		ld	b, zFMInstrumentTLTable_End-zFMInstrumentTLTable	; Number of entries
 		ld	c, (ix+zTrackFMFlutterMask)		; c = flutter bitmask
@@ -1251,26 +1226,6 @@ zSendFMInstrument:
 		call	zSendFMInstrData			; Send data to register
 		ld	(ix+zTrackFeedbackAlgo), a		; Save current feedback/algorithm
 
-	if fix_sndbugs
-		; Start with detune/multiplier operators
-		ld	b, zFMInstrumentRSARTable-zFMInstrumentOperatorTable	; Number of commands to issue
-
--		call	zSendFMInstrData			; Send FM instrument data
-		djnz	-							; Loop
-
-		; Now for rate scaking/attack rate. The attack rate must be 1Fh if using
-		; SSG-EG, which is the reason for the split.
-		ld	b, zFMInstrumentAMD1RTable-zFMInstrumentRSARTable	; Number of commands to issue
-
--		call	zSendFMInstrDataRSAR		; Send FM instrument data
-		djnz	-							; Loop
-
-		; Finalize with all the other operators.
-		ld	b, zFMInstrumentOperatorTable_End-zFMInstrumentAMD1RTable	; Number of commands to issue
-
--		call	zSendFMInstrData			; Send FM instrument data
-		djnz	-							; Loop
-	else
 		; DANGER! The following code ignores the fact that SSG-EG mode must be
 		; used with maximum (1Fh) attack rate or output is officially undefined.
 		; Setting voices with SSG-EG enabled then has the potential effect of
@@ -1280,7 +1235,7 @@ zSendFMInstrument:
 
 -		call	zSendFMInstrData			; Send FM instrument data
 		djnz	-							; Loop
-	endif
+
 		ld	(ix+zTrackTLPtrLow), l			; Save low byte of pointer to (not yet uploaded) TL data
 		ld	(ix+zTrackTLPtrHigh), h			; Save high byte of pointer to (not yet uploaded) TL data
 		jp	zSendTL							; Send TL data
@@ -1700,25 +1655,6 @@ zSFXTrackInitLoop:
 		set	2, (hl)							; Set 'SFX is overriding this track' bit
 		push	ix							; Save pointer to SFX track data in RAM
 		
-	if fix_sndbugs=0
-		ld	a, (zUpdatingSFX)				; Get flag
-		or	a								; Are we updating SFX?
-		jr	z, +							; Branch if not (hint: it was cleared just below the bank switch above so... always)
-
-		; Effectively dead code.
-		; SPECULATION: It is possible that this was meant for GHZ-like waterfall
-		; effects which were subsequently scrapped.
-		; If this speculation is true, then it is likely that, after the call to
-		; zGetSFXChannelPointers, we would have:
-		; * ix = pointer to the overriding SFX track data in RAM;
-		; * iy = pointer to the special SFX track data in RAM.
-		; This code would then ensure that de points to the correct RAM area for
-		; the writes below.
-		pop		hl							; hl = pointer to SFX track data in RAM
-		push	iy							; Save iy (pointer to SFX data)
-+
-	endif
-
 		pop		de							; de = pointer to SFX track data in RAM (unless you consider the above effectively dead code)
 		pop		hl							; hl = pointer to SFX track data
 		ldi									; *de++ = *hl++ (initial playback control)
@@ -1735,45 +1671,8 @@ zSFXTrackInitLoop:
 		ldi									; *de++ = *hl++ (channel volume)
 		call	zInitFMTrack				; Init the remainder of the track RAM
 
-	if fix_sndbugs=0
-		; SPECULATION: The code until the '+' label below was likely related to
-		; GHZ-like waterfall effects which were subsequently scrapped.
-		; If this speculation is true, then we would have at this point:
-		; * ix = pointer to the overriding SFX track data in RAM;
-		; * iy = pointer to the special SFX track data in RAM.
-		; The code would then be checking to see if the corresponding SFX track
-		; was playing, make sure the tracks refer to the same FM/PSG channel
-		; then, if needed, mark the special SFX track as being overridden by the
-		; SFX so as to not abruptly end the SFX.
-		bit	7, (ix+zTrackPlaybackControl)	; Is the 'playing' bit set for this track?
-		jr	z, +							; Branch if not (all SFX define it as 80h, so... never)
-		ld	a, (ix+zTrackVoiceControl)		; Grab the voice control byte
-		cp	(iy+zTrackVoiceControl)			; Is this equal to the one for this track? (hint: should be, we copied it above...)
-		jr	nz, +							; Branch if not (hint: never...)
-		set	2, (iy+zTrackPlaybackControl)	; Set bit 2 of playback control ('SFX is overriding this track') -- on *ROM*???
-+
-	endif
-
 		push	hl							; Save hl
 		ld	hl, (zSFXVoiceTblPtr)			; hl = pointer to voice data
-
-	if fix_sndbugs=0
-		ld	a, (zUpdatingSFX)				; Get flag
-		or	a								; Are we updating SFX?
-		jr	z, +							; Branch if not (hint: it was cleared just below the bank switch above so... always)
-
-		; Effectively dead code.
-		; SPECULATION: It is possible that this was meant for GHZ-like waterfall
-		; effects which were subsequently scrapped.
-		; If this speculation is true, then at this point we would have:
-		; * ix = pointer to the overriding SFX track data in RAM;
-		; * iy = pointer to the special SFX track data in RAM.
-		; This code would then make ix point to the correct track data for the
-		; function calls below.
-		push	iy							; Save iy
-		pop		ix							; ix = pointer to SFX data
-+
-	endif
 
 		ld	(ix+zTrackVoicesLow), l			; Low byte of voice pointer
 		ld	(ix+zTrackVoicesHigh), h		; High byte of voice pointer
@@ -1924,17 +1823,8 @@ zPauseUnpause:
 		add	ix, de							; Advance to next track
 		djnz	-							; Loop for all tracks
 
-	if fix_sndbugs
 		ld	ix, zTracksSFXStart				; Start at the start of SFX track data
 		ld	b, (zTracksSFXEnd-zTracksSFXStart)/zTrackSz		; Number of tracks
-	else
-		; DANGER! This code goes past the end of Z80 RAM and into reserved territory!
-		; By luck, it only *reads* from these areas...
-
-		ld	ix, zTracksSFXEnd				; Start at the END of SFX track data (?)
-		ld	b, 7							; But loop for 7 tracks (??)
-	endif
-
 -		bit	7, (ix+zTrackPlaybackControl)	; Is track playing?
 		jr	z, +							; Branch if not
 		bit	7, (ix+zTrackVoiceControl)		; Is this a PSG track?
@@ -3710,29 +3600,6 @@ sub_F3E:
 		dec	(hl)
 		ret
 		
-; ---------------------------------------------------------------------------
-			; db    0
-PSGTone_2D:     db	  0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2
-                db	  3,   3,   3,   4,   4,   4,   5,   5,   5,   6,   7, 81h
-PSGTone_2E:     db	  0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2
-                db	  3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   5,   5,   5,   5,   5,   6
-                db	  6,   6,   6,   6,   7,   7,   7, 81h
-PSGTone_2F:     db	  0,   1,   2,   3,   4,   5,   6,   7,   8,   9, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 0Fh, 83h
-PSGTone_30:     db	  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1
-                db	  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1
-                db	  1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2
-                db	  2,   2,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   4, 81h
-PSGTone_31:     db	  4,   4,   4,   3,   3,   3,   2,   2,   2,   1,   1,   1,   1,   1,   1,   1
-                db	  2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   4, 81h
-PSGTone_32:     db	  4,   4,   3,   3,   2,   2,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1
-                db	  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2
-                db	  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3
-                db	  3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3
-                db	  3,   3,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4
-                db	  4,   4,   4,   4,   4,   4,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5
-                db	  5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   6,   6,   6,   6,   6,   6
-                db	  6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   7, 81h
-
 z80_SoundDriverEnd:
 Z80_Snd_Driver2:
 
@@ -3741,9 +3608,9 @@ Z80_Snd_Driver2:
 ; ===========================================================================
 
 z80_SoundDriverPointers:
-		dw	z80_MusicPointers
-		dw	z80_UniVoiceBank
-		dw	z80_MusicPointers
+		dw  z80_MusicPointers
+		dw  z80_UniVoiceBank
+		dw  z80_MusicPointers
 		dw  z80_SFXPointers
 		dw  z80_FreqFlutterPointers
 		dw  z80_PSGTonePointers
@@ -3781,6 +3648,12 @@ FreqFlutter7:   db    1,   2,   3,   4,   3,   2,   1,   0,0FFh,0FEh,0FDh,0FCh,0
 ; ===========================================================================
 
 z80_PSGTonePointers:
+		; Chaotix PSG Tone Pointers
+		dw byte_1176, byte_1178, byte_1181, byte_118B, byte_1197
+		dw byte_11A2, byte_11C9, byte_120D, byte_1215, byte_122A
+		dw byte_123F, byte_1249, byte_1252, byte_127F
+		
+		; Standard S1/2/3k PSG Tone Pointers
 		dw		PSGTone_00,PSGTone_01,PSGTone_02,PSGTone_03,PSGTone_04,PSGTone_05
 		dw		PSGTone_06,PSGTone_07,PSGTone_08,PSGTone_09,PSGTone_0A,PSGTone_0B
 		dw		PSGTone_0C,PSGTone_0D,PSGTone_0E,PSGTone_0F,PSGTone_10,PSGTone_11
@@ -3791,72 +3664,115 @@ z80_PSGTonePointers:
 		dw		PSGTone_2A,PSGTone_2B,PSGTone_2C,PSGTone_2D,PSGTone_2E,PSGTone_2F
 		dw		PSGTone_30,PSGTone_31,PSGTone_32,PSGTone_33
 
+byte_118B:	db 4, 3, 2, 1, 0, 0, 1,	1, 2, 2, 2, 81h
+byte_11A2:	db 0, 0, 0, 0, 1, 1, 1,	1, 1, 1, 2, 2, 2, 2, 2,	2, 2, 3
+		db 3, 3, 3, 4, 4, 4, 4,	5, 5, 5, 6, 6, 6, 7, 8,	0Ah, 0Ch
+		db 0Eh,	10h, 12h, 83h
+byte_11C9:	db 12h,	12h, 11h, 11h, 10h, 10h, 0Fh, 0Fh, 0Fh,	0Eh, 0Eh
+		db 0Eh,	0Dh, 0Dh, 0Dh, 0Dh, 0Ch, 0Ch, 0Ch, 0Ch,	0Bh, 0Bh
+		db 0Bh,	0Bh, 0Bh, 0Ah, 0Ah, 0Ah, 0Ah, 9, 9, 9, 9, 8, 8
+		db 8, 8, 7, 7, 7, 7, 6,	6, 6, 6, 5, 5, 5, 5, 4,	4, 4, 4
+		db 3, 3, 3, 2, 2, 2, 1,	1, 1, 0, 0, 2, 1, 0, 81h
+byte_120D:	db 2, 1, 0, 0, 1, 1, 2,	81h 
+byte_1215:	db 6, 6, 6, 6, 6, 5, 5,	5, 5, 5, 4, 4, 4, 3, 3,	3, 3, 3
+		db 3, 2, 81h
+byte_127F:	db 0, 0, 2, 5, 9, 0Eh, 83h
+		
+byte_1176:
 PSGTone_00:		db    2, 83h
 PSGTone_01:
 PSGTone_0E:
+byte_1181:		db    1, 0, 0, 0			
+byte_1178:
 PSGTone_28:		db    0,   2,   4,   6,   8, 10h, 83h
 PSGTone_02:		db    2,   1,   0,   0,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2
-                db    2,   3,   3,   3,   4,   4,   4,   5, 81h
+			db    2,   3,   3,   3,   4,   4,   4,   5, 81h
 PSGTone_03:		db    0,   0,   2,   3,   4,   4,   5,   5,   5,   6,   6, 81h
+byte_1197:
 PSGTone_04:		db    3,   0,   1,   1,   1,   2,   3,   4,   4,   5, 81h
 PSGTone_05:		db    0,   0,   1,   1,   2,   3,   4,   5,   5,   6,   8,   7,   7,   6, 81h
 PSGTone_06:		db    1, 0Ch,   3, 0Fh,   2,   7,   3, 0Fh, 80h
 PSGTone_07:		db    0,   0,   0,   2,   3,   3,   4,   5,   6,   7,   8,   9, 0Ah, 0Bh, 0Eh, 0Fh
-                db  83h
+			db  83h
 PSGTone_08:		db    3,   2,   1,   1,   0,   0,   1,   2,   3,   4, 81h
+byte_122A:
 PSGTone_09:		db    1,   0,   0,   0,   0,   1,   1,   1,   2,   2,   2,   3,   3,   3,   3,   4
-                db    4,   4,   5,   5, 81h
+			db    4,   4,   5,   5, 81h
+byte_123F:			
 PSGTone_0A:		db  10h, 20h, 30h, 40h, 30h, 20h, 10h,   0,0F0h, 80h
+byte_1249
 PSGTone_0B:		db    0,   0,   1,   1,   3,   3,   4,   5, 83h
 PSGTone_0C:		db    0, 81h
 PSGTone_0D:		db    2, 83h
 PSGTone_0F:		db    9,   9,   9,   8,   8,   8,   7,   7,   7,   6,   6,   6,   5,   5,   5,   4
-                db    4,   4,   3,   3,   3,   2,   2,   2,   1,   1,   1,   0,   0,   0, 81h
+			db    4,   4,   3,   3,   3,   2,   2,   2,   1,   1,   1,   0,   0,   0, 81h
 PSGTone_10:		db    1,   1,   1,   0,   0,   0, 81h
 PSGTone_11:		db    3,   0,   1,   1,   1,   2,   3,   4,   4,   5, 81h
 PSGTone_12:		db    0,   0,   1,   1,   2,   3,   4,   5,   5,   6,   8,   7,   7,   6, 81h
 PSGTone_13:		db  0Ah,   5,   0,   4,   8, 83h
 PSGTone_14:		db    0,   0,   0,   2,   3,   3,   4,   5,   6,   7,   8,   9, 0Ah, 0Bh, 0Eh, 0Fh
-                db  83h
+			db  83h
 PSGTone_15:		db    3,   2,   1,   1,   0,   0,   1,   2,   3,   4, 81h
 PSGTone_16:		db    1,   0,   0,   0,   0,   1,   1,   1,   2,   2,   2,   3,   3,   3,   3,   4
-                db    4,   4,   5,   5, 81h
+			db    4,   4,   5,   5, 81h
 PSGTone_17:		db  10h, 20h, 30h, 40h, 30h, 20h, 10h,   0, 80h
 PSGTone_18:		db    0,   0,   1,   1,   3,   3,   4,   5, 83h
 PSGTone_19:		db    0,   2,   4,   6,   8, 16h, 83h
 PSGTone_1A:		db    0,   0,   1,   1,   3,   3,   4,   5, 83h
 PSGTone_1B:		db    4,   4,   4,   4,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1
-                db  83h
+			db  83h
+byte_1252:			
 PSGTone_1C:		db    0,   0,   0,   0,   1,   1,   1,   1,   2,   2,   2,   2,   3,   3,   3,   3
-                db    4,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,   6,   7,   7,   7,   7
-                db    8,   8,   8,   8,   9,   9,   9,   9, 0Ah, 0Ah, 0Ah, 0Ah, 81h
+			db    4,   4,   4,   4,   5,   5,   5,   5,   6,   6,   6,   6,   7,   7,   7,   7
+			db    8,   8,   8,   8,   9,   9,   9,   9, 0Ah, 0Ah, 0Ah, 0Ah, 81h
 PSGTone_1D:		db    0, 0Ah, 83h
 PSGTone_1E:		db    0,   2,   4, 81h
 PSGTone_1F:		db  30h, 20h, 10h,   0,   0,   0,   0,   0,   8, 10h, 20h, 30h, 81h
 PSGTone_20:		db    0,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   6,   6,   6,   8,   8
-                db  0Ah, 83h
+			db  0Ah, 83h
 PSGTone_21:		db    0,   2,   3,   4,   6,   7, 81h
 PSGTone_22:		db    2,   1,   0,   0,   0,   2,   4,   7, 81h
 PSGTone_23:		db  0Fh,   1,   5, 83h
 PSGTone_24:		db    8,   6,   2,   3,   4,   5,   6,   7,   8,   9, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 0Fh
-                db  10h, 83h
+			db  10h, 83h
 PSGTone_25:		db    0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1
-                db    1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3
-                db    3,   3,   3,   3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   4,   4,   4
-                db    4,   4,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   6,   6,   6,   6
-                db    6,   6,   6,   6,   6,   6,   7,   7,   7,   7,   7,   7,   7,   7,   7,   7
-                db    8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   9,   9,   9,   9,   9,   9
-                db    9,   9, 83h
+			db    1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3
+			db    3,   3,   3,   3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   4,   4,   4
+			db    4,   4,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   6,   6,   6,   6
+			db    6,   6,   6,   6,   6,   6,   7,   7,   7,   7,   7,   7,   7,   7,   7,   7
+			db    8,   8,   8,   8,   8,   8,   8,   8,   8,   8,   9,   9,   9,   9,   9,   9
+			db    9,   9, 83h
 PSGTone_26:		db    0,   2,   2,   2,   3,   3,   3,   4,   4,   4,   5,   5, 83h
-PSGTone_27:     db	  0,   0,   0,   1,   1,   1,   2,   2,   2,   3,   3,   3,   4,   4,   4,   5
-                db	  5,   5,   6,   6,   6,   7, 81h
-PSGTone_29:     db	  0,   0,   1,   1,   2,   2,   3,   3,   4,   4,   5,   5,   6,   6,   7,   7, 81h
-PSGTone_2A:     db	  0,   0,   2,   3,   4,   4,   5,   5,   5,   6, 81h
-PSGTone_2C:     db	  3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   0,   0,   0,   0, 81h
-PSGTone_2B:     db	  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1
-                db	  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2
-                db	  2,   2,   2,   2,   3,   3,   3,   3,   3,   3,   3,   3,   4, 81h
-PSGTone_33:     db	0Eh, 0Dh, 0Ch, 0Bh, 0Ah,   9,   8,   7,   6,   5,   4,   3,   2,   1,   0, 81h
+PSGTone_27:     	db	  0,   0,   0,   1,   1,   1,   2,   2,   2,   3,   3,   3,   4,   4,   4,   5
+			db	  5,   5,   6,   6,   6,   7, 81h
+PSGTone_29:    	 	db	  0,   0,   1,   1,   2,   2,   3,   3,   4,   4,   5,   5,   6,   6,   7,   7, 81h
+PSGTone_2A:    	 	db	  0,   0,   2,   3,   4,   4,   5,   5,   5,   6, 81h
+PSGTone_2C:     	db	  3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   0,   0,   0,   0, 81h
+PSGTone_2B:     	db	  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1
+			db	  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2
+			db	  2,   2,   2,   2,   3,   3,   3,   3,   3,   3,   3,   3,   4, 81h
+PSGTone_2D:     db	  0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2
+                db	  3,   3,   3,   4,   4,   4,   5,   5,   5,   6,   7, 81h
+PSGTone_2E:     db	  0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2
+                db	  3,   3,   3,   3,   3,   4,   4,   4,   4,   4,   5,   5,   5,   5,   5,   6
+                db	  6,   6,   6,   6,   7,   7,   7, 81h
+PSGTone_2F:     db	  0,   1,   2,   3,   4,   5,   6,   7,   8,   9, 0Ah, 0Bh, 0Ch, 0Dh, 0Eh, 0Fh, 83h
+PSGTone_30:     db	  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1,   1,   1,   1,   1
+                db	  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1
+                db	  1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2
+                db	  2,   2,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   4, 81h
+PSGTone_31:     db	  4,   4,   4,   3,   3,   3,   2,   2,   2,   1,   1,   1,   1,   1,   1,   1
+                db	  2,   2,   2,   2,   2,   3,   3,   3,   3,   3,   4, 81h
+PSGTone_32:     db	  4,   4,   3,   3,   2,   2,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1
+                db	  1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2
+                db	  2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3
+                db	  3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3
+                db	  3,   3,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4
+                db	  4,   4,   4,   4,   4,   4,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5
+                db	  5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   6,   6,   6,   6,   6,   6
+                db	  6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   6,   7, 81h
+			
+PSGTone_33:     	db	0Eh, 0Dh, 0Ch, 0Bh, 0Ah,   9,   8,   7,   6,   5,   4,   3,   2,   1,   0, 81h
 
 ; ---------------------------------------------------------------------------
 ; ===========================================================================
@@ -4384,19 +4300,19 @@ Sound_DB:	include "Sound/SK/SFX/DB.asm"
 ; Music Bank 1
 ; ---------------------------------------------------------------------------
 Snd_Bank1_Start:	startBank
-Music_01:			binclude	"Sound/01 Door Into Summer.skc"
-Music_02:			include	"Sound/S1/Music/Mus82 - LZ.asm"
-Music_03:			include	"Sound/S1/Music/Mus83 - MZ.asm"
-Music_04:			include	"Sound/S1/Music/Mus84 - SLZ.asm"
-Music_05:			include	"Sound/S1/Music/Mus85 - SYZ.asm"
-Music_06:			include	"Sound/S1/Music/Mus86 - SBZ.asm"
-Music_07:			include	"Sound/S1/Music/Mus87 - Invincibility.asm"
-Music_08:			include	"Sound/S1/Music/Mus88 - Extra Life.asm"
-Music_09:			include	"Sound/S1/Music/Mus89 - Special Stage.asm"
-Music_0A:			include	"Sound/S1/Music/Mus8A - Title Screen.asm"
-Music_0B:			include	"Sound/S1/Music/Mus8B - Ending.asm"
-Music_0C:			include	"Sound/S1/Music/Mus8C - Boss.asm"
-Music_0D:			include	"Sound/S1/Music/Mus8D - FZ.asm"
+Music_01:			binclude "Sound/Chaotix/01 Door Into Summer.skc"
+Music_02:			binclude "Sound/Chaotix/02 Electoria.skc"
+Music_03:			binclude "Sound/Chaotix/03 Speed Of Sound.skc"
+Music_04:			binclude "Sound/Chaotix/04 Seascape.skc"
+Music_05:			binclude "Sound/Chaotix/05 Midnight Greenhouse.skc"
+Music_06:			binclude "Sound/Chaotix/06 New Moon.skc"
+Music_07:			binclude "Sound/Chaotix/07 Labyrinth.skc"
+Music_08:			binclude "Sound/Chaotix/08 Trial And Error.skc"
+Music_09:			binclude "Sound/Chaotix/09 Walkin.skc"
+Music_0A:			binclude "Sound/Chaotix/0A Hyper-Hyper.skc"
+Music_0B:			binclude "Sound/Chaotix/0B Evening Star.skc"
+Music_0C:			binclude "Sound/Chaotix/0C Moonrise.skc"
+Music_0D:			binclude "Sound/Chaotix/0D Overture.skc"
 Music_0E:			include	"Sound/S1/Music/Mus8E - Sonic Got Through.asm"
 Music_0F:			include	"Sound/S1/Music/Mus8F - Game Over.asm"
 Music_10:			include	"Sound/S1/Music/Mus90 - Continue Screen.asm"
