@@ -2127,7 +2127,7 @@ LevelSelect:
 		cmpi.w	#$14,d0		; have you selected item $14 (sound test)?
 		bne.s	LevSel_Level_SS	; if not, go to	Level/SS subroutine
 		move.w	(v_levselsound).w,d0
-		addi.w	#$80,d0
+		;addi.w	#$80,d0
 		tst.b	(f_creditscheat).w ; is Japanese Credits cheat on?
 		beq.s	LevSel_NoCheat	; if not, branch
 		cmpi.w	#$9F,d0		; is sound $9F being played?
